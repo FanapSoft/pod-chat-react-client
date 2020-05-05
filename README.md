@@ -1,3 +1,3 @@
 # pod-chat-react-client
 
-React JS Client of PosChat
+React JS Client of PodChat
