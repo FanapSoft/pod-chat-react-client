@@ -1,0 +1,16 @@
+.MainMessagesUnreadBar {
+  background-color: rgba($color-white, .8);
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.13);
+}
+
+.MainMessagesUnreadBar__Content {
+  background-color: rgba($color-accent, .15);
+  border-radius: 17px;
+  text-align: center;
+  padding: 2px 9px;
+}

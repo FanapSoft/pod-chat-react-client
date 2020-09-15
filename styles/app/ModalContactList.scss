@@ -1,0 +1,32 @@
+.ModalContactList__Input {
+  box-shadow: none;
+  margin: 10px 0 -10px;
+  padding-right: 32px;
+  padding-left: 22px;
+}
+
+.ModalContactList__Loading {
+  padding: 20px 0;
+}
+
+.ModalContactList__Input:hover {
+  box-shadow: none;
+}
+
+.ModalContactList__ActionButtonContainer {
+  margin: 0;
+}
+
+.ModalContactList__ActionButton {
+  margin: 0 5px;
+  display: inline-block;
+  transition: transform 0.09s ease-out 0s;
+}
+
+.ModalContactList__ActionButton--single {
+  margin: 0 25px;
+}
+
+.ModalContactList__ActionButton:hover {
+  transform: scale(1.2);
+}

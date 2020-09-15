@@ -1,0 +1,24 @@
+@import "scope";
+
+.Main {
+  display: flex;
+  flex-direction: column;
+  top: 0;
+  left: 0;
+  height: 100%;
+  position: absolute;
+  width: 100%;
+}
+
+.Main__Cover {
+  position: absolute;
+  width: 100%;
+  opacity: 0.8;
+  background: url("../images/Main/cover-image.jpg") no-repeat;
+  background-size: cover;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+}

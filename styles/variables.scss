@@ -1,0 +1,138 @@
+// typography
+$font-family: IRANSans;
+$line-height-base: 1.6;
+
+// font-weight
+$font-weight-ultralight: 200;
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-bold: bold;
+
+//font-size
+$font-size-base: 14px;
+$font-size-xlg: 18px;
+$font-size-lg: 18px;
+$font-size-jumbo: 50px;
+$font-size-sm: 12px;
+$font-size-xsm: 10px;
+$font-size-h1: 36px;
+$font-size-h2: 20px;
+$font-size-h3: 24px;
+$font-size-h4: 18px;
+$font-size-h5: 16px;
+$font-size-h6: 14px;
+
+//icon size
+$icon-size-xs: 16px;
+$icon-size-sm: 18px;
+$icon-size-md: 24px;
+$icon-size-lg: 36px;
+$icon-size-xlg: 48px;
+
+//z-index
+$z-index-1: 100;
+$z-index-2: 200;
+$z-index-3: 300;
+$z-index-4: 400;
+$z-index-5: 500;
+$z-index-6: 600;
+$z-index-7: 700;
+$z-index-8: 800;
+$z-index-9: 900;
+$z-index-10: 1000;
+
+//colors
+$color-primary: #071024;
+$color-primary-light: #343B4B;
+$color-primary-dark: #070F21;
+
+$color-accent: #f58220;
+$color-accent-dark: #CA6107;
+$color-accent-light: #FFB575;
+
+$color-red: #F52020;
+$color-red-dark: #A00000;
+$color-red-light: #FF4C4C;
+
+$color-yellow: #F5EC20;
+$color-yellow-dark: #CAC107;
+$color-yellow-light: #FFF74C;
+
+$color-green: #5DD51C;
+$color-green-dark: #41AF06;
+$color-green-light: #79DF43;
+
+$color-background: #f0f0f0;
+$color-background-dark: #C5C5C5;
+$color-background-light: #fff;
+
+$color-gray-light: #eee;
+$color-gray: #ddd;
+$color-gray-dark: #aaa;
+
+$color-white: #fff;
+
+$color-text-invert: #f0f0f0;
+$color-text-light: #B1B1B1;
+$color-text: #555;
+$color-text-dark: #272727;
+
+$color-dark: #000;
+$color-green-tick: #72cc66;
+
+:export {
+  fontFamily: $font-family;
+  lineHeightBase: $line-height-base;
+  fontWeightUltralight: $font-weight-ultralight;
+  fontWeightLight: $font-weight-light;
+  fontWeightNormal: $font-weight-normal;
+  fontWeightMedium: $font-weight-medium;
+  fontWeightBold: $font-weight-bold;
+  fontSizeBase: $font-size-base;
+  fontSizeJumbo: $font-size-jumbo;
+  fontSizeXlg: $font-size-lg;
+  fontSizeLg: $font-size-lg;
+  fontSizeSm: $font-size-sm;
+  fontSizeXsm: $font-size-xsm;
+  fontSizeH1: $font-size-h1;
+  fontSizeH2: $font-size-h2;
+  fontSizeH3: $font-size-h3;
+  fontSizeH4: $font-size-h4;
+  fontSizeH5: $font-size-h5;
+  fontSizeH6: $font-size-h6;
+  iconSizeXs: $icon-size-xs;
+  iconSizeSm: $icon-size-sm;
+  iconSizeMd: $icon-size-md;
+  iconSizeLg: $icon-size-lg;
+  iconSizeXlg: $icon-size-xlg;
+  zIndex1: $z-index-1;
+  zIndex2: $z-index-2;
+  zIndex3: $z-index-3;
+  zIndex4: $z-index-4;
+  zIndex5: $z-index-5;
+  zIndex6: $z-index-6;
+  zIndex7: $z-index-7;
+  zIndex8: $z-index-8;
+  zIndex9: $z-index-9;
+  zIndex10: $z-index-10;
+
+  colorPrimary: $color-primary;
+  colorPrimaryLight: $color-primary-light;
+  colorPrimaryDark: $color-primary-dark;
+  colorAccent: $color-accent;
+  colorAccentDark: $color-accent-dark;
+  colorAccentLight: $color-accent-light;
+  colorBackground: $color-background;
+  colorBackgroundDark: $color-background-dark;
+  colorBackgroundLight: $color-background-light;
+  colorGrayLight: $color-gray-light;
+  colorGray: $color-gray;
+  colorGrayDark: $color-gray-dark;
+  colorWhite: $color-white;
+  colorTextInvert: $color-text;
+  colorTextLight: $color-text-light;
+  colorText: $color-text;
+  colorTextDark: $color-text-invert;
+  colorGreenTick: $color-green-tick;
+}

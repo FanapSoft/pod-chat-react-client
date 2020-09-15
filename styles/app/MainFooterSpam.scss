@@ -1,0 +1,25 @@
+.MainFooterSpam {
+  height: 60px;
+  display: none;
+}
+
+
+.MainFooterSpam--active {
+  display: flex;
+}
+
+.MainFooterSpam__ActionBase {
+  position: absolute;
+  top: -1px;
+  right: 0;
+  width: 100%;
+  height: calc(100% + 1px);
+  z-index: 2;
+  background-color: $color-background-light;
+  align-items: center;
+  cursor: pointer;
+}
+
+.MainFooterSpam__ActionBaseTextContainer {
+  margin: 0 auto;
+}

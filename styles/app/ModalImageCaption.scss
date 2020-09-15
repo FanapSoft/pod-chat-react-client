@@ -1,0 +1,54 @@
+.ModalImageCaption__Image {
+  min-width: 100%;
+  max-width: 100%;
+  border-radius: 5px;
+}
+
+.ModalImageCaption__EmojiIconsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  overflow: hidden;
+  background-color: $color-gray-light;
+  margin: 0 -10px 0 -10px;
+}
+
+.ModalImageCaption__InputContainer {
+  margin: 0;
+}
+
+.ModalImageCaption__Input {
+  width: 100%;
+  font-size: 14px;
+  line-height: 1.7;
+  max-width: calc(100% - 50px);
+}
+
+.ModalImageCaption__EditBox {
+  display: flex;
+
+}
+
+.ModalImageCaption__EditBoxInputContainer {
+  flex-grow: 1;
+  max-width: 100%;
+  z-index: 0;
+}
+
+.ModalImageCaption__ParticipantContainer {
+  position: relative;
+  width: calc(100% + 20px);
+  margin-right: -10px;
+  z-index: $z-index-2;
+}
+
+.ModalImageCaption__ParticipantPositionContainer {
+  position: absolute;
+  bottom: 11px;
+  right:0;
+  width: 100%;
+}
+
+.ModalImageCaption__ParticipantPositionContainer--mobile {
+  bottom: 7px;
+}

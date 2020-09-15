@@ -1,0 +1,62 @@
+.MainMessages {
+  flex: 1 1 0;
+  order: 2;
+  position: relative;
+  z-index: $z-index-1;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+}
+
+.MainMessages__Messages {
+  padding-bottom: 10px;
+}
+
+.MainMessages__Empty {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.MainMessages__Tick {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.MainMessages__ReplyFragmentImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 55px;
+  height: 100%;
+  background-repeat: no-repeat ;
+  background-size: cover;
+}
+
+.MainMessages__MessageContainer {
+  display: flex;
+}
+
+.MainMessages__MessageContainer--left {
+  flex-direction: row-reverse;
+}
+
+.MainMessages__UnreadCountBar {
+  background-color: $color-background-light;
+  padding: 7px 0;
+}
+
+.MainMessages__MentionedButtonContainer {
+  font-size: $font-size-xsm;
+  position: absolute;
+  left: 8px;
+  top: -13px;
+  box-shadow: 0 2px 4px #845025;
+  border-radius: 50%;
+}

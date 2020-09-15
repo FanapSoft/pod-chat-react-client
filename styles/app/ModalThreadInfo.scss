@@ -1,0 +1,13 @@
+.ModalThreadInfo__GapContainer {
+  width: calc(100% + 20px);
+  margin: 0 -10px;
+}
+
+.ModalThreadInfo__ModalMediaLink {
+  position: absolute;
+  z-index: 1;
+  width: 100%;
+  height:100%;
+  top:0;
+  left: 0;
+}

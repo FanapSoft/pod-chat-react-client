@@ -1,0 +1,23 @@
+@import "scope";
+
+.MainFooterInputEditing {
+  display: flex;
+}
+
+.MainFooterInputEditing__Content {
+  flex-grow: 1;
+  max-height: 30px;
+  overflow-y: hidden;
+}
+
+.MainFooterInputEditing__ImageContainer {
+  vertical-align: middle;
+  overflow: hidden;
+  margin: 0 10px;
+}
+
+.MainFooterInputEditing__Image {
+  background-size: cover;
+  width: 24px;
+  height: 24px;
+}

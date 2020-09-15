@@ -1,0 +1,22 @@
+@import "scope";
+@import "../mixin/responsive";
+
+.MainHeadBatchActions {
+
+}
+
+.MainHeadBatchActions__ForwardContainer,
+.MainHeadBatchActions__DeleteContainer {
+  padding: 18px 9px;
+}
+
+@include grid("md") {
+
+  .MainHeadBatchActions:not(.MainHeadBatchActions--smallVersion) {
+    .MainHeadBatchActions__ForwardContainer,
+    .MainHeadBatchActions__DeleteContainer {
+      padding: 18px;
+    }
+  }
+
+}
