@@ -1,0 +1,20 @@
+@import "../mixin/responsive";
+
+.LeftAsideHead {
+  height: 59px;
+  width: 100%;
+  align-items: center;
+  position: relative;
+  padding: 0 10px;
+  background-color: $color-accent;
+  z-index: $z-index-1;
+  order: 1;
+}
+
+@include grid("md") {
+
+  .LeftAsideHead:not(.LeftAsideHead--smallVersion) {
+    border-right: 1px solid $color-accent-dark;
+  }
+
+}

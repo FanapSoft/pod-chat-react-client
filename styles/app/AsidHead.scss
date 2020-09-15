@@ -1,0 +1,30 @@
+@import "../mixin/responsive";
+
+.AsideHead {
+  height: 59px;
+  width: 100%;
+  background-color: $color-accent;
+  position: relative;
+}
+
+.AsideHead__ConnectionHandlerContainer {
+  margin: 0 68px;
+}
+
+.AsideHead__SearchContainer {
+  padding: 17px 15px;
+  cursor: pointer;
+}
+
+.AsideHead__UserProfileContainer {
+  height: 140px;
+  background-color: $color-accent;
+}
+
+@include grid("md") {
+  .AsideHead:not(.AsideHead--smallVersion) {
+    .AsideHead__SearchContainer {
+      display: none;
+    }
+  }
+}

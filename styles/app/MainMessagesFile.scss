@@ -1,0 +1,61 @@
+@import "scope";
+@import "../mixin/responsive";
+
+.MainMessagesFile {
+
+}
+
+.MainMessagesFile__ImageContainer {
+  display: block;
+}
+
+.MainMessagesFile__FileContainer {
+  display: flex;
+  align-items: center;
+}
+
+.MainMessagesFile__FileContainer--reverseDirection {
+  flex-direction: row-reverse;
+}
+
+.MainMessagesFile__FileName {
+  flex-grow: 1;
+  word-break: break-word;
+}
+
+.MainMessagesFile__FileControlIcon {
+  cursor: pointer;
+  z-index: 2;
+}
+
+.MainMessagesFile__Image {
+  max-width: 100%;
+  border-radius: 5px;
+  position: relative;
+  z-index: 1;
+}
+
+.MainMessagesFile__ProgressContainer {
+   position: absolute;
+   bottom: 2px;
+   left: 5px;
+   z-index: 1;
+   width: calc(100% - 10px);
+}
+
+.MainMessagesFile__Progress {
+  height: 4px;
+  background-color: $color-accent;
+  border-radius: 5px;
+  transition: width 0.5s ease-in-out;
+}
+
+.MainMessagesFile__ImagePaperContainer {
+  padding: 0;
+}
+
+@include grid("md") {
+  :not(.MainMessagesFile__Image--smallVersion).MainMessagesFile__Image {
+    max-width: 400px;
+  }
+}

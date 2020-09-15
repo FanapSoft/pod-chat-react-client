@@ -1,0 +1,59 @@
+.MainFooterEmojiIcons {
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 220px;
+  overflow: hidden;
+}
+
+.MainFooterEmojiIcons__IconsContainer {
+  height: calc(100% - 45px);
+}
+
+.MainFooterEmojiIcons__Icons {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.MainFooterEmojiIcons__Icons:after {
+  content: "";
+  flex: auto;
+}
+
+.MainFooterEmojiIcons__Icon {
+  padding: 12px;
+  user-select: none;
+  position: relative;
+  cursor: pointer;
+}
+
+.MainFooterEmojiIcons__Icon:after {
+  display: none;
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  border-radius: 50px;
+  background-color: $color-gray;
+  z-index: auto;
+}
+
+.MainFooterEmojiIcons__Icon:hover:after {
+  display: block;
+}
+
+.MainFooterEmojiIcons__Button {
+  width: 30px;
+  height: 30px;
+  transform: scale(1.1);
+  background-size: 810px 210px;
+}
+
+.MainFooterEmojiIcons__Icon:hover .MainFooterEmojiIcons__Button {
+  transform: scale(1.3);
+  position: relative;
+  z-index: 1;
+}

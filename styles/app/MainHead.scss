@@ -1,0 +1,43 @@
+@import "scope";
+@import "../mixin/responsive";
+
+.MainHead {
+  height: 59px;
+  width: 100%;
+  align-items: center;
+  position: relative;
+  padding: 0 10px;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  background-color: $color-accent;
+  cursor: pointer;
+  z-index: $z-index-1;
+  order: 1;
+}
+
+.MainHead * {
+  user-select: none;
+}
+
+.MainHead:hover {
+  background-color: $color-accent-dark;
+}
+
+.MainHead__BackContainer,
+.MainHead__SearchContainer {
+  padding: 18px 9px;
+}
+
+@include grid("md") {
+
+  .MainHead:not(.MainHead--smallVersion) {
+    border-right: 1px solid $color-accent-dark;
+    .MainHead__BackContainer {
+      display: none;
+    }
+    .MainHead__BackContainer,
+    .MainHead__SearchContainer {
+      padding: 18px;
+    }
+  }
+
+}

@@ -1,0 +1,73 @@
+.MainFooterInput {
+  display: flex;
+  flex-direction: column;
+}
+
+.MainFooterInput__EditBox {
+  background-color: $color-white;
+  padding: 9px 12px 11px 12px;
+  min-height: 43px;
+  border-radius: 20px;
+  display: flex;
+}
+
+.MainFooterInput__EditBox--halfBorder {
+  border-radius: 0 0 20px 20px;
+}
+
+.MainFooterInput__InputBox {
+  height: 41px;
+}
+
+.MainFooterInput__InputContainer {
+  background: none;
+  box-shadow: none;
+  margin: 0;
+  &:hover {
+    box-shadow: none;
+  }
+}
+
+.MainFooterInput__Input {
+  padding: 0;
+  width: 100%;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.MainFooterInput__Button {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0 10px;
+  border: none;
+  color: #555;
+  font-family: monospace;
+  font-weight: bold;
+  line-height: 0;
+  height: 100%;
+  background-color: transparent;
+}
+
+.MainFooterInput__EditBoxInputContainer {
+  flex-grow: 1;
+  max-width: calc(100% - 40px);
+}
+
+.MainFooterInput__ParticipantContainer {
+  position: relative;
+  width: calc(100% + 75px);
+  margin-right: -64px;
+  z-index: $z-index-2;
+}
+
+.MainFooterInput__ParticipantPositionContainer {
+  position: absolute;
+  bottom: 11px;
+  right:0;
+  width: 100%;
+}
+
+.MainFooterInput__ParticipantPositionContainer--mobile {
+  bottom: 7px;
+}

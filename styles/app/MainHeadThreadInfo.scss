@@ -1,0 +1,25 @@
+@import "scope";
+@import "../mixin/responsive";
+
+.MainHeadThreadInfo {
+  max-width: calc(100% - 115px);
+  overflow: hidden;
+  height: 100%;
+}
+
+.MainHeadThreadInfo__ThreadInfoTextContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 59px;
+  max-height: 59px;
+}
+
+@include grid("md") {
+
+  .MainHeadThreadInfo:not(.MainHeadThreadInfo--smallVersion) {
+    .MainHeadThreadInfo {
+      max-width: none;
+    }
+  }
+
+}

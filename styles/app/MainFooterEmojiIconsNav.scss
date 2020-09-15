@@ -1,0 +1,29 @@
+.MainFooterEmojiIconsNav {
+  display: inline-flex;
+  height: 45px;
+  background-color: $color-gray-light;
+  border-bottom: 1px solid $color-gray;
+  flex-grow: 1;
+  align-items: center;;
+}
+
+.MainFooterEmojiIconsNav__Item {
+  display: flex;
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+  height: 100%;
+  position: relative;
+}
+
+
+
+.MainFooterEmojiIconsNav__ActiveItem {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  border-bottom: 3px solid $color-accent;
+}
+

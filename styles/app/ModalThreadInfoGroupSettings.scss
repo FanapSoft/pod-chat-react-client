@@ -1,0 +1,36 @@
+.ModalThreadInfoGroupSettings__ImageContainer {
+  cursor: pointer;
+
+}
+
+.ModalThreadInfoGroupSettings__ImageOverlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba($color-dark, .2);
+  border-radius: 50%;
+  display: none;
+}
+
+.ModalThreadInfoGroupSettings__ImageContainer:hover .ModalThreadInfoGroupSettings__ImageOverlay {
+  display: block;
+}
+
+.ModalThreadInfoGroupSettings__ImageIcon {
+  margin-top: -17px;
+}
+
+.ModalThreadInfoGroupSettings__FileInput {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}

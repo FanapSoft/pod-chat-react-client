@@ -1,0 +1,19 @@
+@mixin grid($size) {
+  @if $size == "xs" {
+    @media (min-width: 576px) {
+      @content;
+    }
+  } @else if $size == "sm" {
+    @media (min-width: 768px) {
+      @content;
+    }
+  } @else if $size == "md" {
+    @media (min-width: 992px) {
+      @content;
+    }
+  } @else if $size == "lg" {
+    @media (min-width: 1200px) {
+      @content;
+    }
+  }
+}

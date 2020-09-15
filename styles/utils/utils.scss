@@ -1,0 +1,22 @@
+.u-clearfix:after {
+  clear: both;
+  content: "";
+  display: table;
+  height: 0;
+}
+
+.u-leftTextAlign {
+  text-align: left;
+}
+
+.u-centerTextAlign {
+  text-align: center;
+}
+
+.u-clickable {
+  cursor: pointer;
+}
+
+.u-hoverColorAccent:hover {
+  color: $color-accent !important;
+}

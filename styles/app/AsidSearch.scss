@@ -1,0 +1,35 @@
+@import "scope";
+@import "../mixin/responsive";
+
+
+.AsideSearch {
+  background-color: $color-background;
+  display: none;
+}
+
+.AsideSearch__InputContainer {
+  box-shadow: none;
+  padding: 5px 0;
+  margin: 10px;
+  &:hover {
+    box-shadow: none;
+  }
+  &:focus {
+    box-shadow: none;
+  }
+}
+
+.AsideSearch__Input {
+  border-radius: 18px;
+}
+
+.AsideSearch--show {
+  display: block;
+}
+
+@include grid("md") {
+  .AsideSearch:not(.AsideSearch--smallVersion) {
+    display: block;
+  }
+
+}
