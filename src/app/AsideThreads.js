@@ -214,7 +214,7 @@ export const statics = {
     chatInstance: store.chatInstance.chatSDK,
     chatRouterLess: store.chatRouterLess,
     chatSearchResult: store.chatSearchResult,
-    chatImageHashCodeMap: store.chatImageHashCodeUpdate.hashCodeMap,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     user: store.user.user
   };
 })
@@ -352,7 +352,7 @@ class AsideThreads extends Component {
   }
 
   render() {
-    const {threads, threadsFetching, threadShowing, chatInstance, chatSearchResult, user, threadsHasNext, threadsPartialFetching, chatImageHashCodeMap} = this.props;
+    const {threads, threadsFetching, threadShowing, chatInstance, chatSearchResult, user, threadsHasNext, threadsPartialFetching, chatFileHashCodeMap} = this.props;
     const {activeThread, isMenuShow} = this.state;
     const isMobile = mobileCheck();
     const {MEDIUM} = avatarUrlGenerator.SIZES;

@@ -77,7 +77,7 @@ export function isOwner(thread, user) {
     participantsNextOffset: store.threadParticipantList.nextOffset,
     participantsFetching: store.threadParticipantList.fetching,
     participantsPartialFetching: store.threadParticipantListPartial.fetching,
-    chatImageHashCodeMap: store.chatImageHashCodeUpdate.hashCodeMap
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
   }
 }, null, null, {withRef: true})
 class ModalThreadInfoGroupMain extends Component {

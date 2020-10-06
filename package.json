@@ -74,6 +74,7 @@
     "react-string-replace": "^0.4.1",
     "redux-promise-middleware": "^5.1.1",
     "redux-thunk": "^2.3.0",
-    "sanitize-html": "^1.19.3"
+    "sanitize-html": "^1.19.3",
+    "wavesurfer.js": "^4.1.0"
   }
 }

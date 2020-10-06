@@ -3,7 +3,7 @@ import queryString from "query-string";
 import {serverConfig} from "../constants/connection";
 import {messageGetImage} from "../actions/messageActions";
 import {threadThumbnailUpdate} from "../actions/threadActions";
-import {chatGetImage, chatImageHashCodeUpdate} from "../actions/chatActions";
+import {chatGetImage, chatFileHashCodeUpdate, chatGetFile, chatCancelFileDownload} from "../actions/chatActions";
 
 export function humanFileSize(bytes, si) {
   const thresh = si ? 1000 : 1024;
@@ -140,10 +140,9 @@ export function avatarNameGenerator(firstName, lastName) {
 
 }
 
-export function getImageFromHashMap(hashCode, size, quality) {
-  const id = `${hashCode}-${size}-${quality}`;
-  const {dispatch, chatImageHashCodeMap} = this.props;
-  let result = chatImageHashCodeMap.find(e => e.id === id);
+export function getFileDownloadingFromHashMap(id) {
+  const {chatFileHashCodeMap} = this.props;
+  let result = chatFileHashCodeMap.find(e => e.id === id);
   if (result) {
     const {result: status} = result;
     if (status.indexOf("blob") > -1) {
@@ -154,10 +153,50 @@ export function getImageFromHashMap(hashCode, size, quality) {
       }
     }
   }
+  return false;
+}
 
-  dispatch(chatImageHashCodeUpdate({id, result: "LOADING"}));
-  return dispatch(chatGetImage(hashCode, size, quality)).then(result => {
-    dispatch(chatImageHashCodeUpdate({id, result: URL.createObjectURL(result)}));
+
+export function cancelFileDownloadingFromHashMap(id) {
+  const {dispatch, chatFileHashCodeMap} = this.props;
+  let result = chatFileHashCodeMap.find(e => e.id === id);
+  if (result) {
+    const {result: status, cancelId} = result;
+    if (status === "LOADING") {
+      dispatch(chatCancelFileDownload(cancelId));
+      dispatch(chatFileHashCodeUpdate(id, true));
+      return true;
+    }
+  }
+  return false;
+}
+
+
+export function getImageFromHashMap(hashCode, size, quality) {
+  const id = `${hashCode}-${size}-${quality}`;
+  const {dispatch} = this.props;
+  const downloadingResult = getFileDownloadingFromHashMap.call(this, id);
+  if (downloadingResult) {
+    return downloadingResult;
+  }
+  dispatch(chatFileHashCodeUpdate({id, result: "LOADING"}));
+  dispatch(chatGetImage(hashCode, size, quality)).then(result => {
+    dispatch(chatFileHashCodeUpdate({id, result: URL.createObjectURL(result)}));
+  });
+  return id;
+}
+
+export function getFileFromHashMap(hashCode, metadata) {
+  const id = hashCode;
+  const {dispatch} = this.props;
+  const downloadingResult = getFileDownloadingFromHashMap.call(this, id);
+  if (downloadingResult) {
+    return downloadingResult;
+  }
+  return dispatch(chatGetFile(hashCode, result => {
+    dispatch(chatFileHashCodeUpdate({id, result: URL.createObjectURL(result), metadata}));
+  })).then(downloadingUniqueId => {
+    dispatch(chatFileHashCodeUpdate({id, result: "LOADING", cancelId: downloadingUniqueId, metadata}));
   });
 }
 

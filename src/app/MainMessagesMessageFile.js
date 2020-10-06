@@ -3,9 +3,17 @@ import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import "moment/locale/fa";
-import {getImageFromHashMap, humanFileSize, mobileCheck} from "../utils/helpers";
+import {
+  cancelFileDownloadingFromHashMap,
+  getFileDownloadingFromHashMap,
+  getFileFromHashMap,
+  getImageFromHashMap,
+  humanFileSize,
+  mobileCheck
+} from "../utils/helpers";
 import {urlify, mentionify, emailify} from "./MainMessagesMessage";
 import classnames from "classnames";
+import WaveSurfer from 'wavesurfer.js';
 
 //strings
 
@@ -35,6 +43,7 @@ import {
 import {
   MdArrowDownward,
   MdPlayArrow,
+  MdPause,
   MdClose
 } from "react-icons/md";
 import style from "../../styles/app/MainMessagesFile.scss";
@@ -44,7 +53,8 @@ import strings from "../constants/localization";
 import {decodeEmoji} from "./_component/EmojiIcons.js";
 import {typesCode} from "../constants/messageTypes";
 import oneoneImage from "../../styles/images/_common/oneone.png";
-import {chatGetImage} from "../actions/chatActions";
+import {chatAudioPlayer, chatGetImage} from "../actions/chatActions";
+import {clearHtml} from "./_component/Input";
 
 export function isImage({messageType}) {
   if (messageType) {
@@ -55,6 +65,12 @@ export function isImage({messageType}) {
 export function isVideo({messageType}) {
   if (messageType) {
     return messageType === typesCode.POD_SPACE_VIDEO;
+  }
+}
+
+export function isSound({messageType}) {
+  if (messageType) {
+    return messageType === typesCode.POD_SPACE_SOUND;
   }
 }
 
@@ -92,38 +108,45 @@ function hasError(message) {
   }
 }
 
+
 @connect(store => {
   return {
     smallVersion: store.chatSmallVersion,
-    leftAsideShowing: store.threadLeftAsideShowing.isShowing
+    leftAsideShowing: store.threadLeftAsideShowing.isShowing,
+    chatAudioPlayer: store.chatAudioPlayer,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
   };
 })
 class MainMessagesMessageFile extends Component {
 
   constructor(props) {
     super(props);
-    const {leftAsideShowing, smallVersion, message} = props;
+    const {leftAsideShowing, smallVersion, message, chatAudioPlayer} = props;
     const metaData = typeof message.metadata === "string" ? JSON.parse(message.metadata) : message.metadata;
+    const imageIsSuitableSize = isImage(message) && getImage(metaData, message.id, smallVersion || leftAsideShowing);
+    const isImageReal = isImage(message);
     this.state = {
-      isImage: isImage(message),
+      isImage: isImageReal,
       isVideo: isVideo(message),
-      IsFile: !isVideo(message) && !isImage(message),
+      isSound: isSound(message),
+      isFile: !isSound(message) && !isVideo(message) && !isImage(message),
       metaData,
-      imageIsSuitableSize: isImage(message) && getImage(metaData, message.id, smallVersion || leftAsideShowing),
+      imageIsSuitableSize,
       isUploading: isUploading(message),
-      downloading: false,
-      imageThumb: null,
-      imageModalPreview: null,
-      imageThumbLowQuality: null
+      imageThumb: isImage && imageIsSuitableSize && getImageFromHashMap.apply(this, [metaData.fileHash, 3]),
+      imageModalPreview: isImage && imageIsSuitableSize && getImageFromHashMap.apply(this, [metaData.fileHash, null, .5]),
+      imageThumbLowQuality: isImage && imageIsSuitableSize && getImageFromHashMap.apply(this, [metaData.fileHash, 1, 0.01])
     };
     this.onCancelDownload = this.onCancelDownload.bind(this);
     this.onImageClick = this.onImageClick.bind(this);
     this.onCancel = this.onCancel.bind(this);
     this.onRetry = this.onRetry.bind(this);
     this.videoRef = React.createRef();
+    this.soundRef = React.createRef();
+    this.soundPlayerContainer = React.createRef();
     this.downloadTriggerRef = React.createRef();
     this.playVideoRef = React.createRef();
-    this.downloadingUniqueId = null;
+    this.soundPlayer = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.player;
   }
 
   onImageClick(e) {
@@ -131,29 +154,16 @@ class MainMessagesMessageFile extends Component {
   }
 
   componentDidMount() {
-    const {dispatch} = this.props;
-    const {metaData, isImage, imageIsSuitableSize} = this.state;
-    if (isImage && imageIsSuitableSize) {
-      dispatch(chatGetImage(metaData.fileHash, 1, 0.01)).then(result =>
-        this.setState({
-          imageThumbLowQuality: URL.createObjectURL(result)
-        })
-      );
-      dispatch(chatGetImage(metaData.fileHash, 3)).then(result =>
-        this.setState({
-          imageThumb: URL.createObjectURL(result)
-        })
-      );
-      dispatch(chatGetImage(metaData.fileHash, null, .5)).then(result =>
-        this.setState({
-          imageModalPreview: URL.createObjectURL(result)
-        })
-      )
+    if (this.soundPlayer) {
+      this.soundPlayerContainer.current.appendChild(this.soundPlayer.container);
     }
   }
 
-  componentDidUpdate() {
-    const {message, dispatch} = this.props;
+  componentDidUpdate(oldProps) {
+    const {metaData, isVideo, isSound, imageIsSuitableSize, isImage} = this.state;
+    const {message, dispatch, chatFileHashCodeMap, thread} = this.props;
+    const {chatFileHashCodeMap: oldChatFileHashCodeMap} = oldProps;
+
     if (message) {
       if (message.progress) {
         if (!message.hasError) {
@@ -163,56 +173,116 @@ class MainMessagesMessageFile extends Component {
         }
       }
     }
+
+
+    //Play or download after first fetching
+    const findAndUpdate = (id, callback) => {
+      let result = getFileDownloadingFromHashMap.call(this, id);
+      let oldResult = oldChatFileHashCodeMap.find(e => e.id === id);
+      if (oldResult) {
+        if (oldResult.result === "LOADING") {
+          if (result !== true) {
+            callback(result);
+          }
+        }
+      }
+    };
+
+
+    const downloadRef = this.downloadTriggerRef.current;
+    if (!downloadRef.href) {
+      const id = metaData.file.hashCode;
+      findAndUpdate(id,  () => {
+        const result = chatFileHashCodeMap.find(e => e.id === id);
+        const videoCurrent = this.videoRef.current;
+        const soundCurrent = this.soundRef.current;
+        const playVideoRef = this.playVideoRef.current;
+        const {isPlayable} = result.metadata;
+        const fileUrl = result.result;
+        downloadRef.href = fileUrl;
+        downloadRef.download = metaData.name;
+        if (isPlayable === "IS_VIDEO" || isVideo) {
+          videoCurrent.src = fileUrl;
+          if (isPlayable === "IS_VIDEO") {
+            return playVideoRef.click();
+          }
+        }
+        if (isPlayable === "IS_SOUND" || isSound) {
+          const wavesurfer = this.soundPlayer = WaveSurfer.create({
+            container: soundCurrent,
+            waveColor: styleVar.colorAccentLight,
+            progressColor: styleVar.colorAccent,
+            cursorColor: styleVar.colorAccentDark,
+            height: 20,
+            barWidth: 2,
+            barRadius: 2,
+            cursorWidth: 2,
+            barGap: 1
+          });
+          if (isPlayable === "IS_SOUND") {
+            wavesurfer.on('ready', function () {
+              dispatch(chatAudioPlayer({message, player: wavesurfer, thread, playing: true}));
+              wavesurfer.play();
+            });
+          }
+          wavesurfer.on('finish', function () {
+            dispatch(chatAudioPlayer({message, player: wavesurfer, thread, playing: false}));
+          });
+          wavesurfer.load(fileUrl);
+          if (isPlayable === "IS_SOUND") {
+            return;
+          }
+        }
+        downloadRef.click();
+      }, oldChatFileHashCodeMap, this);
+    }
+    //*************//
+
+
+    //image thumb generation
+    if (isImage && imageIsSuitableSize) {
+      const {imageThumb, imageModalPreview, imageThumbLowQuality} = this.state;
+      findAndUpdate(imageThumb, result => this.setState({imageThumb: result}), oldChatFileHashCodeMap, this);
+      findAndUpdate(imageModalPreview, result => this.setState({imageModalPreview: result}));
+      findAndUpdate(imageThumbLowQuality, result => this.setState({imageThumbLowQuality: result}));
+    }
+    //*************//
+
   }
 
   onCancelDownload() {
-    if (this.state.downloading) {
-      this.setState({
-        downloading: false
-      });
-    }
-    if (this.downloadingUniqueId) {
-      const {dispatch} = this.props;
-      dispatch(messageCancelFileDownload(this.downloadingUniqueId));
-      this.downloadingUniqueId = null;
-    }
-  }
+    const {metaData} = this.props;
+    cancelFileDownloadingFromHashMap.call(this, metaData.file.hashCode);
+}
 
-  onDownload(metaData, isVideo, e) {
-    (e || isVideo).stopPropagation && (e || isVideo).stopPropagation();
-    const {dispatch} = this.props;
+  onDownload(metaData, isPlayable, e) {
+    (e || isPlayable).stopPropagation && (e || isPlayable).stopPropagation();
+    const {thread, message, dispatch} = this.props;
     const videoCurrent = this.videoRef.current;
     const downloadRef = this.downloadTriggerRef.current;
     const playVideoRef = this.playVideoRef.current;
-    if (isVideo === true) {
+    if (isPlayable === "IS_VIDEO") {
       if (videoCurrent.src) {
         return playVideoRef.click();
       }
     }
+    if (isPlayable === "IS_SOUND") {
+      if (this.soundPlayer) {
+        this.soundPlayer.playPause();
+        return dispatch(chatAudioPlayer({
+          message,
+          player: this.soundPlayer,
+          thread,
+          playing: this.soundPlayer.isPlaying()
+        }));
+      }
+    }
     if (downloadRef.href) {
-      if (isVideo !== true) {
+      if (isPlayable !== true) {
         return downloadRef.click();
       }
     }
-    this.setState({
-      downloading: true
-    });
-    dispatch(messageGetFile(metaData.file.hashCode, result => {
-      this.setState({
-        downloading: false
-      });
-      this.downloadingUniqueId = null;
-      const fileUrl = URL.createObjectURL(result);
-      downloadRef.href = fileUrl;
-      downloadRef.download = metaData.name;
-      if (isVideo === true) {
-        videoCurrent.src = fileUrl;
-        return playVideoRef.click();
-      }
-      downloadRef.click();
-    })).then(downloadingUniqueId => {
-      this.downloadingUniqueId = downloadingUniqueId;
-    });
+    getFileFromHashMap.apply(this, [metaData.file.hashCode, {isPlayable}]);
   }
 
   onRetry() {
@@ -249,17 +319,23 @@ class MainMessagesMessageFile extends Component {
       isChannel,
       isOwner,
       isGroup,
-      onPin
+      onPin,
+      chatAudioPlayer
     } = this.props;
     let {
-      downloading,
       imageThumb,
       imageModalPreview,
       imageThumbLowQuality,
       isImage,
       isVideo,
+      isSound,
       metaData
     } = this.state;
+    imageThumb = imageThumb && imageThumb.indexOf("blob") < 0 ? null : imageThumb;
+    imageModalPreview = imageModalPreview && imageModalPreview.indexOf("blob") < 0 ? null : imageModalPreview;
+    imageThumbLowQuality = imageThumbLowQuality && imageThumbLowQuality.indexOf("blob") < 0 ? null : imageThumbLowQuality;
+    const downloading = getFileDownloadingFromHashMap.call(this, metaData.file.hashCode) === true;
+    const isPlaying = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.playing;
     const isUploadingBool = isUploading(message);
     const isBlurry = imageThumbLowQuality && !imageThumb && !isUploadingBool;
     const gettingImageThumb = !imageThumbLowQuality && !imageThumb && isImage && !isUploadingBool;
@@ -346,7 +422,7 @@ class MainMessagesMessageFile extends Component {
                   </BoxModalMediaFragment>
                   <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e => e.stopPropagation()}>
                     <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
-                      {mentionify(emailify(urlify(decodeEmoji(message.message))))}
+                      {mentionify(emailify(urlify(decodeEmoji(clearHtml(message.message)))))}
                     </Text>
                   </Container>
 
@@ -359,22 +435,28 @@ class MainMessagesMessageFile extends Component {
                   <Text wordWrap="breakWord" bold>
                     {metaData.name}
                   </Text>
+                  {
+                    isSound &&
+                    <div style={{minWidth: "100px"}} ref={this.soundPlayerContainer}>
+                      <div id="tester" ref={this.soundRef}/>
+                    </div>
+                  }
                   <Text size="xs" color="gray" dark={isMessageByMe}>
                     {humanFileSize(metaData.file.size, true)}
                   </Text>
 
                 </Container>
               }
-              <Container className={style.MainMessagesFile__FileControlIcon}
-                         style={isImage ? {
-                           maxWidth: `${imageSizeLink.width}px`,
-                           height: `${imageSizeLink.height}px`
-                         } : null}>
-                {(isDownloadable(message) && !isImage) || downloading || isUploadingBool || hasError(message) ?
+              {(isDownloadable(message) && !isImage) || downloading || isUploadingBool || hasError(message) ?
+                <Container className={style.MainMessagesFile__FileControlIcon}
+                           style={isImage ? {
+                             maxWidth: `${imageSizeLink.width}px`,
+                             height: `${imageSizeLink.height}px`
+                           } : null}>
 
                   <Container center={isImage}>
                     <Shape color="accent" size="lg"
-                           onClick={isDownloadable(message) ? downloading ? this.onCancelDownload : this.onDownload.bind(this, metaData, !!isVideo) : this.onCancel.bind(this, message)}>
+                           onClick={isDownloadable(message) ? downloading ? this.onCancelDownload : this.onDownload.bind(this, metaData, isVideo ? "IS_VIDEO" : isSound ? "IS_SOUND" : null) : this.onCancel.bind(this, message)}>
                       <ShapeCircle>
                         {isUploadingBool || hasError(message) ?
                           <MdClose style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/>
@@ -382,16 +464,22 @@ class MainMessagesMessageFile extends Component {
                             downloading ?
                               <MdClose style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/>
                               :
-                              isVideo ?
-                                <MdPlayArrow style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/>
+                              isVideo || isSound ?
+                                isSound ?
+                                  isPlaying ?
+                                    <MdPause style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/>
+                                    :
+                                    <MdPlayArrow style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/>
+                                  :
+                                  <MdPlayArrow style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/>
                                 :
                                 <MdArrowDownward style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/> : ""
                         }
                       </ShapeCircle>
                     </Shape>
                   </Container>
-                  : ""}
-              </Container>
+                </Container>
+                : ""}
             </Container>
 
             {!isImage &&
