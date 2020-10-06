@@ -59,6 +59,13 @@ import {decodeEmoji} from "./_component/EmojiIcons.js";
 import ReactDOMServer from "react-dom/server";
 import {THREAD_ADMIN} from "../constants/privilege";
 import MainMessagesMessageShare from "./MainMessagesMessageShare";
+import MainMessagesMessageFileFallback from "./MainMessagesMessageFileFallback";
+
+function isNewFile({metadata}) {
+  let metaData = metadata;
+  metaData = typeof metaData === "string" ? JSON.parse(metaData).file : metaData.file;
+  return metaData.fileHash;
+}
 
 function datePetrification(time) {
   const correctTime = time / Math.pow(10, 6);
@@ -668,7 +675,10 @@ export default class MainMessagesMessage extends Component {
 
         <ContextTrigger id={message.id || Math.random()} holdToDisplay={-1} contextTriggerRef={this.contextTriggerRef}>
           {isFile(message) ?
-            <MainMessagesMessageFile {...args}/>
+            isNewFile(message) ?
+              <MainMessagesMessageFile {...args}/>
+              :
+              <MainMessagesMessageFileFallback {...args}/>
             :
             <MainMessagesMessageText {...args}/>
           }
