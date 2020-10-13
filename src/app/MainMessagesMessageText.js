@@ -30,6 +30,7 @@ import style from "../../styles/app/MainMessagesText.scss";
 import {decodeEmoji} from "./_component/EmojiIcons.js";
 import strings from "../constants/localization";
 import styleVar from "../../styles/variables.scss";
+import {clearHtml} from "./_component/Input";
 
 @connect()
 export default class MainMessagesMessageText extends Component {
@@ -122,7 +123,7 @@ export default class MainMessagesMessageText extends Component {
           </ControlFragment>
           <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e=>e.stopPropagation()}>
             <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
-              {mentionify(emailify(urlify(decodeEmoji(message.message)), this.onUserNameClick))}
+              {mentionify(emailify(urlify(decodeEmoji(clearHtml(message.message))), this.onUserNameClick))}
             </Text>
           </Container>
           <PaperFooterFragment message={message}
