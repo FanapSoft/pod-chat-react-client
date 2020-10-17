@@ -129,13 +129,13 @@ class MainMessagesMessageFile extends Component {
       isImage: isImageReal,
       isVideo: isVideo(message),
       isSound: isSound(message),
-      isFile: !isSound(message) && !isVideo(message) && !isImage(message),
+      isFile: !isSound(message) && !isVideo(message) && !isImageReal,
       metaData,
       imageIsSuitableSize,
       isUploading: isUploading(message),
-      imageThumb: isImage && imageIsSuitableSize && getImageFromHashMap.apply(this, [metaData.fileHash, 3]),
-      imageModalPreview: isImage && imageIsSuitableSize && getImageFromHashMap.apply(this, [metaData.fileHash, null, .5]),
-      imageThumbLowQuality: isImage && imageIsSuitableSize && getImageFromHashMap.apply(this, [metaData.fileHash, 1, 0.01])
+      imageThumb: isImageReal && imageIsSuitableSize && getImageFromHashMap.apply(this, [metaData.fileHash, 3]),
+      imageModalPreview: isImageReal && imageIsSuitableSize && getImageFromHashMap.apply(this, [metaData.fileHash, null, .5]),
+      imageThumbLowQuality: isImageReal && imageIsSuitableSize && getImageFromHashMap.apply(this, [metaData.fileHash, 1, 0.01])
     };
     this.onCancelDownload = this.onCancelDownload.bind(this);
     this.onImageClick = this.onImageClick.bind(this);
@@ -147,7 +147,8 @@ class MainMessagesMessageFile extends Component {
     this.downloadTriggerRef = React.createRef();
     this.playVideoRef = React.createRef();
     this.soundPlayer = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.player;
-    this.onDownloadClicked = isImage && imageIsSuitableSize;
+    this.onDownloadClicked = isImageReal && imageIsSuitableSize;
+    this.isPlayable = null;
   }
 
   onImageClick(e) {
@@ -155,14 +156,24 @@ class MainMessagesMessageFile extends Component {
   }
 
   componentDidMount() {
+    const {metaData} = this.state;
+    const fileResult = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]);
+    const result = typeof fileResult === "string" && fileResult.indexOf("blob") > -1 ? fileResult : null;
     if (this.soundPlayer) {
       this.soundPlayerContainer.current.appendChild(this.soundPlayer.container);
     }
+    if (result) {
+      const downloadRef = this.downloadTriggerRef.current;
+      if (!downloadRef.href) {
+        return this.buildDownloadAndPlayComponent(true, result, this.soundPlayer);
+      }
+    }
+
   }
 
   componentDidUpdate(oldProps) {
-    const {metaData, isVideo, isSound, imageIsSuitableSize, isImage} = this.state;
-    const {message, dispatch, chatFileHashCodeMap, thread} = this.props;
+    const {metaData, imageIsSuitableSize, isImage} = this.state;
+    const {message, dispatch} = this.props;
     const {chatFileHashCodeMap: oldChatFileHashCodeMap} = oldProps;
 
     if (message) {
@@ -174,7 +185,6 @@ class MainMessagesMessageFile extends Component {
         }
       }
     }
-
 
     //Play or download after first fetching
     const findAndUpdate = (id, callback) => {
@@ -190,53 +200,10 @@ class MainMessagesMessageFile extends Component {
       }
     };
 
-
     const downloadRef = this.downloadTriggerRef.current;
     if (!downloadRef.href) {
       const id = metaData.file.hashCode;
-      findAndUpdate(id, () => {
-        const result = chatFileHashCodeMap.find(e => e.id === id);
-        const videoCurrent = this.videoRef.current;
-        const soundCurrent = this.soundRef.current;
-        const playVideoRef = this.playVideoRef.current;
-        const {isPlayable} = result.metadata;
-        const fileUrl = result.result;
-        downloadRef.href = fileUrl;
-        downloadRef.download = metaData.name;
-        if (isPlayable === "IS_VIDEO" || isVideo) {
-          videoCurrent.src = fileUrl;
-          if (isPlayable === "IS_VIDEO") {
-            return playVideoRef.click();
-          }
-        }
-        if (isPlayable === "IS_SOUND" || isSound) {
-          const wavesurfer = this.soundPlayer = WaveSurfer.create({
-            container: soundCurrent,
-            waveColor: styleVar.colorAccentLight,
-            progressColor: styleVar.colorAccent,
-            cursorColor: styleVar.colorAccentDark,
-            height: 20,
-            barWidth: 2,
-            barRadius: 2,
-            cursorWidth: 2,
-            barGap: 1
-          });
-          if (isPlayable === "IS_SOUND") {
-            wavesurfer.on('ready', function () {
-              dispatch(chatAudioPlayer({message, player: wavesurfer, thread, playing: true}));
-              wavesurfer.play();
-            });
-          }
-          wavesurfer.on('finish', function () {
-            dispatch(chatAudioPlayer({message, player: wavesurfer, thread, playing: false}));
-          });
-          wavesurfer.load(fileUrl);
-          if (isPlayable === "IS_SOUND") {
-            return;
-          }
-        }
-        downloadRef.click();
-      }, oldChatFileHashCodeMap, this);
+      findAndUpdate(id, this.buildDownloadAndPlayComponent.bind(this, false), oldChatFileHashCodeMap, this);
     }
     //*************//
 
@@ -250,6 +217,60 @@ class MainMessagesMessageFile extends Component {
     }
     //*************//
 
+  }
+
+  buildDownloadAndPlayComponent(isJustBuild, result, soundPlayerBuildBefore) {
+    const downloadRef = this.downloadTriggerRef.current;
+    if (!downloadRef.href) {
+      const {message, dispatch, thread} = this.props;
+      const {metaData, isVideo, isSound} = this.state;
+      const isPlayable = this.isPlayable;
+      const videoCurrent = this.videoRef.current;
+      const soundCurrent = this.soundRef.current;
+      const playVideoRef = this.playVideoRef.current;
+      this.isPlayable = null;
+      downloadRef.href = result;
+      downloadRef.download = metaData.name;
+      if (isPlayable === "IS_VIDEO" || isVideo) {
+        videoCurrent.src = result;
+        if (!isJustBuild && isPlayable === "IS_VIDEO") {
+          return playVideoRef.click();
+        }
+      }
+      if (!soundPlayerBuildBefore) {
+        if (isPlayable === "IS_SOUND" || isSound) {
+          const wavesurfer = this.soundPlayer = WaveSurfer.create({
+            container: soundCurrent,
+            waveColor: styleVar.colorAccentLight,
+            progressColor: styleVar.colorAccent,
+            cursorColor: styleVar.colorAccentDark,
+            height: 20,
+            barWidth: 2,
+            barRadius: 2,
+            cursorWidth: 2,
+            barGap: 1
+          });
+          if (!isJustBuild && isPlayable === "IS_SOUND") {
+            wavesurfer.on('ready', function () {
+              dispatch(chatAudioPlayer({message, player: wavesurfer, thread, playing: true}));
+              wavesurfer.play();
+            });
+          }
+          wavesurfer.on('finish', function () {
+            dispatch(chatAudioPlayer({message, player: wavesurfer, thread, playing: false}));
+          });
+          wavesurfer.load(result);
+          if (isPlayable === "IS_SOUND") {
+            return;
+          }
+        }
+      }
+
+      if (!isJustBuild) {
+        downloadRef.click();
+      }
+
+    }
   }
 
   onCancelDownload() {
@@ -285,7 +306,8 @@ class MainMessagesMessageFile extends Component {
       }
     }
     this.onDownloadClicked = true;
-    getFileFromHashMap.apply(this, [metaData.file.hashCode, {isPlayable}]);
+    this.isPlayable = isPlayable;
+    getFileFromHashMap.apply(this, [metaData.file.hashCode]);
   }
 
   onRetry() {
