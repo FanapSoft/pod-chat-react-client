@@ -29,10 +29,14 @@ import {
 } from "react-icons/md";
 import {BoxModalMediaFragment} from "./index";
 import ReactDOMServer from "react-dom/server";
-import {avatarUrlGenerator, humanFileSize} from "../utils/helpers";
-import {getImage} from "./MainMessagesMessageFile";
+import {getFileDownloadingFromHashMap, getFileFromHashMap, getImageFromHashMap, humanFileSize} from "../utils/helpers";
+import {getImage, isImage} from "./MainMessagesMessageFile";
 
-@connect()
+@connect(store => {
+  return {
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+  };
+})
 export default class ModalThreadInfoMessageTypes extends Component {
 
   constructor(props) {
@@ -129,15 +133,44 @@ export default class ModalThreadInfoMessageTypes extends Component {
   buildComponent(type, message) {
     const {dispatch} = this.props;
     const idMessage = `${message.id}-message-types-${type}`;
+    const idMessageTrigger = `${idMessage}-trigger`;
+    const metaData = typeof message.metadata === "string" ? JSON.parse(message.metadata).file : message.metadata.file;
+    const {originalName, size} = metaData;
     const gotoMessage = () => {
       dispatch(threadModalThreadInfoShowing());
       window.modalMediaRef.close();
       dispatch(threadGoToMessageId(message.time));
     };
-    let metaData = message.metadata;
-    metaData = typeof metaData === "string" ? JSON.parse(metaData).file : metaData.file;
-    const {link, originalName, size} = metaData;
+    const setOrGetAttributeFromLinkTrigger = value => {
+      const elem = document.getElementById(idMessageTrigger);
+      if (value === true) {
+        if (elem) {
+          return elem;
+        }
+        return {
+          click: e => {
+          }
+        };
+      }
+      if (elem) {
+        if (value) {
+          return elem.setAttribute("play", value);
+        }
+        return elem.getAttribute("play");
+      }
+    };
+    const onPlayClick = result => {
+      if (result) {
+        return document.getElementById(idMessageTrigger).click();
+      }
+      setOrGetAttributeFromLinkTrigger("true");
+      getFileFromHashMap.apply(this, [metaData.fileHash])
+    };
+
     if (type === "picture") {
+      const thumb = getImageFromHashMap.apply(this, [metaData.fileHash, 3]);
+      const blurryThumb = getImageFromHashMap.apply(this, [metaData.fileHash, 1, 0.01]);
+      const isBlurry = blurryThumb && (!thumb || thumb === true);
       const onFancyBoxClick = e => {
         //window.modalMediaRef.getFancyBox().open()
         setTimeout(e => {
@@ -149,15 +182,28 @@ export default class ModalThreadInfoMessageTypes extends Component {
                    onClick={onFancyBoxClick}>
           <BoxModalMediaFragment
             options={{buttons: ["goto", "slideShow", "close"], caption: message.message}}
-            link={link}>
+            link={thumb}>
             <Image className={style.ModalThreadInfoMessageTypes__Image}
                    setOnBackground
-                   src={getImage(metaData, true, true).imageLink}/>
+                   style={{
+                     filter: isBlurry ? "blur(8px)" : "none"
+                   }}
+                   src={isBlurry ? blurryThumb : thumb}/>
           </BoxModalMediaFragment>
 
         </Container>
       )
     } else if (type === "file" || type === "sound" || type === "video") {
+      const fileResult = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]);
+      const result = typeof fileResult === "string" && fileResult.indexOf("blob") > -1 ? fileResult : null;
+      const isDownloading = fileResult === true;
+      const isPlaying = result && setOrGetAttributeFromLinkTrigger() === "true";
+      if (isPlaying) {
+        setTimeout(e => {
+          setOrGetAttributeFromLinkTrigger(true).click();
+          setOrGetAttributeFromLinkTrigger("false");
+        }, 300);
+      }
       return (
         <Container className={style.ModalThreadInfoMessageTypes__FileContainer} onClick={gotoMessage} key={idMessage}>
           <Container maxWidth="calc(100% - 30px)">
@@ -171,21 +217,27 @@ export default class ModalThreadInfoMessageTypes extends Component {
             <Text size="xs" color="gray">{humanFileSize(size, true)}</Text>
           </Container>
           <Container centerLeft onClick={e => e.stopPropagation()}>
+            {type === "file" ?
+              <Text id={idMessageTrigger} link={`#${idMessage}`} download={originalName} href={result} linkClearStyle/>
+              :
+              <Text id={idMessageTrigger} link={`#${idMessage}`} linkClearStyle data-fancybox/>
+            }
             {type === "video" ?
               <video controls id={idMessage} style={{display: "none"}}
-                     src={link}/> :
+                     src={result}/> :
               type === "sound" ? <audio controls id={idMessage} style={{display: "none"}}
-                                        src={link}/> : ""
+                                        src={result}/> : ""
             }
-            {type === "file" ?
-              <Text link={`${link}&downloadable=true`} target="_blank" linkClearStyle>
-                <MdArrowDownward style={{cursor: "pointer"}} color={styleVar.colorAccent} size={styleVar.iconSizeSm}/>
-              </Text>
-              :
-              <Text link={`#${idMessage}`} linkClearStyle data-fancybox>
-                <MdPlayArrow style={{cursor: "pointer"}} color={styleVar.colorAccent} size={styleVar.iconSizeSm}/>
-              </Text>
-
+            {
+              isDownloading ?
+                <Loading><LoadingBlinkDots size="sm"/></Loading>
+                :
+                type === "file" ?
+                  <MdArrowDownward style={{cursor: "pointer"}} color={styleVar.colorAccent} size={styleVar.iconSizeSm}
+                                   onClick={onPlayClick.bind(this, result)}/>
+                  :
+                  <MdPlayArrow style={{cursor: "pointer"}} color={styleVar.colorAccent} size={styleVar.iconSizeSm}
+                               onClick={onPlayClick.bind(this, result)}/>
             }
           </Container>
         </Container>

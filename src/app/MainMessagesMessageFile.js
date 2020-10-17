@@ -147,6 +147,7 @@ class MainMessagesMessageFile extends Component {
     this.downloadTriggerRef = React.createRef();
     this.playVideoRef = React.createRef();
     this.soundPlayer = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.player;
+    this.onDownloadClicked = isImage && imageIsSuitableSize;
   }
 
   onImageClick(e) {
@@ -181,7 +182,8 @@ class MainMessagesMessageFile extends Component {
       let oldResult = oldChatFileHashCodeMap.find(e => e.id === id);
       if (oldResult) {
         if (oldResult.result === "LOADING") {
-          if (result !== true) {
+          if (result !== true && this.onDownloadClicked) {
+            this.onDownloadClicked = false;
             callback(result);
           }
         }
@@ -192,7 +194,7 @@ class MainMessagesMessageFile extends Component {
     const downloadRef = this.downloadTriggerRef.current;
     if (!downloadRef.href) {
       const id = metaData.file.hashCode;
-      findAndUpdate(id,  () => {
+      findAndUpdate(id, () => {
         const result = chatFileHashCodeMap.find(e => e.id === id);
         const videoCurrent = this.videoRef.current;
         const soundCurrent = this.soundRef.current;
@@ -253,7 +255,7 @@ class MainMessagesMessageFile extends Component {
   onCancelDownload() {
     const {metaData} = this.props;
     cancelFileDownloadingFromHashMap.call(this, metaData.file.hashCode);
-}
+  }
 
   onDownload(metaData, isPlayable, e) {
     (e || isPlayable).stopPropagation && (e || isPlayable).stopPropagation();
@@ -282,6 +284,7 @@ class MainMessagesMessageFile extends Component {
         return downloadRef.click();
       }
     }
+    this.onDownloadClicked = true;
     getFileFromHashMap.apply(this, [metaData.file.hashCode, {isPlayable}]);
   }
 
@@ -334,7 +337,7 @@ class MainMessagesMessageFile extends Component {
     imageThumb = imageThumb && imageThumb.indexOf("blob") < 0 ? null : imageThumb;
     imageModalPreview = imageModalPreview && imageModalPreview.indexOf("blob") < 0 ? null : imageModalPreview;
     imageThumbLowQuality = imageThumbLowQuality && imageThumbLowQuality.indexOf("blob") < 0 ? null : imageThumbLowQuality;
-    const downloading = getFileDownloadingFromHashMap.call(this, metaData.file.hashCode) === true;
+    const downloading = this.onDownloadClicked && getFileDownloadingFromHashMap.call(this, metaData.file.hashCode) === true;
     const isPlaying = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.playing;
     const isUploadingBool = isUploading(message);
     const isBlurry = imageThumbLowQuality && !imageThumb && !isUploadingBool;
