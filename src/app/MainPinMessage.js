@@ -2,7 +2,6 @@ import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
 import classnames from "classnames";
 import checkForPrivilege from "../utils/privilege";
-import {typesCode} from "../constants/messageTypes";
 
 //actions
 import {threadMessageUnpin} from "../actions/threadActions";
@@ -27,7 +26,7 @@ import {messageInfo} from "../actions/messageActions";
 import {getMessageEditingText} from "./MainFooterInputEditing";
 import strings from "../constants/localization";
 import {THREAD_ADMIN} from "../constants/privilege";
-import ImageFetcher from "./_component/ImageFetcher";
+
 
 
 @connect(store => {
@@ -69,14 +68,12 @@ export default class MainPinMessage extends Component {
     this.setState({
       loading: true
     });
-    dispatch(messageInfo(thread.id, messageVo.messageId)).then(message => {
-      this.setState({message, loading: false})
-    });
+    dispatch(messageInfo(thread.id, messageVo.messageId)).then(message => {this.setState({message, loading: false})});
   }
 
   onMessageClick() {
     const {message} = this.state;
-    if (!message) {
+    if(!message) {
       return;
     }
     const {mainMessageRef} = this.props;
@@ -93,12 +90,10 @@ export default class MainPinMessage extends Component {
   }
 
   render() {
-    const {thread} = this.props;
+    const {user, thread} = this.props;
     const {message, loading} = this.state;
     const messageDeleted = !message;
     const messageDetails = message ? getMessageEditingText(message) : {};
-    const isImage = message && message.messageType === typesCode.POD_SPACE_PICTURE;
-    const file = message && JSON.parse(message.metadata).file;
     const messageDetailsClassNames = classnames({
       [style.MainPinMessage__MessageDetails]: true,
       [style["MainPinMessage__MessageDetails--loading"]]: loading
@@ -116,19 +111,10 @@ export default class MainPinMessage extends Component {
               <Loading hasSpace><LoadingBlinkDots size="sm"/></Loading>
               :
               <Fragment>
-                {isImage || messageDetails.image &&
+                {messageDetails.image &&
                 <Container className={style.MainPinMessage__ImageContainer} inline>
-                  {
-                    isImage ?
-                      <ImageFetcher className={style.MainPinMessage__Image}
-                                    hashCode={file.hashCode}
-                                    size={1}
-                                    setOnBackground/>
-                      :
-                      <Container className={style.MainPinMessage__Image}
-                                 style={{backgroundImage: `url(${messageDetails.image})`}}/>
-                  }
-
+                  <Container className={style.MainPinMessage__Image}
+                             style={{backgroundImage: `url(${messageDetails.image})`}}/>
                 </Container>
                 }
                 {
@@ -144,8 +130,7 @@ export default class MainPinMessage extends Component {
 
         </Container>
       </Container>
-      {checkForPrivilege(thread, THREAD_ADMIN) &&
-      <Container className={style.MainPinMessage__CloseIcon} onClick={this.onUnpinClick}>
+      {checkForPrivilege(thread, THREAD_ADMIN) && <Container className={style.MainPinMessage__CloseIcon} onClick={this.onUnpinClick}>
         <MdClose size={styleVar.iconSizeMd} color={styleVar.colorTextLight}/>
       </Container>}
 
