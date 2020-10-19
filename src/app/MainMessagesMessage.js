@@ -52,7 +52,7 @@ import {
 import style from "../../styles/app/MainMessagesMessage.scss";
 import styleVar from "../../styles/variables.scss";
 import {THREAD_LEFT_ASIDE_SEEN_LIST} from "../constants/actionTypes";
-import {avatarNameGenerator, mobileCheck} from "../utils/helpers";
+import {avatarNameGenerator, getImageFromHashMap, mobileCheck} from "../utils/helpers";
 import {messageEditing} from "../actions/messageActions";
 import {chatModalPrompt} from "../actions/chatActions";
 import {decodeEmoji} from "./_component/EmojiIcons.js";
@@ -60,6 +60,7 @@ import ReactDOMServer from "react-dom/server";
 import {THREAD_ADMIN} from "../constants/privilege";
 import MainMessagesMessageShare from "./MainMessagesMessageShare";
 import MainMessagesMessageFileFallback from "./MainMessagesMessageFileFallback";
+import ImageFetcher from "./_component/ImageFetcher";
 
 function isNewFile({metadata}) {
   let metaData = metadata;
@@ -136,7 +137,7 @@ export function ForwardFragment(message, isMessageByMe) {
     }
     const name = !participant ? forwardInfo.conversation.title : participant && (participant.contactName || participant.name);
     return (
-      <Container>
+      <Container onDoubleClick={e => e.stopPropagation()}>
         <Paper colorBackground style={inlineStyle}>
           <Text italic size="xs">{strings.forwardFrom}</Text>
           <Text bold>{name}:</Text>
@@ -157,7 +158,7 @@ export function PersonNameFragment(message, isFirstMessage, isMessageByMe) {
           style={{color: color}}>{isMessageByMe ? messageParticipant.name : messageParticipant.contactName || messageParticipant.name}</Text>
 }
 
-export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth) {
+export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth, scope) {
   if (message.replyInfo) {
     const replyInfo = message.replyInfo;
     let meta = "";
@@ -171,7 +172,7 @@ export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth)
     if (file) {
       isImage = file.mimeType.indexOf("image") > -1;
       isVideo = file.mimeType.indexOf("video") > -1;
-      if (isImage) {
+      if (isImage && !file.fileHash) {
         let width = file.width;
         let height = file.height;
         const ratio = height / width;
@@ -191,6 +192,7 @@ export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth)
       <Container
         maxWidth={maxWidth}
         cursor={replyInfo.deleted ? "default" : "pointer"}
+        onDoubleClick={e => e.stopPropagation()}
         onClick={gotoMessageFunc.bind(null, replyInfo.repliedToMessageTime, replyInfo.deleted)}>
         <Paper colorBackground
                style={inlineStyle}>
@@ -222,8 +224,16 @@ export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth)
                       <Text italic size="xs" isHTML>{text}</Text>}
 
               {isImage &&
-              <Container className={style.MainMessagesMessage__ReplyFragmentImage}
-                         style={{backgroundImage: imageLinkString}}/>
+              file.fileHash ?
+                <ImageFetcher className={style.MainMessagesMessage__ReplyFragmentImage}
+                              hashCode={file.hashCode}
+                              size={1}
+                              setOnBackground/>
+                :
+                isImage ?
+                  <Container className={style.MainMessagesMessage__ReplyFragmentImage}
+                             style={{backgroundImage: imageLinkString}}/> :
+                  null
               }
 
             </Container>
@@ -304,7 +314,8 @@ export function HighLighterFragment({message, highLightMessage}) {
   );
 }
 
-export function PaperFragment({message, onRepliedMessageClicked, isFirstMessage, isMessageByMe, isGroup, maxReplyFragmentWidth, children}) {
+export function PaperFragment({scope, message, onRepliedMessageClicked, isFirstMessage, isMessageByMe, isGroup, maxReplyFragmentWidth, children}) {
+
   const style = {
     borderRadius: "5px"
   };
@@ -314,7 +325,7 @@ export function PaperFragment({message, onRepliedMessageClicked, isFirstMessage,
   return (
     <Paper style={style} hasShadow colorBackgroundLight={!isMessageByMe} relative>
       {isGroup && PersonNameFragment(message, isFirstMessage, isMessageByMe)}
-      {ReplyFragment(isMessageByMe, message, onRepliedMessageClicked, maxReplyFragmentWidth)}
+      {ReplyFragment(isMessageByMe, message, onRepliedMessageClicked, maxReplyFragmentWidth, scope)}
       {ForwardFragment(message, isMessageByMe)}
       {children}
     </Paper>
@@ -466,7 +477,8 @@ export function deleteForAllCondition(message, user, thread) {
   return {
     participants: store.threadParticipantList.participants,
     participantsFetching: store.threadParticipantList.fetching,
-    threadLeftAsideShowing: store.threadLeftAsideShowing
+    threadLeftAsideShowing: store.threadLeftAsideShowing,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
   };
 })
 export default class MainMessagesMessage extends Component {
@@ -620,7 +632,8 @@ export default class MainMessagesMessage extends Component {
       participantsFetching,
       participants,
       threadLeftAsideShowing,
-      lastSeenMessageTime
+      lastSeenMessageTime,
+      chatFileHashCodeMap
     } = this.props;
     const {messageControlShow, messageTriggerShow} = this.state;
     const isGroup = thread.group && thread.type !== 8;
@@ -645,6 +658,7 @@ export default class MainMessagesMessage extends Component {
       isMessageByMe: isMessageByMeReal,
       isParticipantBlocked: showBlock({user, thread, participantsFetching, participants}),
       isOwner: checkForPrivilege(thread, THREAD_ADMIN),
+      chatFileHashCodeMap: chatFileHashCodeMap,
       user,
       thread,
       message,
