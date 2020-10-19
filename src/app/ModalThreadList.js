@@ -42,7 +42,7 @@ const constants = {
     threadsHasNext: store.threads.hasNext,
     isShow: store.threadModalListShowing.isShowing,
     message: store.threadModalListShowing.message,
-    chatImageHashCodeMap: store.chatImageHashCodeUpdate.hashCodeMap,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     user: store.user.user
   };
 }, null, null, {withRef: true})

@@ -39,7 +39,7 @@ const statics = {
 
 @connect(store => {
   return {
-    chatImageHashCodeMap: store.chatImageHashCodeUpdate.hashCodeMap
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
   };
 }, null, null, {withRef: true})
 export default class ModalThreadInfoGroupSettings extends Component {

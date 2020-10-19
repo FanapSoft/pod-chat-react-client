@@ -10,9 +10,10 @@ import {
   CHAT_NOTIFICATION_CLICK_HOOK,
   CHAT_RETRY_HOOK,
   CHAT_SIGN_OUT_HOOK,
-  CHAT_IMAGE_HASH_CODE_UPDATE
+  CHAT_FILE_HASH_CODE_UPDATE, CHAT_AUDIO_PLAYER, CHAT_FILE_HASH_CODE_REMOVE
 } from "../constants/actionTypes";
 import {listUpdateStrategyMethods, stateGenerator, stateGeneratorState, updateStore} from "../utils/storeHelper";
+
 const {SUCCESS} = stateGeneratorState;
 
 export const chatInstanceReducer = (state = {
@@ -33,19 +34,26 @@ export const chatInstanceReducer = (state = {
   }
 };
 
-export const chatImageHashCodeUpdateReducer = (state = {
+export const chatFileHashCodeUpdateReducer = (state = {
   hashCodeMap: [],
   fetching: false,
   fetched: false,
   error: false
 }, action) => {
   switch (action.type) {
-    case CHAT_IMAGE_HASH_CODE_UPDATE:
+    case CHAT_FILE_HASH_CODE_UPDATE:
       return {
         ...state, ...stateGenerator(SUCCESS, updateStore(state.hashCodeMap, action.payload, {
           method: listUpdateStrategyMethods.UPDATE,
           upsert: true,
           by: "id"
+        }), "hashCodeMap")
+      };
+    case CHAT_FILE_HASH_CODE_REMOVE:
+      return {
+        ...state, ...stateGenerator(SUCCESS, updateStore(state.hashCodeMap, action.payload, {
+          by: "id",
+          method: listUpdateStrategyMethods.REMOVE
         }), "hashCodeMap")
       };
     default:
@@ -149,6 +157,15 @@ export const chatModalPromptReducer = (state = {
 }, action) => {
   switch (action.type) {
     case CHAT_MODAL_PROMPT_SHOWING:
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
+export const chatAudioPlayerReducer = (state = null, action) => {
+  switch (action.type) {
+    case CHAT_AUDIO_PLAYER:
       return action.payload;
     default:
       return state;

@@ -39,7 +39,7 @@ export function TypingFragment({isGroup, typing, textProps}) {
     smallVersion: store.chatSmallVersion,
     chatState: store.chatState,
     chatRouterLess: store.chatRouterLess,
-    chatImageHashCodeMap: store.chatImageHashCodeUpdate.hashCodeMap,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     thread: store.thread.thread,
     threadShowing: store.threadShowing,
     participants: store.threadParticipantList.participants,

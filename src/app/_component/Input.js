@@ -21,7 +21,7 @@ export const constants = {
 
 export function sanitizeRule(isSendingMessage) {
   return {
-    allowedTags: isSendingMessage ? ["img"] : ["img", "br", "div"],
+    allowedTags: isSendingMessage ? null : ["img", "br", "div"],
     allowedAttributes: {
       img: ["src", "style", "class", "alt"]
     },
