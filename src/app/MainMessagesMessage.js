@@ -61,6 +61,7 @@ import {THREAD_ADMIN} from "../constants/privilege";
 import MainMessagesMessageShare from "./MainMessagesMessageShare";
 import MainMessagesMessageFileFallback from "./MainMessagesMessageFileFallback";
 import ImageFetcher from "./_component/ImageFetcher";
+import {clearHtml} from "./_component/Input";
 
 function isNewFile({metadata}) {
   let metaData = metadata;
@@ -158,7 +159,7 @@ export function PersonNameFragment(message, isFirstMessage, isMessageByMe) {
           style={{color: color}}>{isMessageByMe ? messageParticipant.name : messageParticipant.contactName || messageParticipant.name}</Text>
 }
 
-export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth, scope) {
+export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth) {
   if (message.replyInfo) {
     const replyInfo = message.replyInfo;
     let meta = "";
@@ -166,7 +167,7 @@ export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth,
       meta = JSON.parse(replyInfo.metadata);
     } catch (e) {
     }
-    const text = decodeEmoji(replyInfo.message);
+    const text = decodeEmoji(clearHtml(replyInfo.message));
     const file = meta && meta.file;
     let isImage, isVideo, imageLink;
     if (file) {
@@ -212,6 +213,7 @@ export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth,
                   isVideo ?
                     <Container>
                       <MdVideocam size={style.iconSizeSm} color={style.colorGrayDark} style={{margin: "0 5px"}}/>
+                      <Text inline size="sm" bold color="gray" dark>{strings.video}</Text>
                       <Text inline size="sm" bold color="gray" dark>{strings.video}</Text>
                     </Container> :
                     file ?
@@ -689,7 +691,7 @@ export default class MainMessagesMessage extends Component {
 
         <ContextTrigger id={message.id || Math.random()} holdToDisplay={-1} contextTriggerRef={this.contextTriggerRef}>
           {isFile(message) ?
-            isNewFile(message) ?
+            isNewFile(message) || !message.id ?
               <MainMessagesMessageFile {...args}/>
               :
               <MainMessagesMessageFileFallback {...args}/>
