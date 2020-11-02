@@ -44,6 +44,7 @@ export const constants = {
 @connect(store => {
   return {
     messageEditing: store.messageEditing,
+    isSendingText: store.threadIsSendingMessage,
     thread: store.thread.thread,
     threadMessages: store.threadMessages,
     user: store.user.user,
@@ -442,8 +443,9 @@ export default class MainFooterInput extends Component {
   }
 
   render() {
-    const {messageEditing, thread, user, emojiShowing, chatAudioRecorder} = this.props;
+    const {messageEditing, thread, user, emojiShowing, chatAudioRecorder, isSendingText} = this.props;
     const {messageText, showParticipant, filterString, recorderTimer} = this.state;
+    const voiceIsPresent = (!messageEditing || messageEditing.type === constants.replying) && !isSendingText;
     const editBoxClassNames = classnames({
       [style.MainFooterInput__EditBox]: true,
       [style["MainFooterInput__EditBox--halfBorder"]]: messageEditingCondition(messageEditing)
@@ -453,6 +455,10 @@ export default class MainFooterInput extends Component {
         [style.MainFooterInput__ParticipantPositionContainer]: true,
         [style["MainFooterInput__ParticipantPositionContainer--mobile"]]: mobileCheck()
       });
+    const editBoxInputContainerClassNames = classnames({
+      [style.MainFooterInput__EditBoxInputContainer]: true,
+      [style["MainFooterInput__EditBoxInputContainer--voiceIsPresent"]]: voiceIsPresent
+    });
 
 
     return (
@@ -481,8 +487,8 @@ export default class MainFooterInput extends Component {
                 </Text>
               </Container>
               <Container className={style.MainFooterInput__RecordingTimerText}>
-                <Text color="accent" dark>
-                 {strings.recordingVoice}...
+                <Text color="accent" dark bold>
+                  {strings.recordingVoice}...
                 </Text>
               </Container>
             </Container>
@@ -492,7 +498,7 @@ export default class MainFooterInput extends Component {
             ref={this.inputClassNode}
             inputNode={this.inputNode}
             containerClassName={editBoxClassNames}
-            editBoxClassName={style.MainFooterInput__EditBoxInputContainer}
+            editBoxClassName={editBoxInputContainerClassNames}
             inputContainerClassName={style.MainFooterInput__InputContainer}
             inputClassName={style.MainFooterInput__Input}
             showParticipant={showParticipant}
@@ -500,7 +506,7 @@ export default class MainFooterInput extends Component {
             placeholder={strings.pleaseWriteHere}
             emojiShowing={emojiShowing}
             chatAudioRecorder={chatAudioRecorder}
-            voiceRecorderEnable={!messageEditing || messageEditing.type === constants.replying}
+            voiceRecorderEnable={voiceIsPresent}
             onStartTyping={this.onStartTyping}
             onText={this.onText}
             onNonEmptyText={this.onNonEmptyText}

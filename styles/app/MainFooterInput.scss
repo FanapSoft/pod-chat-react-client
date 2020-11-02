@@ -55,6 +55,11 @@
   max-width: calc(100% - 40px);
 }
 
+.MainFooterInput__EditBoxInputContainer--voiceIsPresent {
+  flex-grow: 1;
+  max-width: calc(100% - 66px);
+}
+
 .MainFooterInput__ParticipantContainer {
   position: relative;
   width: calc(100% + 75px);

@@ -41,19 +41,31 @@ export default class InputEmojiTrigger extends Component {
     super(props);
     this.onClick = this.onClick.bind(this);
     this.onStop = this.onStop.bind(this);
+    this.lastThread = this.props.thread;
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    const {thread, chatAudioRecorder, dispatch} = this.props;
+    if ((prevProps.thread && prevProps.thread.id) !== thread.id) {
+      if (chatAudioRecorder) {
+        dispatch(chatAudioRecorderAction(false));
+      }
+    }
   }
 
   onClick() {
-    const {chatAudioRecorder, dispatch} = this.props;
+    const {chatAudioRecorder, thread, dispatch} = this.props;
+    if(!chatAudioRecorder) {
+      this.lastThread = thread;
+    }
     dispatch(chatAudioRecorderAction(!chatAudioRecorder));
-  }
-
-  onData(recordedBlob) {
-    console.log('chunk of real-time data is: ', recordedBlob);
   }
 
   onStop(recordedBlob) {
     const {messageEditing, dispatch, thread} = this.props;
+    if (this.lastThread.id !== thread.id) {
+      return;
+    }
     if (recordedBlob.stopTime - recordedBlob.startTime < 1000) {
       return;
     }
