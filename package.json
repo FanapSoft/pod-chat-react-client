@@ -1,6 +1,6 @@
 {
   "name": "podchatweb",
-  "version": "1.10.7",
+  "version": "1.10.71",
   "description": "Podchatweb is a web app built by react for handling POD chating use cases",
   "main": "dist/index.js",
   "scripts": {
@@ -69,9 +69,11 @@
     "react-icons": "^3.9.0",
     "react-localization": "^1.0.10",
     "react-meta-tags": "^0.4.2",
+    "react-mic": "^12.4.6",
     "react-outside-click-handler": "^1.2.3",
     "react-router-dom": "^4.3.1",
     "react-string-replace": "^0.4.1",
+    "react-voice-recorder": "^2.0.1",
     "redux-promise-middleware": "^5.1.1",
     "redux-thunk": "^2.3.0",
     "sanitize-html": "^1.19.3",

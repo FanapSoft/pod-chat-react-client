@@ -330,22 +330,23 @@ export default class ChatSDK {
 
   @promiseDecorator
   sendFileMessage(resolve, reject, file, thread, caption, other) {
-    let sendChatParams = {
-      threadId: thread.id,
-      userGroupHash: thread.userGroupHash,
-      file
-    };
-    if (caption) {
-      sendChatParams.content = caption;
-    }
     const isImage = isImageFile(file);
     const isVideo = isVideoFile(file);
     const isAudio = isAudioFile(file);
     const messageType = isImage ? types.picture : isVideo ? types.video : isAudio ? types.sound : types.file;
+    let sendChatParams = {
+      threadId: thread.id,
+      userGroupHash: thread.userGroupHash,
+      file,
+      messageType
+    };
+    if (caption) {
+      sendChatParams.content = caption;
+    }
     if (other) {
       sendChatParams = {...sendChatParams, ...other};
     }
-    const obj = this.chatAgent.sendFileMessage({...sendChatParams, messageType: messageType.toUpperCase()}, {
+    const obj = this.chatAgent.sendFileMessage(sendChatParams, {
       onSent: result => {
         this._onError(result, reject);
       }
@@ -355,7 +356,7 @@ export default class ChatSDK {
         message: caption,
         time: getNow() * Math.pow(10, 6),
         fileObject: file,
-        messageType: typesCode[messageType],
+        messageType: typesCode[sendChatParams.messageType],
         metadata: {
           name: file.name,
           file: {
@@ -562,14 +563,23 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  replyFileMessage(resolve, reject, file, thread, repliedTo, content, repliedMessage) {
-    const sendChatParams = {
+  replyFileMessage(resolve, reject, file, thread, repliedTo, content, repliedMessage, other) {
+    const isImage = isImageFile(file);
+    const isVideo = isVideoFile(file);
+    const isAudio = isAudioFile(file);
+    const messageType = isImage ? types.picture : isVideo ? types.video : isAudio ? types.sound : types.file;
+
+    let sendChatParams = {
       threadId: thread.id,
       userGroupHash: thread.userGroupHash,
       repliedTo,
       file,
-      content
+      content,
+      messageType
     };
+    if (other) {
+      sendChatParams = {...sendChatParams, ...other};
+    }
     const obj = this.chatAgent.replyFileMessage(sendChatParams, result => {
       if (!this._onError(result, reject)) {
         return resolve({
@@ -592,6 +602,7 @@ export default class ChatSDK {
         },
         time: getNow() * Math.pow(10, 6),
         message: content,
+        messageType: typesCode[sendChatParams.messageType],
         fileObject: file,
         metadata: {
           file: {

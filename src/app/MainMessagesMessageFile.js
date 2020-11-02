@@ -34,7 +34,8 @@ import {
   MdArrowDownward,
   MdPlayArrow,
   MdPause,
-  MdClose
+  MdClose,
+  MdMic
 } from "react-icons/md";
 import {BoxModalMediaFragment} from "./index";
 import Image from "../../../uikit/src/image";
@@ -70,6 +71,12 @@ export function isVideo({messageType}) {
 export function isSound({messageType}) {
   if (messageType) {
     return messageType === typesCode.POD_SPACE_SOUND;
+  }
+}
+
+export function isVoice({messageType}) {
+  if (messageType) {
+    return messageType === typesCode.POD_SPACE_VOICE;
   }
 }
 
@@ -140,6 +147,7 @@ class MainMessagesMessageFile extends Component {
       isImage: isImageReal,
       isVideo: isVideo(message),
       isSound: isSound(message),
+      isVoice: isVoice(message),
       isFile: !isSound(message) && !isVideo(message) && !isImageReal,
       isUploading: isUploading(message),
       imageThumb: isImageReal && imageIsSuitableSize ? getImageFromHashMap.apply(this, [metaData.fileHash, imageQualities.medium.s]) : null,
@@ -218,7 +226,7 @@ class MainMessagesMessageFile extends Component {
     this.isDownloading = false;
     if (!downloadRef.href) {
       const {message, dispatch, thread} = this.props;
-      const {metaData, isVideo, isSound} = this.state;
+      const {metaData, isVideo, isSound, isVoice} = this.state;
       const isPlayable = this.isPlayable;
       const videoCurrent = this.videoRef.current;
       const soundCurrent = this.soundRef.current;
@@ -233,7 +241,7 @@ class MainMessagesMessageFile extends Component {
         }
       }
       if (!soundPlayerBuildBefore) {
-        if (isPlayable === "IS_SOUND" || isSound) {
+        if (isPlayable === "IS_SOUND" || isSound || isVoice) {
           const wavesurfer = this.soundPlayer = WaveSurfer.create({
             container: soundCurrent,
             waveColor: styleVar.colorAccentLight,
@@ -242,6 +250,7 @@ class MainMessagesMessageFile extends Component {
             height: 20,
             barWidth: 2,
             barRadius: 2,
+            barMinHeight: 1,
             cursorWidth: 2,
             barGap: 1
           });
@@ -350,6 +359,7 @@ class MainMessagesMessageFile extends Component {
       isImage,
       isVideo,
       isSound,
+      isVoice,
       metaData
     } = this.state;
     if (isImage) {
@@ -460,11 +470,17 @@ class MainMessagesMessageFile extends Component {
                   {isVideo ?
                     <video controls id={`video-${message.id}`} style={{display: "none"}} ref={this.videoRef}/> : ""
                   }
-                  <Text wordWrap="breakWord" bold>
-                    {metaData.name}
-                  </Text>
+
+                  {isVoice ?
+                    <MdMic size={styleVar.iconSizeSm} color={styleVar.colorAccent}/>
+                    :
+                    <Text wordWrap="breakWord" bold>
+                      {metaData.name}
+                    </Text>
+                  }
+
                   {
-                    isSound &&
+                    (isSound || isVoice) &&
                     <div style={{minWidth: "100px"}} ref={this.soundPlayerContainer}>
                       <div ref={this.soundRef}/>
                     </div>
@@ -485,7 +501,7 @@ class MainMessagesMessageFile extends Component {
                   <Container center={isImage}>
                     <Shape color="accent" size="lg"
                            onDoubleClick={e => e.stopPropagation()}
-                           onClick={isDownloadable(message) ? downloading ? this.onCancelDownload : this.onDownload.bind(this, metaData, isVideo ? "IS_VIDEO" : isSound ? "IS_SOUND" : null) : this.onCancel.bind(this, message)}>
+                           onClick={isDownloadable(message) ? downloading ? this.onCancelDownload : this.onDownload.bind(this, metaData, isVideo ? "IS_VIDEO" : isSound || isVoice ? "IS_SOUND" : null) : this.onCancel.bind(this, message)}>
                       <ShapeCircle>
                         {isUploadingBool || hasError(message) ?
                           <MdClose style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/>
@@ -493,8 +509,8 @@ class MainMessagesMessageFile extends Component {
                             downloading ?
                               <MdClose style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/>
                               :
-                              isVideo || isSound ?
-                                isSound ?
+                              isVideo || isSound || isVoice ?
+                                isSound || isVoice ?
                                   isPlaying ?
                                     <MdPause style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/>
                                     :

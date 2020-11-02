@@ -12,6 +12,7 @@ import {mobileCheck} from "../../utils/helpers";
 import InputEmojiTrigger from "./InputEmojiTrigger";
 import Container from "../../../../uikit/src/container";
 import {InputTextArea} from "../../../../uikit/src/input";
+import InputVoiceRecorder from "./InputVoiceRecorder";
 //styling
 
 export const constants = {
@@ -257,7 +258,7 @@ export default class MainFooterInput extends Component {
   }
 
   render() {
-    const {inputNode, containerClassName, editBoxClassName, inputContainerClassName, inputClassName, value, placeholder, onEmojiShowing, emojiShowing} = this.props;
+    const {inputNode, containerClassName, editBoxClassName, inputContainerClassName, inputClassName, value, placeholder, onEmojiShowing, emojiShowing, chatAudioRecorder, voiceRecorderEnable} = this.props;
 
     const containerClassNames = classnames({
       [containerClassName]: true
@@ -290,6 +291,10 @@ export default class MainFooterInput extends Component {
         </Container>
         <Container centerLeft>
           <InputEmojiTrigger inputNode={this.inputNode} emojiShowing={emojiShowing} onEmojiShowing={onEmojiShowing}/>
+          {voiceRecorderEnable &&
+          <InputVoiceRecorder inputNode={this.inputNode} chatAudioRecorder={chatAudioRecorder}/>
+          }
+
         </Container>
       </Container>
     );

@@ -3,7 +3,7 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import classnames from "classnames";
 import sanitizeHTML from "sanitize-html";
-import {mobileCheck} from "../utils/helpers";
+import {humanFileSize, mobileCheck} from "../utils/helpers";
 import Cookies from "js-cookie";
 import {clearHtml, getCursorMentionMatch} from "./_component/Input"
 
@@ -23,6 +23,7 @@ import {threadDraft, threadEmojiShowing, threadIsSendingMessage} from "../action
 
 //components
 import MainFooterInputEditing, {messageEditingCondition} from "./MainFooterInputEditing";
+import {Text} from "../../../uikit/src/typography";
 import Container from "../../../uikit/src/container";
 import Input from "./_component/Input";
 import {codeEmoji, emojiRegex} from "./_component/EmojiIcons.js";
@@ -66,12 +67,14 @@ export default class MainFooterInput extends Component {
     this.onEmojiShowing = this.onEmojiShowing.bind(this);
     this.resetParticipantSuggestion = this.resetParticipantSuggestion.bind(this);
     this.participantSuggestionsRef = React.createRef();
+    this.recorderTimerId = null;
     this.typingSet = false;
     this.forwardMessageSent = false;
     this.inputNode = React.createRef();
     this.inputClassNode = React.createRef();
     this.lastTypingText = null;
     this.state = {
+      recorderTimer: 0,
       showParticipant: false,
       messageText: ""
     };
@@ -107,14 +110,29 @@ export default class MainFooterInput extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const {dispatch, thread, messageEditing: msgEditing, threadMessages, threadShowing} = this.props;
-    const {threadMessages: oldThreadMessages, threadShowing: oldThreadShowing} = prevProps;
+    const {dispatch, thread, messageEditing: msgEditing, threadMessages, threadShowing, chatAudioRecorder} = this.props;
+    const {threadMessages: oldThreadMessages, threadShowing: oldThreadShowing, chatAudioRecorder: oldChatAudioRecorder} = prevProps;
+    if (chatAudioRecorder !== oldChatAudioRecorder) {
+      if (chatAudioRecorder) {
+        this.recorderTimerId = setInterval(e => {
+          const {recorderTimer} = this.state;
+          this.setState({
+            recorderTimer: recorderTimer === null ? 0 : recorderTimer + 1
+          })
+        }, 1000);
+      } else {
+        this.setState({
+          recorderTimer: 0
+        });
+        this.recorderTimerId = clearInterval(this.recorderTimerId);
+      }
+    }
     const threadId = thread.id;
     const {id: oldThreadId} = prevProps.thread;
     const isThreadHide = oldThreadShowing && !threadShowing;
     const storeDraftCondition = oldThreadId !== threadId || isThreadHide;
     if (msgEditing !== prevProps.messageEditing) {
-      if(this.state.messageText){
+      if (this.state.messageText) {
         this._setDraft(threadId, this.state.messageText);
       }
       this.focus();
@@ -424,8 +442,8 @@ export default class MainFooterInput extends Component {
   }
 
   render() {
-    const {messageEditing, thread, user, emojiShowing} = this.props;
-    const {messageText, showParticipant, filterString} = this.state;
+    const {messageEditing, thread, user, emojiShowing, chatAudioRecorder} = this.props;
+    const {messageText, showParticipant, filterString, recorderTimer} = this.state;
     const editBoxClassNames = classnames({
       [style.MainFooterInput__EditBox]: true,
       [style["MainFooterInput__EditBox--halfBorder"]]: messageEditingCondition(messageEditing)
@@ -435,10 +453,12 @@ export default class MainFooterInput extends Component {
         [style.MainFooterInput__ParticipantPositionContainer]: true,
         [style["MainFooterInput__ParticipantPositionContainer--mobile"]]: mobileCheck()
       });
+
+
     return (
       <Container className={style.MainFooterInput}>
         <OutsideClickHandler onOutsideClick={this.resetParticipantSuggestion}>
-          {showParticipant &&
+          {showParticipant && !chatAudioRecorder &&
 
           <Container className={style.MainFooterInput__ParticipantContainer}>
             <Container className={participantsPositionContainerClassNames}>
@@ -447,11 +467,27 @@ export default class MainFooterInput extends Component {
                                      thread={thread}/>
             </Container>
           </Container>
-
           }
-          <Container className={style.MainFooterInput__EditingBox}>
+
+          <Container>
             <MainFooterInputEditing messageEditing={messageEditing} setInputText={this.setInputText}/>
           </Container>
+          {
+            chatAudioRecorder &&
+            <Container className={style.MainFooterInput__RecordingTimer}>
+              <Container className={style.MainFooterInput__RecordingTimerCountDown}>
+                <Text color="accent" dark bold>
+                  {new Date(recorderTimer * 1000).toISOString().substr(14, 5)}
+                </Text>
+              </Container>
+              <Container className={style.MainFooterInput__RecordingTimerText}>
+                <Text color="accent" dark>
+                 {strings.recordingVoice}...
+                </Text>
+              </Container>
+            </Container>
+          }
+
           <Input
             ref={this.inputClassNode}
             inputNode={this.inputNode}
@@ -463,6 +499,8 @@ export default class MainFooterInput extends Component {
             onShowParticipant={this.onShowParticipant}
             placeholder={strings.pleaseWriteHere}
             emojiShowing={emojiShowing}
+            chatAudioRecorder={chatAudioRecorder}
+            voiceRecorderEnable={!messageEditing || messageEditing.type === constants.replying}
             onStartTyping={this.onStartTyping}
             onText={this.onText}
             onNonEmptyText={this.onNonEmptyText}

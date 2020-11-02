@@ -193,7 +193,7 @@ export default class ModalThreadInfoMessageTypes extends Component {
 
         </Container>
       )
-    } else if (type === "file" || type === "sound" || type === "video") {
+    } else if (type === "file" || type === "sound" || type === "video" || type === "voice") {
       const fileResult = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]);
       const result = typeof fileResult === "string" && fileResult.indexOf("blob") > -1 ? fileResult : null;
       const isDownloading = fileResult === true;
@@ -225,7 +225,7 @@ export default class ModalThreadInfoMessageTypes extends Component {
             {type === "video" ?
               <video controls id={idMessage} style={{display: "none"}}
                      src={result}/> :
-              type === "sound" ? <audio controls id={idMessage} style={{display: "none"}}
+              type === "sound" || type === "voice" ? <audio controls id={idMessage} style={{display: "none"}}
                                         src={result}/> : ""
             }
             {

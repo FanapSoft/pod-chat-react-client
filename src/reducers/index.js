@@ -53,7 +53,7 @@ import {
   chatSearchShowReducer,
   chatRetryHookReducer,
   chatSignOutHookReducer,
-  chatFileHashCodeUpdateReducer
+  chatFileHashCodeUpdateReducer, chatAudioRecorderReducer
 } from "./chatReducer";
 import userReducer from "./userReducer";
 
@@ -70,6 +70,7 @@ const rootReducer = {
   chatRetryHook: chatRetryHookReducer,
   chatSignOutHook: chatSignOutHookReducer,
   chatAudioPlayer: chatAudioPlayerReducer,
+  chatAudioRecorder: chatAudioRecorderReducer,
   chatFileHashCodeUpdate: chatFileHashCodeUpdateReducer,
   contactGetList: contactGetListReducer,
   contactGetListPartial: contactGetListPartialReducer,
