@@ -4,6 +4,7 @@ import {connect} from "react-redux";
 import {ReactMic} from 'react-mic';
 
 //strings
+import strings from "../../constants/localization";
 
 //actions
 import {
@@ -14,7 +15,7 @@ import {
 import Container from "../../../../uikit/src/container";
 
 //styling
-import {MdSentimentVerySatisfied, MdClose, MdMic, MdStop} from "react-icons/md";
+import {MdSentimentVerySatisfied, MdClose, MdMic, MdMicOff, MdStop} from "react-icons/md";
 import style from "../../../styles/modules/InputVoiceRecorder.scss";
 import styleVar from "../../../styles/variables.scss";
 import {messageEditing as messageEditingAction, messageFileReply, messageSendFile} from "../../actions/messageActions";
@@ -42,6 +43,22 @@ export default class InputEmojiTrigger extends Component {
     this.onClick = this.onClick.bind(this);
     this.onStop = this.onStop.bind(this);
     this.lastThread = this.props.thread;
+    this.state = {
+      mic: true
+    }
+  }
+
+  componentDidMount() {
+
+    navigator.permissions.query(
+      {name: 'microphone'}
+    ).then((permissionStatus) => {
+      if (permissionStatus.state === "denied") {
+        this.setState({
+          mic: false
+        });
+      }
+    })
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -55,10 +72,40 @@ export default class InputEmojiTrigger extends Component {
 
   onClick() {
     const {chatAudioRecorder, thread, dispatch} = this.props;
-    if(!chatAudioRecorder) {
-      this.lastThread = thread;
+    const {mic} = this.state;
+    if (!mic) {
+      return alert(strings.youCannotUseMicrophone)
     }
-    dispatch(chatAudioRecorderAction(!chatAudioRecorder));
+    navigator.permissions.query(
+      {name: 'microphone'}
+    ).then((permissionStatus) => {
+      if (permissionStatus.state === "prompt") {
+        navigator.mediaDevices.getUserMedia({audio: true})
+          .then((stream) => {
+            if (!chatAudioRecorder) {
+              this.lastThread = thread;
+            }
+            dispatch(chatAudioRecorderAction(!chatAudioRecorder));
+          })
+          .catch((err) => {
+            this.setState({
+              mic: false
+            });
+            alert(strings.youCannotUseMicrophone)
+          });
+
+        this.setState({
+          mic: true
+        });
+      } else if (permissionStatus.state === "granted") {
+        if (!chatAudioRecorder) {
+          this.lastThread = thread;
+        }
+        dispatch(chatAudioRecorderAction(!chatAudioRecorder));
+      }
+    });
+
+
   }
 
   onStop(recordedBlob) {
@@ -83,6 +130,7 @@ export default class InputEmojiTrigger extends Component {
 
   render() {
     const {chatAudioRecorder} = this.props;
+    const {mic} = this.state;
     const classNames =
       classnames({
         [style.InputVoiceRecorder]: true,
@@ -95,9 +143,15 @@ export default class InputEmojiTrigger extends Component {
                   color={styleVar.colorAccentDark}
                   style={{margin: "3px 4px"}}/>
           :
-          <MdMic size={styleVar.iconSizeMd}
-                 color={styleVar.colorAccentDark}
-                 style={{margin: "3px 4px"}}/>}
+          mic ?
+            <MdMic size={styleVar.iconSizeMd}
+                   color={styleVar.colorAccentDark}
+                   style={{margin: "3px 4px"}}/>
+            :
+            <MdMicOff size={styleVar.iconSizeMd}
+                      color={styleVar.colorGrayDark}
+                      style={{margin: "3px 4px"}}/>
+        }
 
 
         <Container style={{display: "none"}}>
@@ -105,6 +159,7 @@ export default class InputEmojiTrigger extends Component {
             mimeType="audio/mp3"
             record={chatAudioRecorder}
             className="sound-wave"
+            onBlock={e => alert("test")}
             onStop={this.onStop}
             onData={this.onData}/>
         </Container>

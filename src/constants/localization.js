@@ -253,6 +253,7 @@ let strings = new LocalizedStrings({
     areYouSureABoutSendingThisMessage: "از فرستادن این پیام مطئنید",
     gotoMessage: "رفتن به پیام",
     addToContact: "اضافه کردن به مخطابین",
+    youCannotUseMicrophone: "شما دسترسی به میکروفون سیستم را نداده اید پس نمیتوانید از امکانات ضبط صدا استفاده کنید",
     messageTypes: {
       people: "اعضا",
       picture: "تصاویر",
