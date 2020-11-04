@@ -1,10 +1,10 @@
 {
   "name": "podchatweb",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Podchatweb is a web app built by react for handling POD chating use cases",
   "main": "dist/index.js",
   "scripts": {
-    "start": "webpack-dev-server --port 80 --mode development --open",
+    "start": "webpack serve --port 80 --mode development",
     "test": "webpack-dev-server --port 80 --mode development --define TEST --open",
     "build": "webpack --mode production"
   },
@@ -50,8 +50,8 @@
     "url-loader": "^1.0.1",
     "webpack": "^4.12.0",
     "webpack-bundle-analyzer": "^3.7.0",
-    "webpack-cli": "^2.0.12",
-    "webpack-dev-server": "^3.1.1"
+    "webpack-cli": "^4.1.0",
+    "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
