@@ -20,6 +20,7 @@ module.exports = (e, argv) => {
           include: [
             path.resolve(__dirname, "src"),
             path.resolve(__dirname, "node_modules/raduikit/src"),
+            path.resolve(__dirname, "node_modules/react-mic/dist"),
             path.resolve(__dirname, "node_modules/react-icons/*"),
             path.resolve(__dirname, "../uikit/src")
           ],

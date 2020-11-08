@@ -8,6 +8,7 @@ let strings = new LocalizedStrings({
     tryAgain: "تلاش دوباره",
     pleaseStartAThreadFirst: "یه نفرو برای چت انتخاب کن!!",
     pleaseWriteHere: "اینجا بنویسید...",
+    recordingVoice: "در حال ضبط صدا",
     waitingForChatInstance: "در حالت برقراری ارتباط با سرور چت",
     messageInfo: "اطلاعات پیام",
     add: "اضافه کردن",
@@ -252,6 +253,7 @@ let strings = new LocalizedStrings({
     areYouSureABoutSendingThisMessage: "از فرستادن این پیام مطئنید",
     gotoMessage: "رفتن به پیام",
     addToContact: "اضافه کردن به مخطابین",
+    youCannotUseMicrophone: "شما دسترسی به میکروفون سیستم را نداده اید پس نمیتوانید از امکانات ضبط صدا استفاده کنید",
     messageTypes: {
       people: "اعضا",
       picture: "تصاویر",

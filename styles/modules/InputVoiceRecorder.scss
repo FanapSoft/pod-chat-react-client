@@ -1,0 +1,31 @@
+@import "../app/scope";
+
+@keyframes rotation {
+  0% {
+    background-color: $color-accent
+  }
+  37.5%, 50% {
+    background-color: $color-gray-light
+  }
+  87.5%, 100% {
+    background-color: $color-accent
+  }
+}
+
+.InputVoiceRecorder {
+  padding: 2px;
+  background-color: $color-white;
+  height: 35px;
+  width: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.InputVoiceRecorder--noMobile {
+  margin-right: -5px;
+  margin-left: 4px;
+}
+
+.InputVoiceRecorder--recording {
+  animation: rotation 1s infinite ease-in-out;
+}

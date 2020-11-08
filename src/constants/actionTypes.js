@@ -21,6 +21,7 @@ export const buildPromiseMessage = (baseMessage, type) => {
 
 export const CHAT_GET_INSTANCE = buildPromiseMessage.bind(null, "CHAT_GET_INSTANCE");
 export const CHAT_AUDIO_PLAYER = "CHAT_AUDIO_PLAYER";
+export const CHAT_AUDIO_RECORDER = "CHAT_AUDIO_RECORDER";
 export const CHAT_SMALL_VERSION = "CHAT_SMALL_VERSION";
 export const CHAT_ROUTER_LESS = "CHAT_ROUTER_LESS";
 export const CHAT_NOTIFICATION = "CHAT_NOTIFICATION";

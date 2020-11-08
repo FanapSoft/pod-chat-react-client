@@ -79,12 +79,38 @@ export default class ModalThreadInfo extends Component {
   }
 
   componentDidMount() {
-    const {participants, user, dispatch, contacts} = this.props;
+    const {participants, user, dispatch, contacts, thread} = this.props;
+    if (!thread.onTheFly && (!participants || !participants.length)) {
+      return;
+    }
+    const participant = thread.onTheFly ? thread.participant : getParticipant(participants, user);
+    if (!participant.id) {
+      return;
+    }
+    if (!thread.onTheFly && !participant.contactId) {
+      return;
+    }
+    if (contacts && contacts.length) {
+      let contact = contacts.findIndex(contact => contact.id === participant.contactId);
+      if (contact > -1) {
+        return this.setState({contact: contacts[contact]});
+      }
+    }
+    dispatch(contactSearch({id: participant.contactId})).then(contact => {
+      this.setState({contact})
+    });
+  }
+
+  componentDidUpdate({participants: oldParticipants}) {
+    const {participants, user, dispatch, contacts, thread} = this.props;
     if (!participants || !participants.length) {
       return;
     }
     const participant = getParticipant(participants, user);
-    if (!participant.id) {
+    const oldParticipant = getParticipant(oldParticipants, user);
+    if (!participant.id && !oldParticipant.id) {
+      return;
+    } else if (participant.id === oldParticipant.id) {
       return;
     }
     if (!participant.contactId) {
@@ -101,21 +127,12 @@ export default class ModalThreadInfo extends Component {
     });
   }
 
-  componentDidUpdate({participants: oldParticipants}) {
+  getContact() {
     const {participants, user, dispatch, contacts} = this.props;
     if (!participants || !participants.length) {
       return;
     }
     const participant = getParticipant(participants, user);
-    const oldParticipant = getParticipant(oldParticipants, user);
-    if (!participant.id && !oldParticipant.id) {
-      return;
-    } else if (participant.id === oldParticipant.id) {
-      return;
-    }
-    if (!participant.contactId) {
-      return;
-    }
     if (contacts && contacts.length) {
       let contact = contacts.findIndex(contact => contact.id === participant.contactId);
       if (contact > -1) {
@@ -260,25 +277,25 @@ export default class ModalThreadInfo extends Component {
                     }
 
                     {
-                    <ListItem selection invert onSelect={this.onEdit.bind(this, participant, contact)}>
-                      <Container relative>
-                        <MdEdit size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text>{strings.edit}</Text>
-                        </Gap>
-                      </Container>
-                    </ListItem>
+                      <ListItem selection invert onSelect={this.onEdit.bind(this, participant, contact)}>
+                        <Container relative>
+                          <MdEdit size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                          <Gap x={20}>
+                            <Text>{strings.edit}</Text>
+                          </Gap>
+                        </Container>
+                      </ListItem>
                     }
 
                     {
-                    <ListItem selection invert onSelect={this.onRemove.bind(this, participant)}>
-                      <Container relative>
-                        <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text>{strings.remove}</Text>
-                        </Gap>
-                      </Container>
-                    </ListItem>
+                      <ListItem selection invert onSelect={this.onRemove.bind(this, participant)}>
+                        <Container relative>
+                          <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                          <Gap x={20}>
+                            <Text>{strings.remove}</Text>
+                          </Gap>
+                        </Container>
+                      </ListItem>
                     }
 
                   </Fragment>

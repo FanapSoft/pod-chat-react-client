@@ -10,7 +10,7 @@ import {
   CHAT_NOTIFICATION_CLICK_HOOK,
   CHAT_RETRY_HOOK,
   CHAT_SIGN_OUT_HOOK,
-  CHAT_FILE_HASH_CODE_UPDATE, CHAT_AUDIO_PLAYER, CHAT_FILE_HASH_CODE_REMOVE
+  CHAT_FILE_HASH_CODE_UPDATE, CHAT_AUDIO_PLAYER, CHAT_FILE_HASH_CODE_REMOVE, CHAT_AUDIO_RECORDER
 } from "../constants/actionTypes";
 import {listUpdateStrategyMethods, stateGenerator, stateGeneratorState, updateStore} from "../utils/storeHelper";
 
@@ -166,6 +166,16 @@ export const chatModalPromptReducer = (state = {
 export const chatAudioPlayerReducer = (state = null, action) => {
   switch (action.type) {
     case CHAT_AUDIO_PLAYER:
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
+
+export const chatAudioRecorderReducer = (state = null, action) => {
+  switch (action.type) {
+    case CHAT_AUDIO_RECORDER:
       return action.payload;
     default:
       return state;

@@ -41,7 +41,7 @@ import {
   CHAT_DESTROY,
   THREAD_THUMBNAIL_UPDATE,
   CHAT_FILE_HASH_CODE_UPDATE,
-  CHAT_AUDIO_PLAYER, CHAT_FILE_HASH_CODE_REMOVE
+  CHAT_AUDIO_PLAYER, CHAT_FILE_HASH_CODE_REMOVE, CHAT_AUDIO_RECORDER
 } from "../constants/actionTypes";
 import {messageInfo} from "./messageActions";
 import {statics} from "../app/MainMessages";
@@ -424,6 +424,14 @@ export const chatAudioPlayer = data => {
     dispatch({
       type: CHAT_AUDIO_PLAYER,
       payload: data ? data : null
+    });
+  }
+};
+export const chatAudioRecorder = recording => {
+  return (dispatch, getState) => {
+    dispatch({
+      type: CHAT_AUDIO_RECORDER,
+      payload: recording
     });
   }
 };

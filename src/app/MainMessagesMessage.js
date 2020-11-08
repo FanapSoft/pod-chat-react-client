@@ -207,19 +207,18 @@ export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth)
                 :
                 isImage && !text ?
                   <Container>
-                    <MdCameraAlt size={style.iconSizeSm} color={style.colorGrayDark} style={{margin: "0 5px"}}/>
+                    <MdCameraAlt size={style.iconSizeSm} color={style.colorGrayDark} style={{margin: "0 5px", verticalAlign: "middle"}}/>
                     <Text inline size="sm" bold color="gray" dark>{strings.photo}</Text>
                   </Container> :
                   isVideo ?
                     <Container>
-                      <MdVideocam size={style.iconSizeSm} color={style.colorGrayDark} style={{margin: "0 5px"}}/>
-                      <Text inline size="sm" bold color="gray" dark>{strings.video}</Text>
+                      <MdVideocam size={style.iconSizeSm} color={style.colorGrayDark} style={{margin: "0 5px", verticalAlign: "middle"}}/>
                       <Text inline size="sm" bold color="gray" dark>{strings.video}</Text>
                     </Container> :
                     file ?
                       <Container>
                         <MdInsertDriveFile size={style.iconSizeSm} color={style.colorGrayDark}
-                                           style={{margin: "0 5px"}}/>
+                                           style={{margin: "0 5px", verticalAlign: "middle"}}/>
                         <Text inline size="sm" bold color="gray" dark>{file.originalName}</Text>
                       </Container>
                       :
