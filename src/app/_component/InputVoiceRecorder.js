@@ -134,6 +134,7 @@ export default class InputEmojiTrigger extends Component {
     const classNames =
       classnames({
         [style.InputVoiceRecorder]: true,
+        [style["InputVoiceRecorder--noMobile"]]: !mobileCheck(),
         [style["InputVoiceRecorder--recording"]]: chatAudioRecorder
       });
     return (

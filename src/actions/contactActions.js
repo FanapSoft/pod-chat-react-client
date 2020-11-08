@@ -140,6 +140,9 @@ export const contactAdd = (addby, firstName, lastName, editMode, canceled) => {
       if (e.linkedUser) {
         const user = {
           id: e.id,
+          cellphoneNumber:e.cellphoneNumber,
+          linkedUser: e.linkedUser,
+          contactId: e.id,
           isMyContact: true,
           coreUserId: e.linkedUser.coreUserId,
           image: e.linkedUser.image,

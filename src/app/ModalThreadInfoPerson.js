@@ -80,7 +80,7 @@ export default class ModalThreadInfo extends Component {
 
   componentDidMount() {
     const {participants, user, dispatch, contacts, thread} = this.props;
-    if (!participants || !participants.length) {
+    if (!thread.onTheFly && (!participants || !participants.length)) {
       return;
     }
     const participant = thread.onTheFly ? thread.participant : getParticipant(participants, user);
@@ -102,7 +102,7 @@ export default class ModalThreadInfo extends Component {
   }
 
   componentDidUpdate({participants: oldParticipants}) {
-    const {participants, user, dispatch, contacts} = this.props;
+    const {participants, user, dispatch, contacts, thread} = this.props;
     if (!participants || !participants.length) {
       return;
     }
@@ -277,25 +277,25 @@ export default class ModalThreadInfo extends Component {
                     }
 
                     {
-                    <ListItem selection invert onSelect={this.onEdit.bind(this, participant, contact)}>
-                      <Container relative>
-                        <MdEdit size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text>{strings.edit}</Text>
-                        </Gap>
-                      </Container>
-                    </ListItem>
+                      <ListItem selection invert onSelect={this.onEdit.bind(this, participant, contact)}>
+                        <Container relative>
+                          <MdEdit size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                          <Gap x={20}>
+                            <Text>{strings.edit}</Text>
+                          </Gap>
+                        </Container>
+                      </ListItem>
                     }
 
                     {
-                    <ListItem selection invert onSelect={this.onRemove.bind(this, participant)}>
-                      <Container relative>
-                        <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text>{strings.remove}</Text>
-                        </Gap>
-                      </Container>
-                    </ListItem>
+                      <ListItem selection invert onSelect={this.onRemove.bind(this, participant)}>
+                        <Container relative>
+                          <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                          <Gap x={20}>
+                            <Text>{strings.remove}</Text>
+                          </Gap>
+                        </Container>
+                      </ListItem>
                     }
 
                   </Fragment>

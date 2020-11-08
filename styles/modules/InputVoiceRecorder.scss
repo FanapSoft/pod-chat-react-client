@@ -18,9 +18,12 @@
   height: 35px;
   width: 35px;
   border-radius: 50%;
+  cursor: pointer;
+}
+
+.InputVoiceRecorder--noMobile {
   margin-right: -5px;
   margin-left: 4px;
-  cursor: pointer;
 }
 
 .InputVoiceRecorder--recording {
