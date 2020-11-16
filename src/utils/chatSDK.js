@@ -439,7 +439,8 @@ export default class ChatSDK {
       hashCode,
       size, // 1: 100×75 , 2: 200×150, 3: 400×300
       quality, // [0.0, 1.0] Float number
-      crop // Based on crop data from upload
+      crop, // Based on crop data from upload
+      responseType: "blob"
     }, result => {
       if (!this._onError(result, reject)) {
         return resolve(result.result)

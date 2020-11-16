@@ -27,7 +27,7 @@ import {
   messageCancelFile,
   messageSendFile,
 } from "../actions/messageActions";
-import {chatAudioPlayer} from "../actions/chatActions";
+import {chatAudioPlayer, chatGetImage} from "../actions/chatActions";
 
 //components
 import {
@@ -131,8 +131,7 @@ const imageQualities = {
   return {
     smallVersion: store.chatSmallVersion,
     leftAsideShowing: store.threadLeftAsideShowing.isShowing,
-    chatAudioPlayer: store.chatAudioPlayer,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+    chatAudioPlayer: store.chatAudioPlayer
   };
 })
 class MainMessagesMessageFile extends Component {
@@ -143,6 +142,7 @@ class MainMessagesMessageFile extends Component {
     const metaData = typeof message.metadata === "string" ? JSON.parse(message.metadata) : message.metadata;
     const imageIsSuitableSize = isImage(message) && getImage(metaData, message.id, smallVersion || leftAsideShowing);
     const isImageReal = isImage(message);
+    const {fileHash} = metaData;
     this.state = {
       isImage: isImageReal,
       isVideo: isVideo(message),
@@ -150,9 +150,9 @@ class MainMessagesMessageFile extends Component {
       isVoice: isVoice(message),
       isFile: !isSound(message) && !isVideo(message) && !isImageReal,
       isUploading: isUploading(message),
-      imageThumb: isImageReal && imageIsSuitableSize ? getImageFromHashMap.apply(this, [metaData.fileHash, imageQualities.medium.s]) : null,
-      imageModalPreview: isImageReal && imageIsSuitableSize ? getImageFromHashMap.apply(this, [metaData.fileHash, null, imageQualities.high.q]) : null,
-      imageThumbLowQuality: isImageReal && imageIsSuitableSize ? getImageFromHashMap.apply(this, [metaData.fileHash, imageQualities.low.s, imageQualities.low.q]) : null,
+      imageThumb: isImageReal && imageIsSuitableSize ? this.requestForImage(fileHash, imageQualities.medium.s, null, "imageThumb") : null,
+      imageModalPreview: isImageReal && imageIsSuitableSize ? this.requestForImage(fileHash, null, imageQualities.high.q, "imageModalPreview") : null,
+      imageThumbLowQuality: isImageReal && imageIsSuitableSize ? this.requestForImage(fileHash, imageQualities.low.s, imageQualities.low.q, "imageThumbLowQuality") : null,
       metaData,
       imageIsSuitableSize
     };
@@ -173,6 +173,20 @@ class MainMessagesMessageFile extends Component {
 
   onImageClick(e) {
     e.stopPropagation();
+  }
+
+  requestForImage(hash, size, quality, updateKey) {
+    const {dispatch} = this.props;
+    const id = `${hash}-${size}-${quality}`;
+    if (window[id]) {
+      return window[id];
+    }
+    dispatch(chatGetImage(hash, size, quality)).then(result => {
+      window[id] = URL.createObjectURL(result);
+      this.setState({
+        [updateKey]: window[id]
+      });
+    });
   }
 
   componentDidMount() {
@@ -316,7 +330,7 @@ class MainMessagesMessageFile extends Component {
 
   onRetry() {
     const {dispatch, message, thread} = this.props;
-    console.log(message)
+    console.log(message);
     this.onCancel(message);
     dispatch(messageSendFile(message.fileObject, thread, message.message));
   }
@@ -363,9 +377,6 @@ class MainMessagesMessageFile extends Component {
       metaData
     } = this.state;
     if (isImage) {
-      imageThumb = getImageFromHashMap.apply(this, [metaData.fileHash, imageQualities.medium.s]);
-      imageModalPreview = getImageFromHashMap.apply(this, [metaData.fileHash, null, imageQualities.high.q]);
-      imageThumbLowQuality = getImageFromHashMap.apply(this, [metaData.fileHash, imageQualities.low.s, imageQualities.low.q]);
       imageThumb = (typeof imageThumb === "string" && imageThumb.indexOf("blob") < 0) || imageThumb === true ? null : imageThumb;
       imageModalPreview = (typeof imageModalPreview === "string" && imageModalPreview.indexOf("blob") < 0) || imageModalPreview === true ? null : imageModalPreview;
       imageThumbLowQuality = (typeof imageThumbLowQuality === "string" && imageThumbLowQuality.indexOf("blob") < 0) || imageThumbLowQuality === true ? null : imageThumbLowQuality;
