@@ -186,6 +186,53 @@ export function getImageFromHashMap(hashCode, size, quality) {
   return id;
 }
 
+export function getFileDownloadingFromHashMapWindow(id) {
+  if (!window.podspaceHashmap) {
+    window.podspaceHashmap = {};
+  }
+  const result = window.podspaceHashmap[id];
+  if (result) {
+    if (result.indexOf("blob") > -1) {
+      return result;
+    } else {
+      if (result === "LOADING") {
+        return true;
+      }
+    }
+  }
+  return null;
+}
+
+export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, componenet, init) {
+  const id = `${hashCode}-${size}-${quality}`;
+  const {dispatch} = componenet.props;
+  const downloadingResult = getFileDownloadingFromHashMapWindow(id);
+  if (downloadingResult) {
+    return downloadingResult;
+  }
+  const lastResult = window.podspaceHashmap[id] || "";
+  if (lastResult.indexOf("FAIL") < 0) {
+    if (!init) {
+      componenet.setState({
+        [fieldKey]: window.podspaceHashmap[id] = "LOADING"
+      });
+    }
+  }
+  dispatch(chatGetImage(hashCode, size, quality)).then(result => {
+    componenet.setState({
+      [fieldKey]: window.podspaceHashmap[id] = URL.createObjectURL(result)
+    });
+  }, err => {
+    const failCount = +lastResult.split("-")[1] ? +lastResult.split("-")[1] : 1;
+    if (failCount >= 3) {
+      return;
+    }
+    window.podspaceHashmap[id] = `FAIL-${failCount + 1}`;
+    getImageFromHashMapWindow.apply(null, arguments);
+  });
+  return init ? "LOADING" : downloadingResult;
+}
+
 export function getFileFromHashMap(hashCode, metadata) {
   const id = hashCode;
   const {dispatch} = this.props;

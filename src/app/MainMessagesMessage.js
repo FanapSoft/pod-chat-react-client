@@ -65,7 +65,7 @@ import {clearHtml} from "./_component/Input";
 
 function isNewFile({metadata}) {
   let metaData = metadata;
-  metaData = typeof metaData === "string" ? JSON.parse(metaData).file : metaData.file;
+  metaData = typeof metaData === "string" ? JSON.parse(metaData) : metaData;
   return metaData.fileHash;
 }
 
@@ -207,12 +207,14 @@ export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth)
                 :
                 isImage && !text ?
                   <Container>
-                    <MdCameraAlt size={style.iconSizeSm} color={style.colorGrayDark} style={{margin: "0 5px", verticalAlign: "middle"}}/>
+                    <MdCameraAlt size={style.iconSizeSm} color={style.colorGrayDark}
+                                 style={{margin: "0 5px", verticalAlign: "middle"}}/>
                     <Text inline size="sm" bold color="gray" dark>{strings.photo}</Text>
                   </Container> :
                   isVideo ?
                     <Container>
-                      <MdVideocam size={style.iconSizeSm} color={style.colorGrayDark} style={{margin: "0 5px", verticalAlign: "middle"}}/>
+                      <MdVideocam size={style.iconSizeSm} color={style.colorGrayDark}
+                                  style={{margin: "0 5px", verticalAlign: "middle"}}/>
                       <Text inline size="sm" bold color="gray" dark>{strings.video}</Text>
                     </Container> :
                     file ?
@@ -225,9 +227,9 @@ export function ReplyFragment(isMessageByMe, message, gotoMessageFunc, maxWidth)
                       <Text italic size="xs" isHTML>{text}</Text>}
 
               {isImage &&
-              file.fileHash ?
+              meta.fileHash ?
                 <ImageFetcher className={style.MainMessagesMessage__ReplyFragmentImage}
-                              hashCode={file.hashCode}
+                              hashCode={meta.fileHash}
                               size={1}
                               setOnBackground/>
                 :
