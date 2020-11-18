@@ -9,7 +9,7 @@ import {
   cancelFileDownloadingFromHashMap,
   getFileDownloadingFromHashMap,
   getFileFromHashMap,
-  getImageFromHashMap,
+  getImageFromHashMap, getImageFromHashMapWindow,
   humanFileSize,
   mobileCheck
 } from "../utils/helpers";
@@ -27,7 +27,7 @@ import {
   messageCancelFile,
   messageSendFile,
 } from "../actions/messageActions";
-import {chatAudioPlayer} from "../actions/chatActions";
+import {chatAudioPlayer, chatGetImage} from "../actions/chatActions";
 
 //components
 import {
@@ -86,7 +86,7 @@ export function getImage({link, file}, isFromServer, smallVersion) {
   let height = file.actualHeight;
 
   const ratio = height / width;
-  if (ratio < 0.25 || ratio > 5) {
+  if (ratio < 0.15 || ratio > 7) {
     return false;
   }
   const maxWidth = smallVersion || window.innerWidth <= 700 ? 190 : ratio >= 2 ? 200 : 300;
@@ -123,7 +123,20 @@ const imageQualities = {
     s: 3
   },
   high: {
-    q: .5
+    q: meta => {
+      let {size} = meta.file;
+      size = size / 1024;
+      if (size <= 1024) {
+        return .5
+      }
+      if (size <= 2048) {
+        return .3
+      }
+      if (size <= 4096) {
+        return .2
+      }
+      return .1
+    }
   }
 };
 
@@ -131,8 +144,7 @@ const imageQualities = {
   return {
     smallVersion: store.chatSmallVersion,
     leftAsideShowing: store.threadLeftAsideShowing.isShowing,
-    chatAudioPlayer: store.chatAudioPlayer,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+    chatAudioPlayer: store.chatAudioPlayer
   };
 })
 class MainMessagesMessageFile extends Component {
@@ -143,6 +155,7 @@ class MainMessagesMessageFile extends Component {
     const metaData = typeof message.metadata === "string" ? JSON.parse(message.metadata) : message.metadata;
     const imageIsSuitableSize = isImage(message) && getImage(metaData, message.id, smallVersion || leftAsideShowing);
     const isImageReal = isImage(message);
+    const {fileHash} = metaData;
     this.state = {
       isImage: isImageReal,
       isVideo: isVideo(message),
@@ -150,13 +163,12 @@ class MainMessagesMessageFile extends Component {
       isVoice: isVoice(message),
       isFile: !isSound(message) && !isVideo(message) && !isImageReal,
       isUploading: isUploading(message),
-      imageThumb: isImageReal && imageIsSuitableSize ? getImageFromHashMap.apply(this, [metaData.fileHash, imageQualities.medium.s]) : null,
-      imageModalPreview: isImageReal && imageIsSuitableSize ? getImageFromHashMap.apply(this, [metaData.fileHash, null, imageQualities.high.q]) : null,
-      imageThumbLowQuality: isImageReal && imageIsSuitableSize ? getImageFromHashMap.apply(this, [metaData.fileHash, imageQualities.low.s, imageQualities.low.q]) : null,
+      imageThumb: isImageReal && imageIsSuitableSize ? getImageFromHashMapWindow(fileHash, imageQualities.medium.s, null, "imageThumb", this, true) : null,
+      imageModalPreview: isImageReal && imageIsSuitableSize ? getImageFromHashMapWindow(fileHash, null, imageQualities.high.q(metaData), "imageModalPreview", this, true) : null,
+      imageThumbLowQuality: isImageReal && imageIsSuitableSize ? getImageFromHashMapWindow(fileHash, imageQualities.low.s, imageQualities.low.q, "imageThumbLowQuality", this, true) : null,
       metaData,
       imageIsSuitableSize
     };
-
     this.onCancelDownload = this.onCancelDownload.bind(this);
     this.onImageClick = this.onImageClick.bind(this);
     this.onCancel = this.onCancel.bind(this);
@@ -173,6 +185,20 @@ class MainMessagesMessageFile extends Component {
 
   onImageClick(e) {
     e.stopPropagation();
+  }
+
+  requestForImage(hash, size, quality, updateKey) {
+    const {dispatch} = this.props;
+    const id = `${hash}-${size}-${quality}`;
+    if (window[id]) {
+      return window[id];
+    }
+    dispatch(chatGetImage(hash, size, quality)).then(result => {
+      window[id] = URL.createObjectURL(result);
+      this.setState({
+        [updateKey]: window[id]
+      });
+    });
   }
 
   componentDidMount() {
@@ -207,7 +233,7 @@ class MainMessagesMessageFile extends Component {
 
     const downloadRef = this.downloadTriggerRef.current;
     if (!downloadRef.href) {
-      const id = this.state.metaData.file.hashCode;
+      const id = this.state.metaData.fileHash;
       const result = getFileDownloadingFromHashMap.call(this, id);
       const oldResult = oldChatFileHashCodeMap.find(e => e.id === id);
       if (oldResult) {
@@ -279,7 +305,7 @@ class MainMessagesMessageFile extends Component {
 
   onCancelDownload() {
     const {metaData} = this.state;
-    cancelFileDownloadingFromHashMap.call(this, metaData.file.hashCode);
+    cancelFileDownloadingFromHashMap.call(this, metaData.fileHash);
   }
 
   onDownload(metaData, isPlayable, e) {
@@ -316,7 +342,7 @@ class MainMessagesMessageFile extends Component {
 
   onRetry() {
     const {dispatch, message, thread} = this.props;
-    console.log(message)
+    console.log(message);
     this.onCancel(message);
     dispatch(messageSendFile(message.fileObject, thread, message.message));
   }
@@ -360,22 +386,20 @@ class MainMessagesMessageFile extends Component {
       isVideo,
       isSound,
       isVoice,
-      metaData
+      metaData,
+      imageIsSuitableSize
     } = this.state;
     if (isImage) {
-      imageThumb = getImageFromHashMap.apply(this, [metaData.fileHash, imageQualities.medium.s]);
-      imageModalPreview = getImageFromHashMap.apply(this, [metaData.fileHash, null, imageQualities.high.q]);
-      imageThumbLowQuality = getImageFromHashMap.apply(this, [metaData.fileHash, imageQualities.low.s, imageQualities.low.q]);
-      imageThumb = (typeof imageThumb === "string" && imageThumb.indexOf("blob") < 0) || imageThumb === true ? null : imageThumb;
-      imageModalPreview = (typeof imageModalPreview === "string" && imageModalPreview.indexOf("blob") < 0) || imageModalPreview === true ? null : imageModalPreview;
-      imageThumbLowQuality = (typeof imageThumbLowQuality === "string" && imageThumbLowQuality.indexOf("blob") < 0) || imageThumbLowQuality === true ? null : imageThumbLowQuality;
+      imageThumb = imageThumb === "LOADING" ? null : imageThumb;
+      imageModalPreview = imageModalPreview === "LOADING" ? null : imageModalPreview;
+      imageThumbLowQuality = imageThumbLowQuality === "LOADING" ? null : imageThumbLowQuality;
     }
 
-    const downloading = this.isDownloading && getFileDownloadingFromHashMap.call(this, metaData.file.hashCode) === true;
+    const downloading = this.isDownloading && getFileDownloadingFromHashMap.call(this, metaData.fileHash) === true;
     const isPlaying = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.playing;
     const isUploadingBool = isUploading(message);
     const isBlurry = imageThumbLowQuality && !imageThumb && !isUploadingBool;
-    const gettingImageThumb = !imageThumbLowQuality && !imageThumb && isImage && !isUploadingBool;
+    const gettingImageThumb = (isImage && imageIsSuitableSize && !isUploadingBool) && (!imageThumbLowQuality && !imageThumb);
     const imageSizeLink = isImage ? getImage(metaData, message.id, smallVersion || leftAsideShowing) : false;
     if (!imageSizeLink) {
       isImage = false;
@@ -387,6 +411,10 @@ class MainMessagesMessageFile extends Component {
     const progressContainer = classnames({
       [style.MainMessagesFile__ProgressContainer]: true,
       [style["MainMessagesFile__ProgressContainer--downloading"]]: downloading || gettingImageThumb
+    });
+    const fileControlContainerClassNames = classnames({
+      [style.MainMessagesFile__FileControlIcon]: true,
+      [style["MainMessagesFile__FileControlIcon--image"]]: isImage || imageIsSuitableSize
     });
     return (
       <Container className={style.MainMessagesFile} key={message.uuid}>
@@ -446,7 +474,7 @@ class MainMessagesMessageFile extends Component {
                        className={style.MainMessagesFile__FileContainer}>
               {isImage ?
                 <Container style={{width: `${imageSizeLink.width}px`}}>
-                  <BoxModalMediaFragment link={imageModalPreview} options={{caption: message.message}}>
+                  <BoxModalMediaFragment link={imageModalPreview || imageThumb} options={{caption: message.message}}>
                     <Image className={mainMessagesFileImageClassNames}
                            onClick={this.onImageClick}
                            src={message.id ? isBlurry ? imageThumbLowQuality : imageThumb : imageSizeLink.imageLink}
@@ -492,7 +520,7 @@ class MainMessagesMessageFile extends Component {
                 </Container>
               }
               {(isDownloadable(message) && !isImage) || downloading || isUploadingBool || hasError(message) ?
-                <Container className={style.MainMessagesFile__FileControlIcon}
+                <Container className={fileControlContainerClassNames}
                            style={isImage ? {
                              maxWidth: `${imageSizeLink.width}px`,
                              height: `${imageSizeLink.height}px`

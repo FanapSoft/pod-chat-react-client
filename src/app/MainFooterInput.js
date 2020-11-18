@@ -396,7 +396,7 @@ export default class MainFooterInput extends Component {
     const {thread, dispatch} = this.props;
     const threadId = thread.id;
     if (isTyping) {
-      dispatch(startTyping(threadId));
+      return dispatch(startTyping(threadId));
     }
     dispatch(stopTyping());
   }

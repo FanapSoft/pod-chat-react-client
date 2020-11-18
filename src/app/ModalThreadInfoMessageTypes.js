@@ -29,7 +29,12 @@ import {
 } from "react-icons/md";
 import {BoxModalMediaFragment} from "./index";
 import ReactDOMServer from "react-dom/server";
-import {getFileDownloadingFromHashMap, getFileFromHashMap, getImageFromHashMap, humanFileSize} from "../utils/helpers";
+import {
+  getFileDownloadingFromHashMap,
+  getFileFromHashMap,
+  getImageFromHashMapWindow,
+  humanFileSize
+} from "../utils/helpers";
 import {getImage, isImage} from "./MainMessagesMessageFile";
 
 @connect(store => {
@@ -84,6 +89,8 @@ export default class ModalThreadInfoMessageTypes extends Component {
         loading: true,
         hasNext: false,
         nextOffset: 0,
+        thumb: null,
+        blurryThumb: null,
         messages: []
       });
     }
@@ -168,8 +175,8 @@ export default class ModalThreadInfoMessageTypes extends Component {
     };
 
     if (type === "picture") {
-      const thumb = getImageFromHashMap.apply(this, [metaData.fileHash, 3]);
-      const blurryThumb = getImageFromHashMap.apply(this, [metaData.fileHash, 1, 0.01]);
+      const thumb = getImageFromHashMapWindow(metaData.fileHash, 3, null, "thumb", this);
+      const blurryThumb = getImageFromHashMapWindow(metaData.fileHash, 1, 0.01, "blurryThumb", this);
       const isBlurry = blurryThumb && (!thumb || thumb === true);
       const onFancyBoxClick = e => {
         //window.modalMediaRef.getFancyBox().open()

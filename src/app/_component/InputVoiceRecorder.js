@@ -1,5 +1,6 @@
 // src/list/BoxScene.jss
 import React, {Component} from "react";
+import moment from "moment";
 import {connect} from "react-redux";
 import {ReactMic} from 'react-mic';
 
@@ -117,7 +118,7 @@ export default class InputEmojiTrigger extends Component {
       return;
     }
     recordedBlob.blob.lastModifiedDate = new Date();
-    recordedBlob.blob.name = "voice";
+    recordedBlob.blob.name = `voice-${moment(new Date()).format("YYYY-MM-DD-HH:mm")}`;
     if (messageEditing) {
       if (messageEditing.type === constants.replying) {
         dispatch(messageEditingAction());
