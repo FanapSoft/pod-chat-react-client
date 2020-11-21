@@ -21,7 +21,9 @@ import {MdAttachFile, MdChevronRight} from "react-icons/md";
 //styling
 import style from "../../styles/app/MainFooterAttachment.scss";
 import styleVar from "../../styles/variables.scss";
-import {stopTyping} from "../actions/chatActions";
+import {chatModalPrompt, stopTyping} from "../actions/chatActions";
+import {MessageDeletePrompt} from "./_component/prompts";
+import MainFooterAttachmentAttach from "./MainFooterAttachmentAttach";
 
 @connect(store => {
   return {
@@ -88,6 +90,10 @@ export default class MainFooterAttachment extends Component {
     if (isSendingText) {
       sendMessage();
       dispatch(stopTyping());
+    } else {
+      dispatch(chatModalPrompt(true,
+        null, null, null, null,
+        <MainFooterAttachmentAttach dispatch={dispatch}/>));
     }
   }
 
@@ -102,9 +108,6 @@ export default class MainFooterAttachment extends Component {
             </Container>
             :
             <Container>
-              <input className={style.MainFooterAttachment__Button} type="file" onChange={this.onAttachmentChange}
-                     onClick={this.onAttachmentClick}
-                     multiple ref={this.fileInput}/>
               <MdAttachFile size={styleVar.iconSizeMd} color={styleVar.colorAccentDark} style={{margin: "5px 6px"}}/>
             </Container>
         }
