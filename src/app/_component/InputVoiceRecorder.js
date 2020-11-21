@@ -21,7 +21,7 @@ import style from "../../../styles/modules/InputVoiceRecorder.scss";
 import styleVar from "../../../styles/variables.scss";
 import {messageEditing as messageEditingAction, messageFileReply, messageSendFile} from "../../actions/messageActions";
 import classnames from "classnames";
-import {mobileCheck} from "../../utils/helpers";
+import {checkForMediaAccess, mobileCheck} from "../../utils/helpers";
 import {types} from "../../constants/messageTypes";
 
 export const constants = {
@@ -50,16 +50,17 @@ export default class InputEmojiTrigger extends Component {
   }
 
   componentDidMount() {
-
-    navigator.permissions.query(
-      {name: 'microphone'}
-    ).then((permissionStatus) => {
-      if (permissionStatus.state === "denied") {
-        this.setState({
-          mic: false
-        });
-      }
-    })
+    if (navigator.permissions) {
+      navigator.permissions.query(
+        {name: 'microphone'}
+      ).then((permissionStatus) => {
+        if (permissionStatus.state === "denied") {
+          this.setState({
+            mic: false
+          });
+        }
+      })
+    }
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -77,10 +78,8 @@ export default class InputEmojiTrigger extends Component {
     if (!mic) {
       return alert(strings.youCannotUseMicrophone)
     }
-    navigator.permissions.query(
-      {name: 'microphone'}
-    ).then((permissionStatus) => {
-      if (permissionStatus.state === "prompt") {
+    checkForMediaAccess().then(({hasMicrophone, isMicrophoneAlreadyCaptured}) => {
+      if (hasMicrophone && !isMicrophoneAlreadyCaptured) {
         navigator.mediaDevices.getUserMedia({audio: true})
           .then((stream) => {
             if (!chatAudioRecorder) {
@@ -98,7 +97,7 @@ export default class InputEmojiTrigger extends Component {
         this.setState({
           mic: true
         });
-      } else if (permissionStatus.state === "granted") {
+      } else if (hasMicrophone && isMicrophoneAlreadyCaptured) {
         if (!chatAudioRecorder) {
           this.lastThread = thread;
         }
