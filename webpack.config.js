@@ -8,6 +8,23 @@ module.exports = (e, argv) => {
   const mode = argv.mode;
   const define = argv.define;
   let base = {
+    externals: [
+      // nodeExternals(),
+      {
+        react: {
+          root: 'React',
+          commonjs2: 'react',
+          commonjs: 'react',
+          amd: 'react'
+        },
+        'react-dom': {
+          root: 'ReactDOM',
+          commonjs2: 'react-dom',
+          commonjs: 'react-dom',
+          amd: 'react-dom'
+        }
+      }
+    ],
     devServer: {
       compress: true,
       public: "chat.fanapsoft.ir",
@@ -47,7 +64,7 @@ module.exports = (e, argv) => {
                 modules: true,
                 localIdentName: mode === "production" ? "[hash:base64:5]" : "[local]",
                 getLocalIdent: (loaderContext, localIdentName, localName, options) => {
-                  return loaderContext.resourcePath.includes('ModalMedia') || loaderContext.resourcePath.includes('emoji') ?
+                  return loaderContext.resourcePath.includes('ModalMedia') || loaderContext.resourcePath.includes('emoji') || localName.includes('leaflet') ?
                     localName :
                     getLocalIdent(loaderContext, localIdentName, localName, options);
                 }
@@ -64,7 +81,7 @@ module.exports = (e, argv) => {
         },
         {
           test: /\.(png|jpg|gif|ttf|eot|woff2|woff|mp3|svg)$/,
-          exclude: /oneone\.png/,
+          exclude: /(oneone|layers|layers-2x|marker-icon)\.png/,
           use: [
             {
               loader: "url-loader",
@@ -85,7 +102,16 @@ module.exports = (e, argv) => {
               }
             }
           ]
-        }
+        },
+        {
+          test: /(layers|layers-2x|marker-icon|marker-shadow)\.png/,
+          use: {
+            loader: "file-loader",
+            options: {
+              name: '[path][name].[ext]',
+            },
+          },
+        },
       ]
     },
     plugins: [

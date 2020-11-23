@@ -11,7 +11,6 @@ import {
   messageFileReply,
   messageSendFile, messageSendFileOnTheFly
 } from "../actions/messageActions";
-import {threadFilesToUpload} from "../actions/threadActions";
 
 
 //components
@@ -22,7 +21,6 @@ import {MdAttachFile, MdChevronRight} from "react-icons/md";
 import style from "../../styles/app/MainFooterAttachment.scss";
 import styleVar from "../../styles/variables.scss";
 import {chatModalPrompt, stopTyping} from "../actions/chatActions";
-import {MessageDeletePrompt} from "./_component/prompts";
 import MainFooterAttachmentAttach from "./MainFooterAttachmentAttach";
 
 @connect(store => {
@@ -38,10 +36,7 @@ export default class MainFooterAttachment extends Component {
 
   constructor(props) {
     super(props);
-    this.onAttachmentChange = this.onAttachmentChange.bind(this);
-    this.onAttachmentClick = this.onAttachmentClick.bind(this);
     this.onClick = this.onClick.bind(this);
-    this.fileInput = React.createRef();
   }
 
   componentDidUpdate(prevProps) {
@@ -51,14 +46,6 @@ export default class MainFooterAttachment extends Component {
         this.sendFiles(threadFilesToUpload);
       }
     }
-  }
-
-  onAttachmentChange(evt) {
-    this.props.dispatch(threadFilesToUpload(evt.target.files, false, this.fileInput.current));
-  }
-
-  onAttachmentClick(evt) {
-    evt.target.value = null
   }
 
   sendFiles(filesObject) {
@@ -86,14 +73,14 @@ export default class MainFooterAttachment extends Component {
   }
 
   onClick() {
-    const {isSendingText, sendMessage, dispatch} = this.props;
+    const {thread, isSendingText, sendMessage, dispatch} = this.props;
     if (isSendingText) {
       sendMessage();
       dispatch(stopTyping());
     } else {
       dispatch(chatModalPrompt(true,
         null, null, null, null,
-        <MainFooterAttachmentAttach dispatch={dispatch}/>));
+        <MainFooterAttachmentAttach dispatch={dispatch} thread={thread}/>));
     }
   }
 

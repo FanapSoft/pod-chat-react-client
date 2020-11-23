@@ -328,6 +328,51 @@ export default class ChatSDK {
     })
   }
 
+
+  @promiseDecorator
+  sendLocationMessage(resolve, reject, {id, userGroupHash}, lat, lng, options, callBack) {
+    let sendChatParams = {
+      mapCenter: {
+        lat,
+        lng
+      },
+      mapType: "standard-day",
+      threadId: id,
+      userGroupHash,
+      ...options
+    };
+    const time =  getNow() * Math.pow(10, 6);
+    const obj = this.chatAgent.sendLocationMessage(sendChatParams, file => {
+      callBack(
+        {
+          time,
+          fileObject: file,
+          messageType: typesCode[types.picture],
+          metadata: {
+            name: file.name,
+            file: {
+              link: URL.createObjectURL(file),
+              mimeType: file.type,
+              size: file.size
+            }
+          },
+          ...obj
+        }
+      );
+    });
+    resolve({
+      ...obj,
+      fileObject: {},
+      time,
+      participant: this.user,
+      messageType: typesCode[types.picture],
+      metadata: {
+        file: {},
+        mapLink: true
+      }
+    })
+  }
+
   @promiseDecorator
   sendFileMessage(resolve, reject, file, thread, caption, other) {
     const isImage = isImageFile(file);

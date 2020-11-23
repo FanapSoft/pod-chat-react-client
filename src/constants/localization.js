@@ -201,6 +201,7 @@ let strings = new LocalizedStrings({
     messageDeleted: "پیام پاک شده است",
     forMeOnly: "فقط برای من",
     forMeAndOthers: "برای من و دیگران",
+    sendLocation: "فرستادن موقعیت مکانی",
     removeMessageThatYouCanDeleteForAll: "برای من و اونایی که برای دیگران هم میشه",
     adminList: "لیست مدیران",
     admins: "مدیران",
@@ -242,6 +243,7 @@ let strings = new LocalizedStrings({
       }
       return `ارسال ${count} ${fileText}`;
     },
+    sendFile: "ارسال فایل",
     thereIsNoContact: "مخاطبی وجود ندارد",
     share: "اشتراک گذاری",
     socialNetworks: {

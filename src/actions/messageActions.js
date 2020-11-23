@@ -7,7 +7,7 @@ import {
   MESSAGE_FORWARD,
   MESSAGE_SENDING_ERROR,
   MESSAGE_FILE_UPLOAD_CANCEL,
-  MESSAGE_DELETING, MESSAGE_CANCEL, THREAD_CREATE
+  MESSAGE_DELETING, MESSAGE_CANCEL, THREAD_CREATE, THREAD_NEW_MESSAGE
 } from "../constants/actionTypes";
 import {threadCreateWithExistThread} from "./threadActions";
 import {getNow, isAudioFile, isImageFile, isVideoFile} from "../utils/helpers";
@@ -84,6 +84,24 @@ export const messageSend = (text, threadId, other) => {
       type: MESSAGE_SEND(),
       payload: chatSDK.sendMessage(text, threadId, other)
     });
+  }
+};
+
+export const messageSendLocation = (thread, lat, lng, options) => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const chatSDK = state.chatInstance.chatSDK;
+    chatSDK.sendLocationMessage(thread, lat, lng, options, message => {
+      dispatch({
+        type: THREAD_NEW_MESSAGE,
+        payload: message
+      });
+    }).then(message=>{
+      dispatch({
+        type: MESSAGE_SEND(SUCCESS),
+        payload: message
+      });
+    })
   }
 };
 

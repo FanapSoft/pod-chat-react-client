@@ -219,7 +219,7 @@ class MainMessagesMessageFile extends Component {
 
   componentDidUpdate(oldProps) {
     const {message, dispatch} = this.props;
-    const {chatFileHashCodeMap: oldChatFileHashCodeMap} = oldProps;
+    const {chatFileHashCodeMap: oldChatFileHashCodeMap, message: oldMessage} = oldProps;
 
     if (message) {
       if (message.progress) {
@@ -227,6 +227,17 @@ class MainMessagesMessageFile extends Component {
           if (hasError(message)) {
             dispatch(messageSendingError(message.threadId, message.uniqueId));
           }
+        }
+      }
+    }
+
+    if (oldMessage) {
+      if (oldMessage.metadata.mapLink) {
+        if (!message.metadata.mapLink) {
+          const metaData = typeof message.metadata === "string" ? JSON.parse(message.metadata) : message.metadata;
+          this.setState({
+            metaData
+          })
         }
       }
     }
@@ -394,12 +405,13 @@ class MainMessagesMessageFile extends Component {
       imageModalPreview = imageModalPreview === "LOADING" ? null : imageModalPreview;
       imageThumbLowQuality = imageThumbLowQuality === "LOADING" ? null : imageThumbLowQuality;
     }
-
+    const isLocationMap = metaData.mapLink;
+    const isLocationMapLoading = isLocationMap === true;
     const downloading = this.isDownloading && getFileDownloadingFromHashMap.call(this, metaData.fileHash) === true;
     const isPlaying = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.playing;
-    const isUploadingBool = isUploading(message);
+    const isUploadingBool = isUploading(message) && !isLocationMapLoading;
     const isBlurry = imageThumbLowQuality && !imageThumb && !isUploadingBool;
-    const gettingImageThumb = (isImage && imageIsSuitableSize && !isUploadingBool) && (!imageThumbLowQuality && !imageThumb);
+    const gettingImageThumb = isLocationMapLoading || (isImage && imageIsSuitableSize && !isUploadingBool) && (!imageThumbLowQuality && !imageThumb);
     const imageSizeLink = isImage ? getImage(metaData, message.id, smallVersion || leftAsideShowing) : false;
     if (!imageSizeLink) {
       isImage = false;
@@ -416,6 +428,16 @@ class MainMessagesMessageFile extends Component {
       [style.MainMessagesFile__FileControlIcon]: true,
       [style["MainMessagesFile__FileControlIcon--image"]]: isImage || imageIsSuitableSize
     });
+    const ImageFragment = () => <Image className={mainMessagesFileImageClassNames}
+                                       onClick={this.onImageClick}
+                                       src={message.id ? isBlurry ? imageThumbLowQuality : imageThumb : imageSizeLink.imageLink}
+                                       style={{
+                                         backgroundColor: gettingImageThumb ? "#fff" : "none",
+                                         maxWidth: `${imageSizeLink.width}px`,
+                                         width: `${imageSizeLink.width}px`,
+                                         height: `${isLocationMapLoading ? "200" : imageSizeLink.height}px`,
+                                         filter: isBlurry || gettingImageThumb ? "blur(8px)" : "none"
+                                       }}/>;
     return (
       <Container className={style.MainMessagesFile} key={message.uuid}>
         <Container display="none">
@@ -474,18 +496,16 @@ class MainMessagesMessageFile extends Component {
                        className={style.MainMessagesFile__FileContainer}>
               {isImage ?
                 <Container style={{width: `${imageSizeLink.width}px`}}>
-                  <BoxModalMediaFragment link={imageModalPreview || imageThumb} options={{caption: message.message}}>
-                    <Image className={mainMessagesFileImageClassNames}
-                           onClick={this.onImageClick}
-                           src={message.id ? isBlurry ? imageThumbLowQuality : imageThumb : imageSizeLink.imageLink}
-                           style={{
-                             backgroundColor: gettingImageThumb ? "#fff" : "none",
-                             maxWidth: `${imageSizeLink.width}px`,
-                             width: `${imageSizeLink.width}px`,
-                             height: `${imageSizeLink.height}px`,
-                             filter: isBlurry || gettingImageThumb ? "blur(8px)" : "none"
-                           }}/>
-                  </BoxModalMediaFragment>
+                  {isLocationMap ?
+                    <Text link={isLocationMap} linkClearStyle target={"_blank"}>
+                      <ImageFragment/>
+                    </Text>
+                    :
+                    <BoxModalMediaFragment link={imageModalPreview || imageThumb} options={{caption: message.message}}>
+                      <ImageFragment/>
+                    </BoxModalMediaFragment>
+                  }
+
                   <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e => e.stopPropagation()}>
                     <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
                       {mentionify(emailify(urlify(decodeEmoji(clearHtml(message.message)))))}
