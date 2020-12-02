@@ -13,7 +13,7 @@ import {
 } from "../../actions/chatActions";
 
 //components
-import Container from "../../../../uikit/src/container";
+import Container from "../../../../pod-chat-ui-kit/src/container";
 
 //styling
 import {MdSentimentVerySatisfied, MdClose, MdMic, MdMicOff, MdStop} from "react-icons/md";

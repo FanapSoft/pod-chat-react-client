@@ -8,15 +8,17 @@ import {connect} from "react-redux";
 import {threadFilesToUpload} from "../actions/threadActions";
 
 //components
-import Container from "../../../uikit/src/container";
-import List, {ListItem} from "../../../uikit/src/list";
-import {Text} from "../../../uikit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import {MdMap, MdInsertDriveFile, MdClose} from "react-icons/md";
 
 //styling
 import style from "../../styles/app/MainFooterAttachmentAttach.scss";
 import {chatModalPrompt, stopTyping} from "../actions/chatActions";
 import strings from "../constants/localization";
 import MainFooterAttachmentAttachMap from "./MainFooterAttachmentAttachMap";
+import styleVar from "../../styles/variables.scss";
 
 @connect()
 export default class MainFooterAttachmentAttach extends Component {
@@ -25,6 +27,7 @@ export default class MainFooterAttachmentAttach extends Component {
     super(props);
     this.onAttachmentChange = this.onAttachmentChange.bind(this);
     this.onMapClick = this.onMapClick.bind(this);
+    this.onCancel = this.onCancel.bind(this);
     this.fileInput = React.createRef();
   }
 
@@ -42,6 +45,11 @@ export default class MainFooterAttachmentAttach extends Component {
       <MainFooterAttachmentAttachMap dispatch={dispatch} thread={thread}/>));
   }
 
+  onCancel() {
+    const {dispatch} = this.props;
+    dispatch(chatModalPrompt());
+  }
+
   onAttachmentClick(evt) {
     evt.target.value = null
   }
@@ -55,30 +63,47 @@ export default class MainFooterAttachmentAttach extends Component {
   }
 
   render() {
-
     return (
       <Container className={style.MainFooterAttachmentAttach} inline relative onClick={this.onClick.bind(this)}>
         <List>
 
-          <ListItem key="for-me"
+          <ListItem key="send-file"
                     selection={true}
-                    invert={true}
-                    onSelect={e => dispatch(chatModalPrompt())}>
-            <Text bold color="accent">
-              {strings.sendFile}
-              <input className={style.MainFooterAttachmentAttach__Input} type="file" onChange={this.onAttachmentChange}
-                     onClick={this.onAttachmentClick}
-                     multiple ref={this.fileInput}/>
-            </Text>
+                    invert={true}>
+            <Container display="flex">
+              <MdInsertDriveFile size={styleVar.iconSizeMd} color={styleVar.colorAccent} style={{margin: "2px 0 0 6px"}}/>
+              <Text bold color="accent">
+                {strings.sendFile}
+                <input className={style.MainFooterAttachmentAttach__Input} type="file" onChange={this.onAttachmentChange}
+                       onClick={this.onAttachmentClick}
+                       multiple ref={this.fileInput}/>
+              </Text>
+            </Container>
+
 
           </ListItem>
 
-          <ListItem key="for-others-also"
+          <ListItem key="send-location"
                     color="accent"
                     selection={true}
                     invert={true}
                     onSelect={this.onMapClick}>
-            <Text bold color="accent">{strings.sendLocation}</Text>
+            <Container display="flex">
+              <MdMap size={styleVar.iconSizeMd} color={styleVar.colorAccent} style={{margin: "2px 0 0 6px"}}/>
+              <Text bold color="accent">{strings.sendLocation}</Text>
+            </Container>
+
+          </ListItem>
+
+          <ListItem key="cancel"
+                    color="accent"
+                    selection={true}
+                    invert={true}
+                    onSelect={this.onCancel}>
+            <Container display="flex">
+              <MdClose size={styleVar.iconSizeMd} color={styleVar.colorAccent} style={{margin: "2px 0 0 6px"}}/>
+              <Text bold color="accent">{strings.cancel}</Text>
+            </Container>
 
           </ListItem>
         </List>

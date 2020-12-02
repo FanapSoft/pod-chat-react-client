@@ -1,11 +1,17 @@
 {
   "presets": [
-    "env",
-    "react"
+    "@babel/preset-env",
+    "@babel/preset-react"
   ],
   "plugins": [
-    "transform-object-rest-spread",
-    "transform-decorators-legacy",
-    "transform-class-properties"
+    "@babel/plugin-proposal-object-rest-spread",
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        "legacy": true
+      }
+    ],
+    ["@babel/plugin-proposal-class-properties", { "loose": true }]
+
   ]
 }

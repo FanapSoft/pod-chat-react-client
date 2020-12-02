@@ -20,11 +20,11 @@ import {threadInit, threadMessageGetList, threadParticipantList, threadShowing} 
 import MainHead from "./MainHead";
 import MainMessages from "./MainMessages";
 import MainFooter from "./MainFooter";
-import Message from "../../../uikit/src/message";
-import Gap from "../../../uikit/src/gap";
+import Message from "../../../pod-chat-ui-kit/src/message";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 import {MdChat} from "react-icons/md";
-import {Button} from "../../../uikit/src/button";
-import Container from "../../../uikit/src/container";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import MainPinMessage from "./MainPinMessage";
 
 //styling

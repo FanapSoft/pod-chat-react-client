@@ -21,11 +21,11 @@ import {
 } from "../actions/threadActions";
 
 //components
-import Context, {ContextItem, ContextTrigger} from "../../../uikit/src/menu/Context";
-import Paper, {PaperFooter} from "../../../uikit/src/paper";
-import Container from "../../../uikit/src/container";
-import {Text} from "../../../uikit/src/typography";
-import Gap from "../../../uikit/src/gap";
+import Context, {ContextItem, ContextTrigger} from "../../../pod-chat-ui-kit/src/menu/Context";
+import Paper, {PaperFooter} from "../../../pod-chat-ui-kit/src/paper";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 //styling
 import {

@@ -14,7 +14,7 @@ import {
 
 
 //components
-import Container from "../../../uikit/src/container";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import {MdAttachFile, MdChevronRight} from "react-icons/md";
 
 //styling

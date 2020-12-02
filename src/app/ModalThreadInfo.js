@@ -11,9 +11,9 @@ import {
 import {ROUTE_THREAD_INFO} from "../constants/routes";
 
 //UI components
-import Gap from "../../../uikit/src/gap";
-import Container from "../../../uikit/src/container";
-import Divider from "../../../uikit/src/divider";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Divider from "../../../pod-chat-ui-kit/src/divider";
 
 //UI components
 
@@ -23,7 +23,7 @@ import ModalThreadInfoPerson from "./ModalThreadInfoPerson";
 
 //styling
 import style from "../../styles/app/ModalThreadInfo.scss";
-import {getFileFromHashMap} from "../utils/helpers";
+import {getFileFromHashMap, getImageFromHashMapWindow} from "../utils/helpers";
 
 function GapFragment() {
   return (
@@ -42,7 +42,7 @@ function AvatarModalMediaFragment({participant, thread, }) {
     caption = getName(participant);
   } else {
     if(thread.metadata) {
-      image = getFileFromHashMap.apply(this, [JSON.parse(thread.metadata).fileHash, 3, 1])
+      image = getImageFromHashMapWindow(JSON.parse(thread.metadata).fileHash, 2, null, "avatarImage", this)
     } else {
       image = thread.image;
     }
@@ -62,7 +62,7 @@ function AvatarModalMediaFragment({participant, thread, }) {
     contacts: store.contactGetList.contacts,
     chatRouterLess: store.chatRouterLess
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 class ModalThreadInfo extends Component {
 
   constructor(props) {

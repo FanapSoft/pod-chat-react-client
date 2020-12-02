@@ -23,18 +23,18 @@ import {chatModalPrompt} from "../actions/chatActions";
 //UI components
 import {ContactList} from "./_component/contactList";
 import {ContactSearchFragment, PartialLoadingFragment} from "./ModalContactList";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 import ModalThreadInfoGroupSettings from "./ModalThreadInfoGroupSettings";
-import {Button} from "../../../uikit/src/button";
-import Gap from "../../../uikit/src/gap";
-import {Heading, Text} from "../../../uikit/src/typography";
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import Container from "../../../uikit/src/container";
-import Modal from "../../../uikit/src/modal";
-import ModalHeader from "../../../uikit/src/modal/ModalHeader";
-import ModalBody from "../../../uikit/src/modal/ModalBody";
-import ModalFooter from "../../../uikit/src/modal/ModalFooter";
-import List, {ListItem} from "../../../uikit/src/list";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {Heading, Text} from "../../../pod-chat-ui-kit/src/typography";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Modal from "../../../pod-chat-ui-kit/src/modal";
+import ModalHeader from "../../../pod-chat-ui-kit/src/modal/ModalHeader";
+import ModalBody from "../../../pod-chat-ui-kit/src/modal/ModalBody";
+import ModalFooter from "../../../pod-chat-ui-kit/src/modal/ModalFooter";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
 
 //styling
 import {MdGroupAdd, MdArrowBack, MdSettings, MdBlock, MdNotifications, MdPersonAdd} from "react-icons/md";
@@ -55,7 +55,7 @@ const constants = {
   }
 };
 
-@connect(null, null, null, {withRef: true})
+@connect(null, null, null, {forwardRef: true})
 class ModalThreadInfoGroup extends Component {
 
   constructor(props) {

@@ -10,8 +10,8 @@ import {mobileCheck} from "../../utils/helpers";
 
 //components
 import InputEmojiTrigger from "./InputEmojiTrigger";
-import Container from "../../../../uikit/src/container";
-import {InputTextArea} from "../../../../uikit/src/input";
+import Container from "../../../../pod-chat-ui-kit/src/container";
+import {InputTextArea} from "../../../../pod-chat-ui-kit/src/input";
 import InputVoiceRecorder from "./InputVoiceRecorder";
 //styling
 

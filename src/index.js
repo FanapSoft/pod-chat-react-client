@@ -27,7 +27,7 @@ function Podchat(props, elementId) {
     </Provider>,
     document.getElementById(elementId)
   );
-  return instance.getWrappedInstance();
+  return instance;
 }
 
 function DestroyPodchat(elementId) {

@@ -18,10 +18,10 @@ import {contactAdding, contactListShowing, contactModalCreateGroupShowing} from 
 //UI components
 import {MdMenu, MdClose, MdSearch, MdEdit, MdArrowBack} from "react-icons/md";
 import Notification from "./Notification";
-import Dropdown, {DropdownItem} from "../../../uikit/src/menu/Dropdown";
-import {ButtonFloating} from "../../../uikit/src/button"
-import {Text} from "../../../uikit/src/typography";
-import Container from "../../../uikit/src/container";
+import Dropdown, {DropdownItem} from "../../../pod-chat-ui-kit/src/menu/Dropdown";
+import {ButtonFloating} from "../../../pod-chat-ui-kit/src/button"
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //styling
 import style from "../../styles/app/AsidHead.scss";
@@ -29,10 +29,10 @@ import styleVar from "../../styles/variables.scss";
 import utilsStlye from "../../styles/utils/utils.scss";
 import classnames from "classnames";
 import {chatSearchShow} from "../actions/chatActions";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
 import {avatarNameGenerator} from "../utils/helpers";
-import Gap from "../../../uikit/src/gap";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 const statics = {
   headMenuSize: 59

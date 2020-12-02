@@ -12,16 +12,16 @@ import {ROUTE_THREAD, ROUTE_THREAD_INFO} from "../constants/routes";
 import {threadModalThreadInfoShowing} from "../actions/threadActions";
 
 //UI components
-import {Text} from "../../../uikit/src/typography";
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import Container from "../../../uikit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //styling
 import style from "../../styles/app/MainHeadThreadInfo.scss";
 import classnames from "classnames";
 import {avatarNameGenerator, avatarUrlGenerator} from "../utils/helpers";
-import Loading from "../../../uikit/src/loading";
-import LoadingBlinkDots from "../../../uikit/src/loading/LoadingBlinkDots";
+import Loading from "../../../pod-chat-ui-kit/src/loading";
+import LoadingBlinkDots from "../../../pod-chat-ui-kit/src/loading/LoadingBlinkDots";
 import {getParticipant} from "./ModalThreadInfoPerson";
 import date from "../utils/date";
 

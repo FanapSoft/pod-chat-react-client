@@ -28,13 +28,13 @@ import {
 } from "../actions/threadActions";
 
 //components
-import {ButtonFloating} from "../../../uikit/src/button";
-import List, {ListItem} from "../../../uikit/src/list";
-import Avatar, {AvatarImage} from "../../../uikit/src/avatar";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import Container from "../../../uikit/src/container";
-import Message from "../../../uikit/src/message";
-import Scroller from "../../../uikit/src/scroller";
+import {ButtonFloating} from "../../../pod-chat-ui-kit/src/button";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import Avatar, {AvatarImage} from "../../../pod-chat-ui-kit/src/avatar";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Message from "../../../pod-chat-ui-kit/src/message";
+import Scroller from "../../../pod-chat-ui-kit/src/scroller";
 
 //styling
 import {
@@ -44,7 +44,7 @@ import {
 import style from "../../styles/app/MainMessages.scss";
 import styleVar from "../../styles/variables.scss";
 import MainMessagesMessage from "./MainMessagesMessage";
-import Shape, {ShapeCircle} from "../../../uikit/src/shape";
+import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
 import MainMessagesUnreadBar from "./MainMessagesUnreadBar";
 import isElementVisible from "../utils/dom";
 
@@ -177,7 +177,7 @@ function getAvatar(message, messages, onAvatarClick, thread, user) {
     messageNew: store.messageNew,
     user: store.user.user,
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class MainMessages extends Component {
 
   constructor(props) {

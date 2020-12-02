@@ -12,22 +12,22 @@ import {
 import {chatUploadImage} from "../actions/chatActions";
 
 //UI components
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import Container from "../../../uikit/src/container";
-import {InputText} from "../../../uikit/src/input";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {InputText} from "../../../pod-chat-ui-kit/src/input";
 
 //styling
 import {MdArrowBack, MdBlock, MdCameraAlt, MdVerifiedUser} from "react-icons/md";
 import styleVar from "../../styles/variables.scss";
 import style from "../../styles/app/ModalThreadInfoGroupSettings.scss";
-import List, {ListItem} from "../../../uikit/src/list";
-import Gap from "../../../uikit/src/gap";
-import {Text} from "../../../uikit/src/typography";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import {ContactList} from "./_component/contactList";
 import ModalThreadInfoGroupSettingsAdminList from "./ModalThreadInfoGroupSettingsAdminList";
 import {ContactSearchFragment} from "./ModalContactList";
-import {Button} from "../../../uikit/src/button";
-import ModalFooter from "../../../uikit/src/modal/ModalFooter";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import ModalFooter from "../../../pod-chat-ui-kit/src/modal/ModalFooter";
 import {isChannel} from "./Main";
 import checkForPrivilege, {isOwner} from "../utils/privilege";
 import {THREAD_ADMIN} from "../constants/privilege";
@@ -41,7 +41,7 @@ const statics = {
   return {
     chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class ModalThreadInfoGroupSettings extends Component {
 
   constructor(props) {

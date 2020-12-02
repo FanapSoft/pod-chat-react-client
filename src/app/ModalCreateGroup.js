@@ -12,15 +12,15 @@ import {contactModalCreateGroupShowing} from "../actions/contactActions";
 import {threadCreateGroupOrChannelWithUsers, threadCreateWithUser} from "../actions/threadActions";
 
 //UI components
-import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../uikit/src/modal";
-import {Button} from "../../../uikit/src/button";
-import {Heading, Text} from "../../../uikit/src/typography";
-import {InputText} from "../../../uikit/src/input";
-import Container from "../../../uikit/src/container";
+import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../pod-chat-ui-kit/src/modal";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import {Heading, Text} from "../../../pod-chat-ui-kit/src/typography";
+import {InputText} from "../../../pod-chat-ui-kit/src/input";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //styling
 import {MdArrowForward} from "react-icons/md";
-import Message from "../../../uikit/src/message";
+import Message from "../../../pod-chat-ui-kit/src/message";
 
 const constants = {
   GROUP_NAME: "GROUP_NAME",
@@ -44,7 +44,7 @@ function ModalContactListFooterFragment(threadContacts, onNext, onClose) {
     contactModalCreateGroup: store.contactModalCreateGroupShowing,
     chatRouterLess: store.chatRouterLess
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 class ModalCreateGroup extends Component {
 
   constructor(props) {

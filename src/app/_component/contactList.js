@@ -3,11 +3,11 @@ import React from "react";
 import {avatarNameGenerator, avatarUrlGenerator} from "../../utils/helpers";
 
 //components
-import List, {ListItem} from "../../../../uikit/src/list"
-import Avatar, {AvatarImage, AvatarName} from "../../../../uikit/src/avatar";
-import Container from "../../../../uikit/src/container";
-import AvatarText from "../../../../uikit/src/avatar/AvatarText";
-import Scroller from "../../../../uikit/src/scroller";
+import List, {ListItem} from "../../../../pod-chat-ui-kit/src/list"
+import Avatar, {AvatarImage, AvatarName} from "../../../../pod-chat-ui-kit/src/avatar";
+import Container from "../../../../pod-chat-ui-kit/src/container";
+import AvatarText from "../../../../pod-chat-ui-kit/src/avatar/AvatarText";
+import Scroller from "../../../../pod-chat-ui-kit/src/scroller";
 
 //styling
 

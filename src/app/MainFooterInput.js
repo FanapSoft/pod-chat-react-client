@@ -23,8 +23,8 @@ import {threadDraft, threadEmojiShowing, threadIsSendingMessage} from "../action
 
 //components
 import MainFooterInputEditing, {messageEditingCondition} from "./MainFooterInputEditing";
-import {Text} from "../../../uikit/src/typography";
-import Container from "../../../uikit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import Input from "./_component/Input";
 import {codeEmoji, emojiRegex} from "./_component/EmojiIcons.js";
 import {startTyping, stopTyping} from "../actions/chatActions";
@@ -50,7 +50,7 @@ export const constants = {
     user: store.user.user,
     threadShowing: store.threadShowing
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class MainFooterInput extends Component {
 
   constructor(props) {
@@ -371,7 +371,7 @@ export default class MainFooterInput extends Component {
         if (keyCode === 27) {
           this.resetParticipantSuggestion();
         }
-        this.participantSuggestionsRef.current.getWrappedInstance().keyDownSignal(evt);
+        this.participantSuggestionsRef.current.keyDownSignal(evt);
       }
     }
   }

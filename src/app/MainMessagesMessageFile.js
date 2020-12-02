@@ -38,11 +38,11 @@ import {
   MdMic
 } from "react-icons/md";
 import {BoxModalMediaFragment} from "./index";
-import Image from "../../../uikit/src/image";
-import Container from "../../../uikit/src/container";
-import {Text} from "../../../uikit/src/typography";
-import Shape, {ShapeCircle} from "../../../uikit/src/shape";
-import {ContextItem} from "../../../uikit/src/menu/Context";
+import Image from "../../../pod-chat-ui-kit/src/image";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
+import {ContextItem} from "../../../pod-chat-ui-kit/src/menu/Context";
 import {
   PaperFragment,
   PaperFooterFragment,
@@ -353,7 +353,6 @@ class MainMessagesMessageFile extends Component {
 
   onRetry() {
     const {dispatch, message, thread} = this.props;
-    console.log(message);
     this.onCancel(message);
     dispatch(messageSendFile(message.fileObject, thread, message.message));
   }
@@ -501,14 +500,16 @@ class MainMessagesMessageFile extends Component {
                       <ImageFragment/>
                     </Text>
                     :
-                    <BoxModalMediaFragment link={imageModalPreview || imageThumb} options={{caption: message.message}}>
+                    <Fragment>
+                      <BoxModalMediaFragment link={imageModalPreview || imageThumb} linkClassName={style.MainMessagesFile__ModalMediaLink} options={{caption: message.message}}/>
                       <ImageFragment/>
-                    </BoxModalMediaFragment>
+                    </Fragment>
+
                   }
 
                   <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e => e.stopPropagation()}>
                     <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
-                      {mentionify(emailify(urlify(decodeEmoji(clearHtml(message.message)))))}
+                      {mentionify(emailify(decodeEmoji(urlify(clearHtml(message.message)))))}
                     </Text>
                   </Container>
 

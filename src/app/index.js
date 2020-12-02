@@ -36,9 +36,9 @@ import {userGet} from "../actions/userActions";
 import Aside from "./Aside";
 import Main from "./Main";
 import LeftAside from "./LeftAside";
-import Container from "../../../uikit/src/container";
-import {Text} from "../../../uikit/src/typography";
-import {ModalMedia} from "../../../uikit/src/modal";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import {ModalMedia} from "../../../pod-chat-ui-kit/src/modal";
 import ModalContactListMenu from "./ModalContactListMenu";
 import ModalAddContact from "./ModalAddContact";
 import ModalThreadList from "./ModalThreadList";
@@ -57,6 +57,7 @@ export function BoxModalMediaFragment({link, caption, linkClassName, children, o
 
   return <Container className={style.Box__MediaTrigger} inline>
     <Text link={link}
+          target={"_blank"}
           className={linkClassName}
           linkClearStyle
           data-options={JSON.stringify(fixedOptions)}>
@@ -77,7 +78,7 @@ export function BoxModalMediaFragment({link, caption, linkClassName, children, o
     thread: store.thread.thread,
     messageNew: store.messageNew
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 class Box extends Component {
   constructor(props) {
     super(props);
@@ -152,7 +153,7 @@ class Box extends Component {
   resetChat() {
     const {dispatch} = this.props;
     dispatch(threadShowing(false));
-    const closeModal = modal => modal.current.getWrappedInstance().onClose();
+    const closeModal = modal => modal.current.onClose();
     closeModal(this.modalDeleteMessagePromptRef);
     closeModal(this.modalThreadListRef);
     closeModal(this.modalImageCaptionRef);
@@ -238,7 +239,7 @@ class Box extends Component {
                render={() => <ModalThreadInfo smallVersion={small}/>}/>
         <ModalThreadList smallVersion={small} ref={this.modalThreadListRef}/>
         <ModalImageCaption smallVersion={small} ref={this.modalImageCaptionRef}/>
-        <ModalMedia selector={`.${style.Box__MediaTrigger} a:visible`}
+        <ModalMedia selector={`.${style.Box__MediaTrigger} a`}
                     ref={this.modalMediaRef}
                     lang="fa"
                     i18n={modalMediaI18n}

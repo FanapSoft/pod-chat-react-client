@@ -12,9 +12,9 @@ import {urlify, mentionify, emailify} from "./MainMessagesMessage";
 import {messageCancel, messageEditing, messageSend} from "../actions/messageActions";
 
 //components
-import Container from "../../../uikit/src/container";
-import {ContextItem} from "../../../uikit/src/menu/Context";
-import {Text} from "../../../uikit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {ContextItem} from "../../../pod-chat-ui-kit/src/menu/Context";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import {
   PaperFragment,
   PaperFooterFragment,
@@ -123,7 +123,7 @@ export default class MainMessagesMessageText extends Component {
           </ControlFragment>
           <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e=>e.stopPropagation()}>
             <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
-              {mentionify(emailify(urlify(decodeEmoji(clearHtml(message.message))), this.onUserNameClick))}
+              {mentionify(emailify(decodeEmoji(urlify(clearHtml(message.message))), this.onUserNameClick))}
             </Text>
           </Container>
           <PaperFooterFragment message={message}

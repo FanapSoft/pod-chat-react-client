@@ -15,18 +15,18 @@ import {
 import {messageEditing} from "../actions/messageActions";
 
 //UI components
-import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../uikit/src/modal";
-import {Button} from "../../../uikit/src/button";
-import {Heading} from "../../../uikit/src/typography";
-import Gap from "../../../uikit/src/gap";
-import List, {ListItem} from "../../../uikit/src/list";
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import {Text} from "../../../uikit/src/typography";
-import Container from "../../../uikit/src/container";
+import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../pod-chat-ui-kit/src/modal";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import {Heading} from "../../../pod-chat-ui-kit/src/typography";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import {ContactSearchFragment, NoResultFragment, PartialLoadingFragment} from "./ModalContactList";
 import {contactGetList} from "../actions/contactActions";
 import {ContactList} from "./_component/contactList";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 
 //styling
 
@@ -45,7 +45,7 @@ const constants = {
     chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     user: store.user.user
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class ModalThreadList extends Component {
 
   constructor(props) {

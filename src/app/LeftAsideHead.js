@@ -12,8 +12,8 @@ import {threadLeftAsideShowing} from "../actions/threadActions";
 
 //UI components
 import {MdClose} from "react-icons/md";
-import {Text} from "../../../uikit/src/typography";
-import Container from "../../../uikit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //styling
 import style from "../../styles/app/LeftAsideHead.scss";

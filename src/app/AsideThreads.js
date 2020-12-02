@@ -37,29 +37,29 @@ import {
 import {
   AiFillPushpin
 } from "react-icons/ai";
-import Avatar, {AvatarImage, AvatarName, AvatarText} from "../../../uikit/src/avatar";
-import List, {ListItem} from "../../../uikit/src/list";
-import Scroller from "../../../uikit/src/scroller";
-import Shape, {ShapeCircle} from "../../../uikit/src/shape";
-import Container from "../../../uikit/src/container";
-import LoadingBlinkDots from "../../../uikit/src/loading/LoadingBlinkDots";
-import Loading from "../../../uikit/src/loading";
-import {Text} from "../../../uikit/src/typography";
-import Gap from "../../../uikit/src/gap";
+import Avatar, {AvatarImage, AvatarName, AvatarText} from "../../../pod-chat-ui-kit/src/avatar";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import Scroller from "../../../pod-chat-ui-kit/src/scroller";
+import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import LoadingBlinkDots from "../../../pod-chat-ui-kit/src/loading/LoadingBlinkDots";
+import Loading from "../../../pod-chat-ui-kit/src/loading";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 import date from "../utils/date";
 
 //styling
 import style from "../../styles/app/AsideThreads.scss";
-import Message from "../../../uikit/src/message";
+import Message from "../../../pod-chat-ui-kit/src/message";
 import classnames from "classnames";
 import styleVar from "../../styles/variables.scss";
-import Context, {ContextItem, ContextTrigger} from "../../../uikit/src/menu/Context";
+import Context, {ContextItem, ContextTrigger} from "../../../pod-chat-ui-kit/src/menu/Context";
 import {chatModalPrompt, chatSearchResult} from "../actions/chatActions";
 import {contactChatting} from "../actions/contactActions";
 import {clearHtml} from "./_component/Input";
 import {messageSeen} from "../actions/messageActions";
 
-function sliceMessage(message, to) {
+function sliceMessage(message) {
   return decodeEmoji(message);
 }
 
@@ -195,8 +195,7 @@ const sanitizeRule = {
   allowedTags: ["img"],
   allowedAttributes: {
     img: ["src", "style", "class"]
-  },
-  allowedSchemes: ["data"]
+  }
 };
 
 export const statics = {

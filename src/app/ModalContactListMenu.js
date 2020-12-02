@@ -19,8 +19,8 @@ import {chatModalPrompt} from "../actions/chatActions";
 
 
 //UI components
-import Container from "../../../uikit/src/container";
-import {Button} from "../../../uikit/src/button";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
 
 //styling
 
@@ -47,7 +47,7 @@ function LeftActionFragment(onRemoveContact, {contact}) {
     isShow: store.contactListShowing,
     chatRouterLess: store.chatRouterLess
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 class ModalContactListMenu extends Component {
 
   constructor(props) {

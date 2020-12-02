@@ -13,13 +13,13 @@ import {
 } from "../actions/contactActions";
 
 //UI components
-import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../uikit/src/modal";
-import {Button} from "../../../uikit/src/button";
-import {Heading, Text} from "../../../uikit/src/typography";
-import Container from "../../../uikit/src/container";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import Gap from "../../../uikit/src/gap";
-import {InputText} from "../../../uikit/src/input";
+import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../pod-chat-ui-kit/src/modal";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import {Heading, Text} from "../../../pod-chat-ui-kit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {InputText} from "../../../pod-chat-ui-kit/src/input";
 import {MdSearch, MdClose} from "react-icons/md";
 
 //styling
@@ -135,7 +135,7 @@ function filterContactList(contacts, userType) {
     chatRouterLess: store.chatRouterLess,
     smallVersion: store.chatSmallVersion
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 class ModalContactList extends Component {
 
   constructor(props) {

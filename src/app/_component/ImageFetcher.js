@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
-import Image from "../../../../uikit/src/image";
+import Image from "../../../../pod-chat-ui-kit/src/image";
 import {
   getImageFromHashMap
 } from "../../utils/helpers";

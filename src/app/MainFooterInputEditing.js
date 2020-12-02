@@ -10,9 +10,9 @@ import {messageEditing} from "../actions/messageActions";
 import {threadIsSendingMessage} from "../actions/threadActions";
 
 //components
-import Paper from "../../../uikit/src/paper";
-import Container from "../../../uikit/src/container";
-import {Text} from "../../../uikit/src/typography";
+import Paper from "../../../pod-chat-ui-kit/src/paper";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 
 //styling
 import {MdClose, MdEdit, MdReply} from "react-icons/md";

@@ -12,9 +12,9 @@ import {
 import {chatUploadImage} from "../actions/chatActions";
 
 //UI components
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import Container from "../../../uikit/src/container";
-import {InputText} from "../../../uikit/src/input";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {InputText} from "../../../pod-chat-ui-kit/src/input";
 import {PartialLoadingFragment} from "./ModalContactList";
 
 
@@ -22,21 +22,21 @@ import {PartialLoadingFragment} from "./ModalContactList";
 import {MdArrowBack, MdBlock, MdCameraAlt, MdVerifiedUser} from "react-icons/md";
 import styleVar from "../../styles/variables.scss";
 import style from "../../styles/app/ModalThreadInfoGroupSettings.scss";
-import List, {ListItem} from "../../../uikit/src/list";
-import Gap from "../../../uikit/src/gap";
-import {Text} from "../../../uikit/src/typography";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import {ContactList} from "./_component/contactList";
 import {ContactSearchFragment} from "./ModalContactList";
 import {messageGetSeenList} from "../actions/messageActions";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import {Button} from "../../../uikit/src/button";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
 
 
 @connect(store => {
   return {
     threadAdminList: store.threadAdminList
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class ModalThreadInfoGroupSettingsAdminList extends Component {
 
   constructor(props) {

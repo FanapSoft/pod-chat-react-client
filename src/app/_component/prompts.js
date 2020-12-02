@@ -1,7 +1,7 @@
 import React, {Fragment} from "react";
-import List, {ListItem} from "../../../../uikit/src/list";
-import {Text, Heading} from "../../../../uikit/src/typography";
-import Gap from "../../../../uikit/src/gap";
+import List, {ListItem} from "../../../../pod-chat-ui-kit/src/list";
+import {Text, Heading} from "../../../../pod-chat-ui-kit/src/typography";
+import Gap from "../../../../pod-chat-ui-kit/src/gap";
 import strings from "../../constants/localization";
 import {deleteForAllCondition} from "../MainMessagesMessage";
 import {messageDelete} from "../../actions/messageActions";

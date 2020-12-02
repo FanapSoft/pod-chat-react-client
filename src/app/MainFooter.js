@@ -12,7 +12,7 @@ import MainFooterInput from "./MainFooterInput";
 import MainFooterAttachment from "./MainFooterAttachment";
 import EmojiIcons from "./_component/EmojiIcons";
 import MainFooterSpam from "./MainFooterSpam";
-import Container from "../../../uikit/src/container";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //styling
 import style from "../../styles/app/MainFooter.scss";
@@ -33,15 +33,15 @@ export default class MainFooter extends Component {
   }
 
   sendMessage() {
-    this.mainFooterInputRef.current.getWrappedInstance().sendMessage();
+    this.mainFooterInputRef.current.sendMessage();
   }
 
   setInputText(value, append) {
-    this.mainFooterInputRef.current.getWrappedInstance().setInputText(value, append);
+    this.mainFooterInputRef.current.setInputText(value, append);
   }
 
   focusInputNode() {
-    this.mainFooterInputRef.current.getWrappedInstance().focus();
+    this.mainFooterInputRef.current.focus();
   }
 
   render() {

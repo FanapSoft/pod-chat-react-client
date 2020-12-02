@@ -10,7 +10,7 @@ import {
 } from "../../actions/threadActions";
 
 //components
-import Container from "../../../../uikit/src/container";
+import Container from "../../../../pod-chat-ui-kit/src/container";
 
 //styling
 import {MdSentimentVerySatisfied, MdClose} from "react-icons/md";

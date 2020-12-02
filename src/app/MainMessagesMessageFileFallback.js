@@ -18,11 +18,11 @@ import {
 
 //components
 import {BoxModalMediaFragment} from "./index";
-import Image from "../../../uikit/src/image";
-import Container from "../../../uikit/src/container";
-import {Text} from "../../../uikit/src/typography";
-import Shape, {ShapeCircle} from "../../../uikit/src/shape";
-import Gap from "../../../uikit/src/gap";
+import Image from "../../../pod-chat-ui-kit/src/image";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 import {
   PaperFragment,
   PaperFooterFragment,
@@ -39,7 +39,7 @@ import {
 } from "react-icons/md";
 import style from "../../styles/app/MainMessagesFile.scss";
 import styleVar from "../../styles/variables.scss";
-import {ContextItem} from "../../../uikit/src/menu/Context";
+import {ContextItem} from "../../../pod-chat-ui-kit/src/menu/Context";
 import strings from "../constants/localization";
 import {decodeEmoji} from "./_component/EmojiIcons.js";
 

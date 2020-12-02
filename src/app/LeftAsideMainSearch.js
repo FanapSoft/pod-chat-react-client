@@ -11,12 +11,12 @@ import strings from "../constants/localization";
 import {threadLeftAsideShowing, threadSearchMessage, threadGoToMessageId} from "../actions/threadActions";
 
 //UI components
-import {InputText} from "../../../uikit/src/input";
-import {Text} from "../../../uikit/src/typography";
-import Container from "../../../uikit/src/container";
-import List, {ListItem} from "../../../uikit/src/list";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import Message from "../../../uikit/src/message";
+import {InputText} from "../../../pod-chat-ui-kit/src/input";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import Message from "../../../pod-chat-ui-kit/src/message";
 import {sanitizeRule, sliceMessage} from "./AsideThreads";
 import {decodeEmoji} from "./_component/EmojiIcons.js";
 

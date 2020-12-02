@@ -19,7 +19,7 @@ import strings from "../constants/localization";
 import {chatModalPrompt} from "../actions/chatActions";
 
 //components
-import Container from "../../../uikit/src/container";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import {
   FaWhatsapp,
   FaTelegram,
@@ -29,13 +29,13 @@ import {
   FiTwitter
 } from "react-icons/fi";
 
-import {Button} from "../../../uikit/src/button";
-import ListItem from "../../../uikit/src/list/ListItem";
-import List from "../../../uikit/src/list";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import ListItem from "../../../pod-chat-ui-kit/src/list/ListItem";
+import List from "../../../pod-chat-ui-kit/src/list";
 import style from "../../styles/app/MainMessagesMessageShare.scss";
 import styleVar from "../../styles/variables.scss";
-import Text from "../../../uikit/src/typography/Text";
-import Gap from "../../../uikit/src/gap";
+import Text from "../../../pod-chat-ui-kit/src/typography/Text";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 import {isFile} from "./MainMessagesMessage";
 
 

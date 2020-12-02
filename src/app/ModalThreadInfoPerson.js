@@ -18,15 +18,15 @@ import {threadLeave, threadModalThreadInfoShowing, threadNotification} from "../
 import {chatModalPrompt} from "../actions/chatActions";
 
 //UI components
-import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../uikit/src/modal";
-import {Button} from "../../../uikit/src/button";
-import Gap from "../../../uikit/src/gap";
-import {Heading, Text} from "../../../uikit/src/typography";
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import Container from "../../../uikit/src/container";
-import List, {ListItem} from "../../../uikit/src/list";
+import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../pod-chat-ui-kit/src/modal";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {Heading, Text} from "../../../pod-chat-ui-kit/src/typography";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
 import date from "../utils/date";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 import {
   MdPersonAdd,
   MdPerson,
@@ -63,7 +63,7 @@ export function getParticipant(participants, user) {
     chatRouterLess: store.chatRouterLess,
     contacts: store.contactGetList.contacts
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class ModalThreadInfo extends Component {
 
   constructor(props) {

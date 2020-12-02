@@ -10,15 +10,15 @@ import {threadFilesToUpload, threadModalImageCaptionShowing} from "../actions/th
 import {messageSend} from "../actions/messageActions";
 
 //UI components
-import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../uikit/src/modal";
+import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../pod-chat-ui-kit/src/modal";
 import ParticipantSuggestion from "./_component/ParticipantSuggestion";
-import {Button} from "../../../uikit/src/button";
-import {Heading} from "../../../uikit/src/typography";
-import List, {ListItem} from "../../../uikit/src/list";
-import {Text} from "../../../uikit/src/typography";
-import Container from "../../../uikit/src/container";
-import Image from "../../../uikit/src/image";
-import Paper from "../../../uikit/src/paper";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import {Heading} from "../../../pod-chat-ui-kit/src/typography";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Image from "../../../pod-chat-ui-kit/src/image";
+import Paper from "../../../pod-chat-ui-kit/src/paper";
 import {
   MdInsertDriveFile
 } from "react-icons/md";
@@ -28,7 +28,7 @@ import style from "../../styles/app/ModalImageCaption.scss";
 import {codeEmoji} from "./_component/EmojiIcons.js";
 import {clearHtml} from "./_component/Input";
 import {humanFileSize, mobileCheck} from "../utils/helpers";
-import Shape, {ShapeCircle} from "../../../uikit/src/shape";
+import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
 import styleVar from "../../styles/variables.scss";
 import Input, {getCursorMentionMatch} from "./_component/Input";
 import EmojiIcons from "./_component/EmojiIcons";
@@ -41,7 +41,7 @@ import EmojiIcons from "./_component/EmojiIcons";
     files: store.threadImagesToCaption || [],
     thread: store.thread.thread
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class ModalImageCaption extends Component {
 
   constructor(props) {
@@ -133,7 +133,7 @@ export default class ModalImageCaption extends Component {
         if (keyCode === 27) {
           this.resetParticipantSuggestion();
         }
-        this.participantSuggestionsRef.current.getWrappedInstance().keyDownSignal(evt);
+        this.participantSuggestionsRef.current.keyDownSignal(evt);
       }
     }
   }
@@ -217,7 +217,7 @@ export default class ModalImageCaption extends Component {
           {isAllImage ?
             <List>
               {fileArray.map(el => (
-                <ListItem key={el.id} invert multiple>
+                <ListItem key={el.id || (el.name + el.size)} invert multiple>
                   <Container centerTextAlign>
 
                     <Image className={style.ModalImageCaption__Image} src={URL.createObjectURL(el)}/>

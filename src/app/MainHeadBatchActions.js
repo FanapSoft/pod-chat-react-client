@@ -17,9 +17,9 @@ import {messageDelete} from "../actions/messageActions";
 import {chatModalPrompt} from "../actions/chatActions";
 
 //UI components
-import Gap from "../../../uikit/src/gap";
-import Container from "../../../uikit/src/container";
-import {Text} from "../../../uikit/src/typography";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import {MdDelete} from "react-icons/md";
 import {TiArrowForward} from "react-icons/ti";
 

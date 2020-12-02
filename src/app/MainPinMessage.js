@@ -7,9 +7,9 @@ import checkForPrivilege from "../utils/privilege";
 import {threadMessageUnpin} from "../actions/threadActions";
 
 //components
-import Container from "../../../uikit/src/container";
-import {Text} from "../../../uikit/src/typography";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 import {
   AiFillPushpin
 } from "react-icons/ai";
@@ -79,7 +79,7 @@ export default class MainPinMessage extends Component {
     const {mainMessageRef} = this.props;
     const {current} = mainMessageRef;
     if (current) {
-      current.getWrappedInstance().goToSpecificMessage(message.time);
+      current.goToSpecificMessage(message.time);
     }
   }
 

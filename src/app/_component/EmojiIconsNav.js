@@ -11,7 +11,7 @@ import {emojiCookieName} from "../../constants/emoji";
 //actions
 
 //components
-import Container from "../../../../uikit/src/container";
+import Container from "../../../../pod-chat-ui-kit/src/container";
 import {
   FaRegSmileBeam,
   FaRegClock,

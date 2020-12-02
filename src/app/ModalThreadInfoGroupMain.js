@@ -25,13 +25,13 @@ import {chatModalPrompt} from "../actions/chatActions";
 //UI components
 import {ContactList} from "./_component/contactList";
 import {ContactSearchFragment, PartialLoadingFragment} from "./ModalContactList";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import {Button} from "../../../uikit/src/button";
-import Gap from "../../../uikit/src/gap";
-import {Heading, Text} from "../../../uikit/src/typography";
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import Container from "../../../uikit/src/container";
-import List, {ListItem} from "../../../uikit/src/list";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {Heading, Text} from "../../../pod-chat-ui-kit/src/typography";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
 
 //styling
 import {MdGroupAdd, MdArrowBack, MdSettings, MdBlock, MdNotifications, MdPersonAdd} from "react-icons/md";
@@ -79,7 +79,7 @@ export function isOwner(thread, user) {
     participantsPartialFetching: store.threadParticipantListPartial.fetching,
     chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
   }
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 class ModalThreadInfoGroupMain extends Component {
 
   constructor(props) {

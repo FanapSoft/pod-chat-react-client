@@ -30,15 +30,15 @@ import {
 } from "react-icons/md";
 import style from "../../styles/app/MainMessagesUnreadBar.scss";
 import styleVar from "../../styles/variables.scss";
-import Container from "../../../uikit/src/container";
-import Gap from "../../../uikit/src/gap";
-import Text from "../../../uikit/src/typography/Text";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import Text from "../../../pod-chat-ui-kit/src/typography/Text";
 import strings from "../constants/localization";
 
 
 @connect(store => {
   return {};
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class MainMessages extends Component {
 
   constructor(props) {

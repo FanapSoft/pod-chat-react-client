@@ -10,12 +10,12 @@ import {messageGetSeenList} from "../actions/messageActions";
 import {threadCreateWithUser} from "../actions/threadActions";
 
 //UI components
-import Container from "../../../uikit/src/container";
-import Gap from "../../../uikit/src/gap";
-import Scroller from "../../../uikit/src/scroller";
-import {Text} from "../../../uikit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import Scroller from "../../../pod-chat-ui-kit/src/scroller";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import strings from "../constants/localization";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 import {avatarUrlGenerator} from "../utils/helpers";
 
 //styling

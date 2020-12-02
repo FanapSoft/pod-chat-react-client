@@ -18,12 +18,12 @@ import {threadModalThreadInfoShowing, threadCheckedMessageList} from "../actions
 
 //UI components
 import {MdChevronLeft, MdSearch, MdCheck, MdClose} from "react-icons/md";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import Container from "../../../uikit/src/container";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import MainHeadThreadInfo from "./MainHeadThreadInfo";
 import MainHeadBatchActions from "./MainHeadBatchActions";
-import {Text} from "../../../uikit/src/typography";
-import Gap from "../../../uikit/src/gap";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 //styling
 import style from "../../styles/app/MainHead.scss";

@@ -8,12 +8,12 @@ import {
 } from "../../actions/threadActions";
 
 //components
-import Container from "../../../../uikit/src/container";
-import Scroller from "../../../../uikit/src/scroller";
-import {Text} from "../../../../uikit/src/typography";
+import Container from "../../../../pod-chat-ui-kit/src/container";
+import Scroller from "../../../../pod-chat-ui-kit/src/scroller";
+import {Text} from "../../../../pod-chat-ui-kit/src/typography";
 import {ContactList} from "./contactList";
-import Loading, {LoadingBlinkDots} from "../../../../uikit/src/loading";
-import Gap from "../../../../uikit/src/gap";
+import Loading, {LoadingBlinkDots} from "../../../../pod-chat-ui-kit/src/loading";
+import Gap from "../../../../pod-chat-ui-kit/src/gap";
 
 //styling
 import style from "../../../styles/modules/ParticipantSuggestion.scss";
@@ -45,7 +45,7 @@ export const constants = {
   count: 20
 };
 
-@connect(null, null, null, {withRef: true})
+@connect(null, null, null, {forwardRef: true})
 export default class extends Component {
 
   constructor(props) {

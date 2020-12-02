@@ -10,17 +10,17 @@ import {
 } from "../actions/threadActions";
 
 //UI components
-import Container from "../../../uikit/src/container";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //UI components
 
 //styling
 import style from "../../styles/app/ModalThreadInfoMessageTypes.scss";
-import Text from "../../../uikit/src/typography/Text";
+import Text from "../../../pod-chat-ui-kit/src/typography/Text";
 import strings from "../constants/localization";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import Image from "../../../uikit/src/image";
-import Shape, {ShapeCircle} from "../../../uikit/src/shape";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import Image from "../../../pod-chat-ui-kit/src/image";
+import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
 import styleVar from "../../styles/variables.scss";
 import {
   MdArrowDownward,

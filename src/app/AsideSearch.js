@@ -12,8 +12,8 @@ import strings from "../constants/localization";
 
 //UI components
 import {MdClose} from "react-icons/md";
-import Container from "../../../uikit/src/container";
-import {InputText} from "../../../uikit/src/input";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {InputText} from "../../../pod-chat-ui-kit/src/input";
 
 //styling
 import style from "../../styles/app/AsidSearch.scss";

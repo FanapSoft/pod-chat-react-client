@@ -14,13 +14,14 @@ import {messageSendLocation} from "../actions/messageActions";
 import {chatModalPrompt} from "../actions/chatActions";
 
 //components
-import Container from "../../../uikit/src/container";
-import Button from "../../../uikit/src/button/Button";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Button from "../../../pod-chat-ui-kit/src/button/Button";
+import {MdMyLocation} from "react-icons/md";
 
 //styling
 import style from "../../styles/app/MainFooterAttachmentAttachMap.scss";
 import styleVar from "../../styles/variables.scss";
-import {MdAttachFile, MdMyLocation} from "react-icons/md";
+
 
 @connect()
 export default class MainFooterAttachmentAttachMap extends Component {
@@ -42,7 +43,6 @@ export default class MainFooterAttachmentAttachMap extends Component {
     const {dispatch, thread} = this.props;
     dispatch(chatModalPrompt());
     dispatch(messageSendLocation(thread, position[0], position[1]))
-
   }
 
   gotoMyLocation() {
@@ -78,6 +78,9 @@ export default class MainFooterAttachmentAttachMap extends Component {
         <MapContainer center={position} zoom={13}
                       style={{height: "400px", maxHeight: "calc(100vh - 111px)", position: "relative"}}
                       whenCreated={this.whenCreated}>
+          <TileLayer
+            attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
           <Container bottomLeft className={style.MainFooterAttachmentAttachMap__MyLocation}
                      onClick={this.gotoMyLocation}>
             <MdMyLocation size={styleVar.iconSizeSm} color={styleVar.colorWhite} style={{margin: "5px 7px"}}/>
