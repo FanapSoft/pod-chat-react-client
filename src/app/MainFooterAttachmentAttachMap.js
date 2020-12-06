@@ -43,6 +43,7 @@ export default class MainFooterAttachmentAttachMap extends Component {
     const {dispatch, thread} = this.props;
     dispatch(chatModalPrompt());
     dispatch(messageSendLocation(thread, position[0], position[1]))
+
   }
 
   gotoMyLocation() {

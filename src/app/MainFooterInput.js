@@ -308,7 +308,7 @@ export default class MainFooterInput extends Component {
     this.lastTypingText = null;
   }
 
-  _analyzeDraft(text) {
+  _analyzeDraft(text = "") {
     const splitedText = text.split("|");
     setTimeout(() => {
       if (splitedText.length > 1) {
