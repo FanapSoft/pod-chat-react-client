@@ -57,7 +57,10 @@ export function getMessageEditingText(message) {
       editObject.text = strings.messagesCount(message.length);
     } else {
       if (message.metadata) {
-        const file = JSON.parse(message.metadata).file;
+        let file = {};
+        try {
+          file = JSON.parse(message.metadata).file
+        } catch (e) {}
         if (file) {
           const isVideo = file.mimeType.match(/mp4|ogg|3gp|ogv/);
           let width = file.width;
@@ -95,7 +98,7 @@ export default class MainFooterInputEditing extends Component {
       if (messageEditing.type !== constants.replying) {
         if (prevProps.messageEditing !== messageEditing) {
           if (messageEditing.type !== constants.replying && messageEditing.type !== constants.forwarding) {
-            if(!messageEditing.message.draftMode) {
+            if (!messageEditing.message.draftMode) {
               setInputText(decodeEmoji(messageEditing.message.message));
             }
           } else {

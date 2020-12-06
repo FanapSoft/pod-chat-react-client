@@ -341,7 +341,7 @@ export default class ChatSDK {
       userGroupHash,
       ...options
     };
-    const time =  getNow() * Math.pow(10, 6);
+    const time = getNow() * Math.pow(10, 6);
     const obj = this.chatAgent.sendLocationMessage(sendChatParams, file => {
       callBack(
         {
@@ -494,9 +494,10 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  updateThreadInfo(resolve, reject, customParams, threadId) {
+  updateThreadInfo(resolve, reject, {id, userGroupHash}, customParams) {
     const params = {
-      threadId,
+      threadId: id,
+      userGroupHash,
       ...customParams
     };
     this.chatAgent.updateThreadInfo(params, result => {

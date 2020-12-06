@@ -162,7 +162,12 @@ class MainMessagesMessageFile extends Component {
       onPin
     } = this.props;
     let metaData = message.metadata;
-    metaData = typeof metaData === "string" ? JSON.parse(metaData).file : metaData.file;
+    try {
+      metaData = typeof metaData === "string" ? JSON.parse(metaData).file : metaData.file;
+    } catch (e) {
+      metaData = {};
+    }
+
     const mimeType = metaData.mimeType;
     let isImage = mimeType.indexOf("image") > -1;
     const isVideo = mimeType.match(/mp4|ogg|3gp|ogv/);

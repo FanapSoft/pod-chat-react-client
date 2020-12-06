@@ -65,7 +65,12 @@ import {clearHtml} from "./_component/Input";
 
 function isNewFile({metadata}) {
   let metaData = metadata;
-  metaData = typeof metaData === "string" ? JSON.parse(metaData) : metaData;
+  try {
+    metaData = typeof metaData === "string" ? JSON.parse(metaData) : metaData;
+  } catch (e) {
+    return false
+  }
+
   return metaData.fileHash;
 }
 

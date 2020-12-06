@@ -54,12 +54,17 @@ export default class ModalThreadInfoGroupSettings extends Component {
     const {thread} = props;
     const {metadata}  = thread;
     this.previewImage = null;
-    this.state = {
-      state: statics.MAIN,
-      groupName: thread.title,
-      groupDesc: thread.description,
-      image: metadata && JSON.parse(metadata).fileHash ? JSON.parse(metadata).fileHash : thread.image
-    };
+    try {
+      this.state = {
+        state: statics.MAIN,
+        groupName: thread.title,
+        groupDesc: thread.description,
+        image: metadata && JSON.parse(metadata).fileHash ? JSON.parse(metadata).fileHash : thread.image
+      };
+    } catch (e) {
+
+    }
+
   }
 
   componentDidMount() {
@@ -119,7 +124,7 @@ export default class ModalThreadInfoGroupSettings extends Component {
     if (image) {
       baseObject.image = image;
     }
-    dispatch(threadMetaUpdate(baseObject, thread.id));
+    dispatch(threadMetaUpdate(thread, baseObject));
     setStep(steps.ON_GROUP_INFO);
   }
 

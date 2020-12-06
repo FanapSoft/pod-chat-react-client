@@ -501,13 +501,13 @@ export const threadFilesToUpload = (files, upload, inputNode, caption) => {
   }
 };
 
-export const threadMetaUpdate = (meta, threadId) => {
+export const threadMetaUpdate = (thread, meta) => {
   return (dispatch, getState) => {
     const state = getState();
     const chatSDK = state.chatInstance.chatSDK;
     return dispatch({
       type: THREAD_META_UPDATE,
-      payload: chatSDK.updateThreadInfo(meta, threadId)
+      payload: chatSDK.updateThreadInfo(thread, meta)
     });
   }
 };

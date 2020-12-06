@@ -360,6 +360,9 @@ class MainMessagesMessageFile extends Component {
 
   onCancel() {
     const {dispatch, message} = this.props;
+    if (message.cancel) {
+      message.cancel();
+    }
     dispatch(messageCancelFile(message.uniqueId, message.threadId));
   }
 
@@ -409,7 +412,7 @@ class MainMessagesMessageFile extends Component {
     const isLocationMapLoading = isLocationMap === true;
     const downloading = this.isDownloading && getFileDownloadingFromHashMap.call(this, metaData.fileHash) === true;
     const isPlaying = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.playing;
-    const isUploadingBool = isUploading(message) && !isLocationMapLoading;
+    const isUploadingBool = isUploading(message);
     const isBlurry = imageThumbLowQuality && !imageThumb && !isUploadingBool;
     const gettingImageThumb = isLocationMapLoading || (isImage && imageIsSuitableSize && !isUploadingBool) && (!imageThumbLowQuality && !imageThumb);
     const imageSizeLink = isImage ? getImage(metaData, message.id, smallVersion || leftAsideShowing) : false;
