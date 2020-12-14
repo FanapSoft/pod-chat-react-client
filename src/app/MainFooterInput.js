@@ -27,14 +27,16 @@ import {Text} from "../../../uikit/src/typography";
 import Container from "../../../uikit/src/container";
 import Input from "./_component/Input";
 import {codeEmoji, emojiRegex} from "./_component/EmojiIcons.js";
-import {startTyping, stopTyping} from "../actions/chatActions";
+import {chatAudioRecorder as chatAudioRecorderAction, startTyping, stopTyping} from "../actions/chatActions";
 import ParticipantSuggestion from "./_component/ParticipantSuggestion";
+import {MdClose} from "react-icons/md";
 
 //styling
 import style from "../../styles/app/MainFooterInput.scss";
 import OutsideClickHandler from "react-outside-click-handler";
 import {emojiCookieName} from "../constants/emoji";
 import {MESSAGE_SHARE} from "../constants/cookie-keys";
+import styleVar from "../../styles/variables.scss";
 
 export const constants = {
   replying: "REPLYING",
@@ -66,6 +68,7 @@ export default class MainFooterInput extends Component {
     this.onShowParticipant = this.onShowParticipant.bind(this);
     this.onParticipantSelect = this.onParticipantSelect.bind(this);
     this.onEmojiShowing = this.onEmojiShowing.bind(this);
+    this.onRecordingCancel = this.onRecordingCancel.bind(this);
     this.resetParticipantSuggestion = this.resetParticipantSuggestion.bind(this);
     this.participantSuggestionsRef = React.createRef();
     this.recorderTimerId = null;
@@ -114,7 +117,7 @@ export default class MainFooterInput extends Component {
     const {dispatch, thread, messageEditing: msgEditing, threadMessages, threadShowing, chatAudioRecorder} = this.props;
     const {threadMessages: oldThreadMessages, threadShowing: oldThreadShowing, chatAudioRecorder: oldChatAudioRecorder} = prevProps;
     if (chatAudioRecorder !== oldChatAudioRecorder) {
-      if (chatAudioRecorder) {
+      if (chatAudioRecorder === true) {
         this.recorderTimerId = setInterval(e => {
           const {recorderTimer} = this.state;
           this.setState({
@@ -442,6 +445,10 @@ export default class MainFooterInput extends Component {
     dispatch(threadIsSendingMessage(false));
   }
 
+  onRecordingCancel() {
+    this.props.dispatch(chatAudioRecorderAction("CANCELED"));
+  }
+
   render() {
     const {messageEditing, thread, user, emojiShowing, chatAudioRecorder, isSendingText} = this.props;
     const {messageText, showParticipant, filterString, recorderTimer} = this.state;
@@ -482,9 +489,13 @@ export default class MainFooterInput extends Component {
             chatAudioRecorder &&
             <Container className={style.MainFooterInput__RecordingTimer}>
               <Container className={style.MainFooterInput__RecordingTimerCountDown}>
-                <Text color="accent" dark bold>
+                <Text color="accent" dark bold inline>
                   {new Date(recorderTimer * 1000).toISOString().substr(14, 5)}
                 </Text>
+                <Container className={style.MainFooterInput__RecordingCancel} onClick={this.onRecordingCancel}>
+                  <MdClose size={styleVar.iconSizeMd}
+                           color={styleVar.colorWhite}/>
+                </Container>
               </Container>
               <Container className={style.MainFooterInput__RecordingTimerText}>
                 <Text color="accent" dark bold>

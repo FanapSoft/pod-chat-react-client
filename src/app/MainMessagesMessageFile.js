@@ -114,6 +114,29 @@ function hasError(message) {
   }
 }
 
+function updateSlide(imageModalPreview, imageThumb, instance) {
+  const slide = instance.current;
+  if (!instance || !slide) {
+    return;
+  }
+  imageThumb = imageThumb === "LOADING" ? null : imageThumb;
+  imageModalPreview = imageModalPreview === "LOADING" ? null : imageModalPreview;
+  const {src} = slide;
+  if (src === imageThumb) {
+    if (imageModalPreview) {
+      const slide = instance.current;
+      slide.isLoaded = false;
+      slide.src = imageModalPreview;
+      delete slide.type;
+      instance.trigger("objectNeedsType", slide);
+      instance.loadSlide(slide);
+      instance.hideLoading();
+    } else {
+      instance.showLoading();
+    }
+  }
+}
+
 const imageQualities = {
   low: {
     s: 1,
@@ -181,6 +204,14 @@ class MainMessagesMessageFile extends Component {
     this.soundPlayer = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.player;
     this.isDownloading = isImageReal && imageIsSuitableSize;
     this.isPlayable = null;
+    this.modalMediaInstance = null;
+    if (isImageReal) {
+      modalMediaRef.getJqueryScope()(document).on('afterShow.fb', (e, instance) => {
+        let {imageThumb, imageModalPreview} = this.state;
+        updateSlide(imageModalPreview, imageThumb, this.modalMediaInstance = instance);
+      })
+    }
+
   }
 
   onImageClick(e) {
@@ -404,6 +435,9 @@ class MainMessagesMessageFile extends Component {
       imageIsSuitableSize
     } = this.state;
     if (isImage) {
+      if (this.modalMediaInstance) {
+        updateSlide(imageModalPreview, imageThumb, this.modalMediaInstance);
+      }
       imageThumb = imageThumb === "LOADING" ? null : imageThumb;
       imageModalPreview = imageModalPreview === "LOADING" ? null : imageModalPreview;
       imageThumbLowQuality = imageThumbLowQuality === "LOADING" ? null : imageThumbLowQuality;
@@ -504,9 +538,13 @@ class MainMessagesMessageFile extends Component {
                       <ImageFragment/>
                     </Text>
                     :
+
                     <BoxModalMediaFragment link={imageModalPreview || imageThumb} options={{caption: message.message}}>
-                      <ImageFragment/>
+                      <Container onClick={e => console.log(e)}>
+                        <ImageFragment/>
+                      </Container>
                     </BoxModalMediaFragment>
+
                   }
 
                   <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e => e.stopPropagation()}>

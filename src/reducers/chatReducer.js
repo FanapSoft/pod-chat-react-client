@@ -173,7 +173,7 @@ export const chatAudioPlayerReducer = (state = null, action) => {
 };
 
 
-export const chatAudioRecorderReducer = (state = null, action) => {
+export const chatAudioRecorderReducer = (state = false, action) => {
   switch (action.type) {
     case CHAT_AUDIO_RECORDER:
       return action.payload;
