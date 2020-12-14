@@ -1,8 +1,9 @@
-// src/list/Avatar.scss
+// app/AsideHead.js
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
-import {avatarUrlGenerator, OnWindowFocusInOut} from "../utils/helpers";
+import {avatarUrlGenerator, OnWindowFocusInOut, avatarNameGenerator, socketStatus} from "../utils/helpers";
+import classnames from "classnames";
 
 //strings
 import strings from "../constants/localization";
@@ -14,6 +15,7 @@ import {ROUTE_ADD_CONTACT, ROUTE_CONTACTS, ROUTE_CREATE_CHANNEL, ROUTE_CREATE_GR
 
 //actions
 import {contactAdding, contactListShowing, contactModalCreateGroupShowing} from "../actions/contactActions";
+import {chatSearchShow} from "../actions/chatActions";
 
 //UI components
 import {MdMenu, MdClose, MdSearch, MdEdit, MdArrowBack} from "react-icons/md";
@@ -22,38 +24,21 @@ import Dropdown, {DropdownItem} from "../../../pod-chat-ui-kit/src/menu/Dropdown
 import {ButtonFloating} from "../../../pod-chat-ui-kit/src/button"
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import Container from "../../../pod-chat-ui-kit/src/container";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 //styling
 import style from "../../styles/app/AsidHead.scss";
 import styleVar from "../../styles/variables.scss";
 import utilsStlye from "../../styles/utils/utils.scss";
-import classnames from "classnames";
-import {chatSearchShow} from "../actions/chatActions";
-import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
-import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
-import {avatarNameGenerator} from "../utils/helpers";
-import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 const statics = {
   headMenuSize: 59
 };
 
-function routeChange(history, route, chatRouterLess) {
-  if (!chatRouterLess) {
-    history.push(route);
-  }
-}
-
-export function socketStatus(chatState) {
-  const isReconnecting = chatState.socketState == 1 && !chatState.deviceRegister;
-  const isConnected = chatState.socketState == 1 && chatState.deviceRegister;
-  const isDisconnected = chatState.socketState == 3;
-  return {isReconnecting, isConnected, isDisconnected, timeUntilReconnect: chatState.timeUntilReconnect};
-}
-
 @connect(store => {
   return {
-    threadId: store.thread.thread.id,
     chatState: store.chatState,
     chatInstance: store.chatInstance.chatSDK,
     chatRouterLess: store.chatRouterLess,

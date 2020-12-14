@@ -27,7 +27,7 @@ import {
   MdPlayArrow,
   MdClose
 } from "react-icons/md";
-import {BoxModalMediaFragment} from "./index";
+import {IndexModalMediaFragment} from "./index";
 import ReactDOMServer from "react-dom/server";
 import {
   getFileDownloadingFromHashMap,
@@ -187,7 +187,7 @@ export default class ModalThreadInfoMessageTypes extends Component {
       return (
         <Container className={style.ModalThreadInfoMessageTypes__ImageContainer} data-fancybox key={idMessage}
                    onClick={onFancyBoxClick}>
-          <BoxModalMediaFragment
+          <IndexModalMediaFragment
             options={{buttons: ["goto", "slideShow", "close"], caption: message.message}}
             link={thumb}>
             <Image className={style.ModalThreadInfoMessageTypes__Image}
@@ -196,7 +196,7 @@ export default class ModalThreadInfoMessageTypes extends Component {
                      filter: isBlurry ? "blur(8px)" : "none"
                    }}
                    src={isBlurry ? blurryThumb : thumb}/>
-          </BoxModalMediaFragment>
+          </IndexModalMediaFragment>
 
         </Container>
       )

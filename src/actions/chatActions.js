@@ -204,7 +204,6 @@ export const chatSetInstance = config => {
           dispatch(restoreChatState());
         }
         firstReadyPassed = true;
-        window.instance = e;
         dispatch({
           type: CHAT_GET_INSTANCE("SUCCESS"),
           payload: e

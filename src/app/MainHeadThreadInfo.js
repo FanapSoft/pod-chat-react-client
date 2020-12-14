@@ -2,7 +2,6 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
-import {socketStatus} from "./AsideHead";
 
 //strings
 import strings from "../constants/localization";
@@ -19,7 +18,7 @@ import Container from "../../../pod-chat-ui-kit/src/container";
 //styling
 import style from "../../styles/app/MainHeadThreadInfo.scss";
 import classnames from "classnames";
-import {avatarNameGenerator, avatarUrlGenerator} from "../utils/helpers";
+import {avatarNameGenerator, avatarUrlGenerator, socketStatus} from "../utils/helpers";
 import Loading from "../../../pod-chat-ui-kit/src/loading";
 import LoadingBlinkDots from "../../../pod-chat-ui-kit/src/loading/LoadingBlinkDots";
 import {getParticipant} from "./ModalThreadInfoPerson";

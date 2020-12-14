@@ -37,7 +37,7 @@ import {
   MdClose,
   MdMic
 } from "react-icons/md";
-import {BoxModalMediaFragment} from "./index";
+import {IndexModalMediaFragment} from "./index";
 import Image from "../../../pod-chat-ui-kit/src/image";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
@@ -504,7 +504,7 @@ class MainMessagesMessageFile extends Component {
                     </Text>
                     :
                     <Fragment>
-                      <BoxModalMediaFragment link={imageModalPreview || imageThumb} linkClassName={style.MainMessagesFile__ModalMediaLink} options={{caption: message.message}}/>
+                      <IndexModalMediaFragment link={imageModalPreview || imageThumb} linkClassName={style.MainMessagesFile__ModalMediaLink} options={{caption: message.message}}/>
                       <ImageFragment/>
                     </Fragment>
 

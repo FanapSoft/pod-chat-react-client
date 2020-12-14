@@ -1,12 +1,23 @@
 // src/list/Avatar.scss.js
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
-import {avatarNameGenerator, avatarUrlGenerator, getNow, isIosAndSafari, mobileCheck} from "../utils/helpers";
+import {
+  avatarNameGenerator,
+  avatarUrlGenerator,
+  getNow,
+  isIosAndSafari,
+  mobileCheck,
+  isGroup,
+  isChannel
+} from "../utils/helpers";
 import {withRouter} from "react-router-dom";
 import {isFile} from "./MainMessagesMessage";
 import {isMessageByMe} from "./MainMessages";
-import {codeEmoji, decodeEmoji} from "./_component/EmojiIcons.js";
-import {isGroup, isChannel} from "./Main";
+import {decodeEmoji} from "./_component/EmojiIcons.js";
+import {clearHtml} from "./_component/Input";
+import classnames from "classnames";
+import date from "../utils/date";
+
 
 //strings
 import strings from "../constants/localization";
@@ -14,11 +25,16 @@ import {ROUTE_THREAD} from "../constants/routes";
 
 //actions
 import {
-  threadCreateWithExistThread, threadCreateWithUser,
+  threadCreateWithExistThread,
+  threadCreateWithUser,
   threadGetList,
   threadLeave,
   threadModalThreadInfoShowing, threadNotification, threadPinToTop, threadUnpinFromTop
 } from "../actions/threadActions";
+import {chatModalPrompt, chatSearchResult} from "../actions/chatActions";
+import {contactChatting} from "../actions/contactActions";
+import {messageSeen} from "../actions/messageActions";
+
 
 //UI components
 import {TypingFragment} from "./MainHeadThreadInfo";
@@ -27,7 +43,6 @@ import {
   MdRecordVoiceOver,
   MdDoneAll,
   MdDone,
-  MdSchedule,
   MdNotificationsOff,
   MdDelete,
   MdNotificationsActive,
@@ -46,18 +61,14 @@ import LoadingBlinkDots from "../../../pod-chat-ui-kit/src/loading/LoadingBlinkD
 import Loading from "../../../pod-chat-ui-kit/src/loading";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import Gap from "../../../pod-chat-ui-kit/src/gap";
-import date from "../utils/date";
+import Message from "../../../pod-chat-ui-kit/src/message";
+import Context, {ContextItem, ContextTrigger} from "../../../pod-chat-ui-kit/src/menu/Context";
+
 
 //styling
 import style from "../../styles/app/AsideThreads.scss";
-import Message from "../../../pod-chat-ui-kit/src/message";
-import classnames from "classnames";
 import styleVar from "../../styles/variables.scss";
-import Context, {ContextItem, ContextTrigger} from "../../../pod-chat-ui-kit/src/menu/Context";
-import {chatModalPrompt, chatSearchResult} from "../actions/chatActions";
-import {contactChatting} from "../actions/contactActions";
-import {clearHtml} from "./_component/Input";
-import {messageSeen} from "../actions/messageActions";
+
 
 function sliceMessage(message) {
   return decodeEmoji(message);
@@ -72,22 +83,11 @@ function prettifyMessageDate(passedTime) {
     return date.format(passedTime, "HH:mm", "en")
   } else if (isYesterday) {
     return strings.yesterday;
-  } else if(isWithinAWeek){
+  } else if (isWithinAWeek) {
     return date.format(passedTime, "dddd");
   }
   return date.format(passedTime, "YYYY-MM-DD");
 }
-
-function getTitle(title) {
-  /*  if (!title) {
-      return "";
-    }
-    if (title.length >= 30) {
-      return `${title.slice(0, 30)}...`;
-    }*/
-  return title;
-}
-
 
 function LastMessageTextFragment({isGroup, isChannel, lastMessageVO, lastMessage, draftMessage, inviter, isTyping}) {
   const isFileReal = isFile(lastMessageVO);
@@ -198,7 +198,7 @@ const sanitizeRule = {
   }
 };
 
-export const statics = {
+const statics = {
   count: 50
 };
 
@@ -236,13 +236,13 @@ class AsideThreads extends Component {
   }
 
   componentDidUpdate(oldProps) {
-    const {chatInstance, dispatch} = this.props;
+    const {chatInstance, threadId, dispatch} = this.props;
     if (oldProps.chatInstance !== chatInstance) {
       dispatch(threadGetList(0, statics.count));
     }
-    if (oldProps.threadId !== this.props.threadId) {
+    if (oldProps.threadId !== threadId) {
       this.setState({
-        activeThread: this.props.threadId
+        activeThread: threadId
       });
     }
   }
@@ -271,11 +271,6 @@ class AsideThreads extends Component {
     const {threadsNextOffset, dispatch} = this.props;
     dispatch(threadGetList(threadsNextOffset, statics.count));
   }
-
-  onScroll(e) {
-    this.currentScroll = e.currentTarget.scrollTop;
-  }
-
 
   onLastMessageSeen(thread) {
     const {dispatch} = this.props;
@@ -351,7 +346,7 @@ class AsideThreads extends Component {
   }
 
   render() {
-    const {threads, threadsFetching, threadShowing, chatInstance, chatSearchResult, user, threadsHasNext, threadsPartialFetching, chatFileHashCodeMap} = this.props;
+    const {threads, threadsFetching, threadsHasNext, threadShowing, chatInstance, chatSearchResult, user, threadsPartialFetching} = this.props;
     const {activeThread, isMenuShow} = this.state;
     const isMobile = mobileCheck();
     const {MEDIUM} = avatarUrlGenerator.SIZES;
@@ -389,7 +384,6 @@ class AsideThreads extends Component {
           </section>
         )
       }
-
 
       const threadsContainerClassNames = classnames({
         [style.AsideThreads__Threads]: true,
@@ -504,7 +498,8 @@ class AsideThreads extends Component {
                                          onTouchMove={this.onThreadTouchMove.bind(this, el)}
                                          onTouchEnd={this.onThreadTouchEnd.bind(this, el)}>
                                 <Avatar cssClassNames={style.AsideThreads__AvatarContainer}>
-                                  <AvatarImage src={avatarUrlGenerator.apply(this, [el.image, MEDIUM, el.metadata])} customSize="50px"
+                                  <AvatarImage src={avatarUrlGenerator.apply(this, [el.image, MEDIUM, el.metadata])}
+                                               customSize="50px"
                                                text={avatarNameGenerator(el.title).letter}
                                                textBg={avatarNameGenerator(el.title).color}/>
                                   <Container className={style.AsideThreads__ThreadCheck} bottomRight
@@ -527,7 +522,7 @@ class AsideThreads extends Component {
                                       <Gap x={2}/>
                                     </Container>
                                     }
-                                    {getTitle(el.title)}
+                                    {el.title}
                                     <AvatarText>
                                       <LastMessageFragment thread={el} user={user}/>
                                     </AvatarText>
@@ -627,4 +622,4 @@ class AsideThreads extends Component {
 }
 
 const exportDefault = withRouter(AsideThreads);
-export {getTitle, sliceMessage, isFile, sanitizeRule, prettifyMessageDate, exportDefault as default};
+export {sliceMessage, isFile, sanitizeRule, prettifyMessageDate, exportDefault as default};

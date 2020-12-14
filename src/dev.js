@@ -6,14 +6,14 @@ import {serverConfig} from "./constants/connection";
 import store from "./store/index";
 import "../styles/main.scss";
 import "../styles/layout/defualt.scss";
-import Box from "./app";
+import Index from "./app";
 import {auth, retry} from "podauth/src/auth";
 
 function renderPodchat(token) {
   render(
     <Provider store={store}>
       <BrowserRouter>
-        <Box token={token}  {...serverConfig} onRetryHook={e => {
+        <Index token={token}  {...serverConfig} onRetryHook={e => {
           return retry();
         }}/>
       </BrowserRouter>

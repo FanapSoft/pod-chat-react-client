@@ -1,33 +1,30 @@
-// src/list/Avatar.scss
+// src/AsideSearch.js
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
-import {signOut, retry} from "podauth";
-import {isContains} from "../utils/helpers";
 
 //strings
 import strings from "../constants/localization";
+import classnames from "classnames";
 
 //actions
+import {chatSearchResult} from "../actions/chatActions";
+import {threadGetList} from "../actions/threadActions";
+import {contactGetList} from "../actions/contactActions";
 
 //UI components
 import {MdClose} from "react-icons/md";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import {InputText} from "../../../pod-chat-ui-kit/src/input";
 
+
 //styling
 import style from "../../styles/app/AsidSearch.scss";
 import styleVar from "../../styles/variables.scss";
 import utilsStlye from "../../styles/utils/utils.scss";
-import {chatSearchResult} from "../actions/chatActions";
-import classnames from "classnames";
-import {threadGetList} from "../actions/threadActions";
-import {contactGetList} from "../actions/contactActions";
 
 @connect(store => {
   return {
-    threads: store.threads.threads,
-    contacts: store.contactGetList.contacts,
     chatSearchShow: store.chatSearchShow,
     chatSearchResult: store.chatSearchResult
   };
@@ -53,13 +50,13 @@ class AsideSearch extends Component {
       }
     }
     if (chatSearchShow) {
-      if (!oldProps.chatSearchShow) {
+      if (!oldChatSearchShow) {
         if (this.inputRef.current) {
           this.inputRef.current.focus();
         }
       }
     } else {
-      if (oldProps.chatSearchShow) {
+      if (oldChatSearchShow) {
         if (this.inputRef.current) {
           this.onClearSearchClick();
         }
@@ -84,7 +81,7 @@ class AsideSearch extends Component {
   }
 
   search(query) {
-    const {threads, contacts, dispatch} = this.props;
+    const {dispatch} = this.props;
     if (query) {
       const threadPromise = dispatch(threadGetList(0, 50, query, true));
       const contactPromise = dispatch(contactGetList(0, 50, query, false, true));

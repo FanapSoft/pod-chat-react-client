@@ -303,7 +303,7 @@ avatarUrlGenerator.SIZES = {
 };
 
 
-export function OnWindowFocusInOut(onFocusedOut, onFocusedIn) {
+export function OnWindowFocusInOut(onFocusedOut= ()=>{}, onFocusedIn = ()=>{}) {
   ifvisible.on("blur", onFocusedOut);
   ifvisible.on("focus", onFocusedIn);
   window.addEventListener("blur", onFocusedOut);
@@ -464,4 +464,43 @@ export function checkForMediaAccess() {
       });
     });
   })
+}
+
+export function isChannel(thread) {
+  if (thread.group) {
+    if (thread.type === 8) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isGroup(thread) {
+  if (thread.group) {
+    if (thread.type !== 8) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isP2PThread(thread) {
+  return !(isGroup(thread) && isChannel(thread));
+}
+
+export function isChannelOwner(thread, user) {
+  return thread.inviter.id === user.id;
+}
+
+export function socketStatus(chatState) {
+  const isReconnecting = chatState.socketState == 1 && !chatState.deviceRegister;
+  const isConnected = chatState.socketState == 1 && chatState.deviceRegister;
+  const isDisconnected = chatState.socketState == 3;
+  return {isReconnecting, isConnected, isDisconnected, timeUntilReconnect: chatState.timeUntilReconnect};
+}
+
+export function routeChange(history, route, chatRouterLess) {
+  if (!chatRouterLess) {
+    history.push(route);
+  }
 }

@@ -17,7 +17,7 @@ import {
 } from "../actions/messageActions";
 
 //components
-import {BoxModalMediaFragment} from "./index";
+import {IndexModalMediaFragment} from "./index";
 import Image from "../../../pod-chat-ui-kit/src/image";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
@@ -220,12 +220,12 @@ class MainMessagesMessageFile extends Component {
                        className={style.MainMessagesFile__FileContainer}>
               {isImage ?
                 <Container style={{width: `${imageSizeLink.width}px`}}>
-                  <BoxModalMediaFragment link={imageSizeLink.imageLinkOrig} options={{caption: message.message}}>
+                  <IndexModalMediaFragment link={imageSizeLink.imageLinkOrig} options={{caption: message.message}}>
                     <Image className={mainMessagesFileImageClassNames}
                            onClick={this.onImageClick}
                            src={imageSizeLink.imageLink}
                            style={{maxWidth: `${imageSizeLink.width}px`, height: `${imageSizeLink.height}px`}}/>
-                  </BoxModalMediaFragment>
+                  </IndexModalMediaFragment>
                   <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e => e.stopPropagation()}>
                     <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
                       {mentionify(emailify(urlify(decodeEmoji(message.message))))}

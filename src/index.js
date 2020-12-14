@@ -3,7 +3,7 @@ import ReactDOM, {render} from "react-dom";
 import {Provider} from "react-redux";
 import store from "./store/index";
 import "../styles/main.scss";
-import Box from "./app";
+import Index from "./app";
 import {BrowserRouter} from "react-router-dom";
 
 
@@ -11,7 +11,7 @@ function PodchatJSX(props) {
   return (
     <Provider store={store}>
       <BrowserRouter>
-        <Box {...props}/>
+        <Index {...props}/>
       </BrowserRouter>
     </Provider>
   );
@@ -22,7 +22,7 @@ function Podchat(props, elementId) {
   render(
     <Provider store={store}>
       <BrowserRouter>
-        <Box {...props} wrappedComponentRef={e => instance = e}/>
+        <Index {...props} wrappedComponentRef={e => instance = e}/>
       </BrowserRouter>
     </Provider>,
     document.getElementById(elementId)

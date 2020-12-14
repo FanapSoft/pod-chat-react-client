@@ -17,7 +17,7 @@ import Divider from "../../../pod-chat-ui-kit/src/divider";
 
 //UI components
 
-import {BoxModalMediaFragment} from "./index";
+import {IndexModalMediaFragment} from "./index";
 import ModalThreadInfoGroup from "./ModalThreadInfoGroup";
 import ModalThreadInfoPerson from "./ModalThreadInfoPerson";
 
@@ -48,8 +48,8 @@ function AvatarModalMediaFragment({participant, thread, }) {
     }
     caption = thread.title;
   }
-  return image ? <BoxModalMediaFragment link={image} options={{caption}}
-                                        linkClassName={style.ModalThreadInfo__ModalMediaLink}/> : null;
+  return image ? <IndexModalMediaFragment link={image} options={{caption}}
+                                          linkClassName={style.ModalThreadInfo__ModalMediaLink}/> : null;
 }
 
 @connect(store => {
