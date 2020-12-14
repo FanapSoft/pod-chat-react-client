@@ -42,6 +42,7 @@ const constants = {
     threadsHasNext: store.threads.hasNext,
     isShow: store.threadModalListShowing.isShowing,
     message: store.threadModalListShowing.message,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     user: store.user.user
   };
 }, null, null, {withRef: true})
@@ -131,7 +132,6 @@ export default class ModalThreadList extends Component {
 
   onSelect(thread, isContact) {
     const {dispatch, message} = this.props;
-    let targetId;
     if (isContact && isContact.id) {
       const user = {
         id: isContact.id,
@@ -202,7 +202,7 @@ export default class ModalThreadList extends Component {
                       <Container relative>
 
                         <Avatar>
-                          <AvatarImage src={avatarUrlGenerator(el.image, avatarUrlGenerator.SIZES.SMALL)}
+                          <AvatarImage src={avatarUrlGenerator.apply(this, [el.image, avatarUrlGenerator.SIZES.SMALL, el.metadata])}
                                        text={avatarNameGenerator(el.title).letter}
                                        textBg={avatarNameGenerator(el.title).color}/>
                           <AvatarName>{el.title}</AvatarName>

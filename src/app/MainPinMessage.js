@@ -123,7 +123,7 @@ export default class MainPinMessage extends Component {
                               style={{marginLeft: "5px", marginTop: "3px"}}/>
                 }
                 <Text isHTML color={messageDeleted ? "gray" : null} italic={messageDeleted} dark={messageDeleted}>
-                  {messageDeleted ? strings.messageDeleted : decodeEmoji(messageDetails.text)}
+                  {messageDeleted ? strings.messageDeleted : decodeEmoji(message.message || messageDetails.text)}
                 </Text>
               </Fragment>
           }

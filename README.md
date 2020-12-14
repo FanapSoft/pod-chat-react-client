@@ -79,5 +79,5 @@ This project is open-sourced software licensed under the [MIT license](http://op
 
 
 [//]: # (LINKS)
-[preview_image]: https://raw.githubusercontent.com/FanapSoft/pod-chat-react-client//master/docs/preview.png "Preview of podchat web"
+[preview_image]: https://raw.githubusercontent.com/FanapSoft/pod-chat-react-client/master/docs/preview.png "Preview of podchat web"
 [preview_image_url]: https://raw.githubusercontent.com/FanapSoft/pod-chat-react-client/master/docs/preview.png

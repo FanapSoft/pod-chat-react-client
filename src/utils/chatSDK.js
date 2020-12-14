@@ -1,10 +1,10 @@
 import PodChat from "podchat-browser";
 import {promiseDecorator} from "./decorators";
 import React from "react";
-import {getNow} from "./helpers";
+import {getNow, isAudioFile, isImageFile, isVideoFile} from "./helpers";
 import Cookies from "js-cookie";
 import {THREAD_ADMIN} from "../constants/privilege";
-import {types} from "../constants/messageTypes";
+import {types, typesCode} from "../constants/messageTypes";
 
 const errorCodes = {
   CLIENT_NOT_AUTH: 21,
@@ -171,8 +171,8 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  getMessageById(resolve, reject, threadId, id) {
-    this.chatAgent.getHistory({threadId, id}, result => {
+  getMessageById(resolve, reject, threadId, messageId) {
+    this.chatAgent.getHistory({threadId, messageId}, result => {
       if (!this._onError(result, reject)) {
         return resolve(result.result.history[0]);
       }
@@ -222,14 +222,14 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  getThreads(resolve, reject, offset, count, name, params) {
+  getThreads(resolve, reject, offset, count, threadName, params) {
     let getThreadsParams = {
       count,
       offset
     };
-    if (typeof name === "string") {
-      if (name.trim()) {
-        getThreadsParams.name = name;
+    if (typeof threadName === "string") {
+      if (threadName.trim()) {
+        getThreadsParams.threadName = threadName;
       }
     }
     if (params) {
@@ -309,9 +309,9 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  sendMessage(resolve, reject, content, threadId, other) {
+  sendMessage(resolve, reject, textMessage, threadId, other) {
     let sendChatParams = {
-      content,
+      textMessage,
       threadId,
       messageType: "TEXT"
     };
@@ -323,28 +323,75 @@ export default class ChatSDK {
       ...obj, ...{
         participant: this.user,
         time: getNow() * Math.pow(10, 6),
-        message: content,
+        message: textMessage,
+      }
+    })
+  }
+
+
+  @promiseDecorator
+  sendLocationMessage(resolve, reject, {id, userGroupHash}, lat, lng, options, callBack) {
+    let sendChatParams = {
+      mapCenter: {
+        lat,
+        lng
+      },
+      mapType: "standard-day",
+      threadId: id,
+      userGroupHash,
+      ...options
+    };
+    const time = getNow() * Math.pow(10, 6);
+    const obj = this.chatAgent.sendLocationMessage(sendChatParams, file => {
+      callBack(
+        {
+          time,
+          fileObject: file,
+          messageType: typesCode[types.picture],
+          metadata: {
+            name: file.name,
+            file: {
+              link: URL.createObjectURL(file),
+              mimeType: file.type,
+              size: file.size
+            }
+          },
+          ...obj
+        }
+      );
+    });
+    resolve({
+      ...obj,
+      fileObject: {},
+      time,
+      participant: this.user,
+      messageType: typesCode[types.picture],
+      metadata: {
+        file: {},
+        mapLink: true
       }
     })
   }
 
   @promiseDecorator
-  sendFileMessage(resolve, reject, file, threadId, caption, other) {
+  sendFileMessage(resolve, reject, file, thread, caption, other) {
+    const isImage = isImageFile(file);
+    const isVideo = isVideoFile(file);
+    const isAudio = isAudioFile(file);
+    const messageType = isImage ? types.picture : isVideo ? types.video : isAudio ? types.sound : types.file;
     let sendChatParams = {
-      threadId,
-      file
+      threadId: thread.id,
+      userGroupHash: thread.userGroupHash,
+      file,
+      messageType
     };
     if (caption) {
       sendChatParams.content = caption;
     }
-    const isImage = file.type.startsWith("image/");
-    const isVideo = file.type.match(/mp4|ogg|3gp|ogv/);
-    const isAudio = file.type.match(/audio.*/);
-    const messageType =  isImage ? types.picture : isVideo ? types.video : isAudio ? types.sound : types.file;
     if (other) {
       sendChatParams = {...sendChatParams, ...other};
     }
-    const obj = this.chatAgent.sendFileMessage({...sendChatParams, messageType: messageType.toUpperCase()}, {
+    const obj = this.chatAgent.sendFileMessage(sendChatParams, {
       onSent: result => {
         this._onError(result, reject);
       }
@@ -354,10 +401,11 @@ export default class ChatSDK {
         message: caption,
         time: getNow() * Math.pow(10, 6),
         fileObject: file,
+        messageType: typesCode[sendChatParams.messageType],
         metadata: {
+          name: file.name,
           file: {
             mimeType: file.type,
-            originalName: file.name,
             size: file.size
           }
         }
@@ -388,6 +436,14 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
+  cancelFileDownload(resolve, reject, uniqueId) {
+    resolve(uniqueId);
+    this.chatAgent.cancelFileDownload({
+      uniqueId
+    });
+  }
+
+  @promiseDecorator
   cancelMessage(resolve, reject, uniqueId) {
     const cancelMessageParams = {
       uniqueId
@@ -411,10 +467,38 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  updateThreadInfo(resolve, reject, customparams, threadId) {
+  getFileFromPodspace(resolve, reject, hashCode, callBack) {
+    const {uniqueId} = chatAgent.getFileFromPodspace({
+      hashCode,
+    }, result => {
+      if (!this._onError(result, reject)) {
+        return callBack(result.result);
+      }
+    });
+    resolve(uniqueId);
+  }
+
+  @promiseDecorator
+  getImageFromPodspace(resolve, reject, hashCode, size = 3, quality = 1, crop = false) {
+    this.chatAgent.getImageFromPodspace({
+      hashCode,
+      size, // 1: 100×75 , 2: 200×150, 3: 400×300
+      quality, // [0.0, 1.0] Float number
+      crop, // Based on crop data from upload
+      responseType: "blob"
+    }, result => {
+      if (!this._onError(result, reject)) {
+        return resolve(result.result)
+      }
+    });
+  }
+
+  @promiseDecorator
+  updateThreadInfo(resolve, reject, {id, userGroupHash}, customParams) {
     const params = {
-      threadId,
-      ...customparams
+      threadId: id,
+      userGroupHash,
+      ...customParams
     };
     this.chatAgent.updateThreadInfo(params, result => {
       if (!this._onError(result, reject)) {
@@ -439,7 +523,7 @@ export default class ChatSDK {
   @promiseDecorator
   muteThread(resolve, reject, threadId, mute) {
     const params = {
-      subjectId: threadId
+      threadId
     };
     this.chatAgent[mute ? "muteThread" : "unMuteThread"](params, result => {
       if (!this._onError(result, reject)) {
@@ -480,10 +564,10 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  forwardMessage(resolve, reject, threadId, messageId) {
+  forwardMessage(resolve, reject, threadId, messageIds) {
     const sendChatParams = {
-      subjectId: threadId,
-      content: JSON.stringify(messageId instanceof Array ? messageId : [messageId])
+      threadId,
+      messageIds: messageIds instanceof Array ? messageIds : [messageIds]
     };
     this.chatAgent.forwardMessage(sendChatParams, {
       onSent() {
@@ -493,17 +577,17 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  replyMessage(resolve, reject, content, repliedTo, threadId, repliedMessage) {
+  replyMessage(resolve, reject, textMessage, repliedTo, threadId, repliedMessage) {
     const sendChatParams = {
       threadId,
       repliedTo,
-      content
+      textMessage
     };
-    const obj = this.chatAgent.replyMessage(sendChatParams, (result) => {
+    const obj = this.chatAgent.replyTextMessage(sendChatParams, (result) => {
       if (!this._onError(result, reject)) {
         return resolve({
           result, ...{
-            message: content, participant: {}
+            message: textMessage, participant: {}
           }
         });
       }
@@ -520,19 +604,29 @@ export default class ChatSDK {
           messageType: 0,
         },
         time: getNow() * Math.pow(10, 6),
-        message: content,
+        message: textMessage
       }
     });
   }
 
   @promiseDecorator
-  replyFileMessage(resolve, reject, file, threadId, repliedTo, content, repliedMessage) {
-    const sendChatParams = {
-      threadId,
+  replyFileMessage(resolve, reject, file, thread, repliedTo, content, repliedMessage, other) {
+    const isImage = isImageFile(file);
+    const isVideo = isVideoFile(file);
+    const isAudio = isAudioFile(file);
+    const messageType = isImage ? types.picture : isVideo ? types.video : isAudio ? types.sound : types.file;
+
+    let sendChatParams = {
+      threadId: thread.id,
+      userGroupHash: thread.userGroupHash,
       repliedTo,
       file,
-      content
+      content,
+      messageType
     };
+    if (other) {
+      sendChatParams = {...sendChatParams, ...other};
+    }
     const obj = this.chatAgent.replyFileMessage(sendChatParams, result => {
       if (!this._onError(result, reject)) {
         return resolve({
@@ -555,6 +649,7 @@ export default class ChatSDK {
         },
         time: getNow() * Math.pow(10, 6),
         message: content,
+        messageType: typesCode[sendChatParams.messageType],
         fileObject: file,
         metadata: {
           file: {
@@ -651,7 +746,7 @@ export default class ChatSDK {
       count: 50,
       offset: 0
     };
-    this.chatAgent.getBlocked(getContactsParams, (result) => {
+    this.chatAgent.getBlockedList(getContactsParams, (result) => {
       if (!this._onError(result, reject)) {
         return resolve(result.result.blockedUsers);
       }
@@ -691,7 +786,7 @@ export default class ChatSDK {
   @promiseDecorator
   spamPvThread(resolve, reject, threadId) {
     const reportSpamPv = {threadId};
-    this.chatAgent.spamPvThread(reportSpamPv, result => {
+    this.chatAgent.spamPrivateThread(reportSpamPv, result => {
       if (!this._onError(result, reject)) {
         return resolve(result.result);
       }
@@ -740,7 +835,7 @@ export default class ChatSDK {
 
   @promiseDecorator
   getThreadParticipantRoles(resolve, reject, threadId) {
-    this.chatAgent.getParticipantRoles({threadId}, (result) => {
+    this.chatAgent.getCurrentUserRoles({threadId}, (result) => {
       if (!this._onError(result, reject)) {
         return resolve({threadId, roles: result.result});
       }
@@ -750,14 +845,14 @@ export default class ChatSDK {
   @promiseDecorator
   pinThread(resolve, reject, threadId) {
     this.chatAgent.pinThread({
-      subjectId: threadId
+      threadId
     });
   }
 
   @promiseDecorator
   unpinThread(resolve, reject, threadId) {
     this.chatAgent.unPinThread({
-      subjectId: threadId
+      threadId
 
     });
   }
@@ -793,10 +888,10 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  addParticipants(resolve, reject, threadId, contacts) {
+  addParticipants(resolve, reject, threadId, contactIds) {
     const addParticipantParams = {
       threadId,
-      contacts
+      contactIds
     };
 
     this.chatAgent.addParticipants(addParticipantParams, (result) => {
@@ -807,15 +902,15 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  removeParticipants(resolve, reject, threadId, participants) {
+  removeParticipants(resolve, reject, threadId, participantIds) {
     const removeParticipantParams = {
       threadId,
-      participants
+      participantIds
     };
 
     this.chatAgent.removeParticipants(removeParticipantParams, (result) => {
       if (!this._onError(result, reject)) {
-        return resolve(participants);
+        return resolve(participantIds);
       }
     });
   }

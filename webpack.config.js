@@ -8,6 +8,7 @@ module.exports = (e, argv) => {
   const mode = argv.mode;
   const define = argv.define;
   let base = {
+
     devServer: {
       compress: true,
       public: "chat.fanapsoft.ir",
@@ -20,6 +21,7 @@ module.exports = (e, argv) => {
           include: [
             path.resolve(__dirname, "src"),
             path.resolve(__dirname, "node_modules/raduikit/src"),
+            path.resolve(__dirname, "node_modules/react-mic/dist"),
             path.resolve(__dirname, "node_modules/react-icons/*"),
             path.resolve(__dirname, "../uikit/src")
           ],
@@ -46,7 +48,7 @@ module.exports = (e, argv) => {
                 modules: true,
                 localIdentName: mode === "production" ? "[hash:base64:5]" : "[local]",
                 getLocalIdent: (loaderContext, localIdentName, localName, options) => {
-                  return loaderContext.resourcePath.includes('ModalMedia') || loaderContext.resourcePath.includes('emoji') ?
+                  return loaderContext.resourcePath.includes('ModalMedia') || loaderContext.resourcePath.includes('emoji') || localName.includes('leaflet') ?
                     localName :
                     getLocalIdent(loaderContext, localIdentName, localName, options);
                 }
@@ -63,7 +65,7 @@ module.exports = (e, argv) => {
         },
         {
           test: /\.(png|jpg|gif|ttf|eot|woff2|woff|mp3|svg)$/,
-          exclude: /oneone\.png/,
+          exclude: /(oneone|layers|layers-2x|marker-icon|marker-icon-2x)\.png/,
           use: [
             {
               loader: "url-loader",
@@ -84,7 +86,16 @@ module.exports = (e, argv) => {
               }
             }
           ]
-        }
+        },
+        {
+          test: /(layers|layers-2x|marker-icon|marker-shadow|marker-icon-2x)\.png/,
+          use: {
+            loader: "file-loader",
+            options: {
+              name: 'assets/[name].[ext]',
+            },
+          },
+        },
       ]
     },
     plugins: [
@@ -107,6 +118,24 @@ module.exports = (e, argv) => {
 
   //IF MODE IS PRODUCTION
   if (mode === "production") {
+
+    base.externals = [
+      // nodeExternals(),
+      {
+        react: {
+          root: 'React',
+          commonjs2: 'react',
+          commonjs: 'react',
+          amd: 'react'
+        },
+        'react-dom': {
+          root: 'ReactDOM',
+          commonjs2: 'react-dom',
+          commonjs: 'react-dom',
+          amd: 'react-dom'
+        }
+      }
+    ];
     base.output = {
       path: __dirname + "/dist",
       filename: "index.js",

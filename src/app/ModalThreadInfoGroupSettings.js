@@ -37,7 +37,11 @@ const statics = {
   MAIN: "MAIN"
 };
 
-@connect(null, null, null, {withRef: true})
+@connect(store => {
+  return {
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+  };
+}, null, null, {withRef: true})
 export default class ModalThreadInfoGroupSettings extends Component {
 
   constructor(props) {
@@ -47,10 +51,20 @@ export default class ModalThreadInfoGroupSettings extends Component {
     this.groupNameChange = this.groupNameChange.bind(this);
     this.onSaveSettings = this.onSaveSettings.bind(this);
     this.onPrevious = this.onPrevious.bind(this);
-    this.state = {
-      state: statics.MAIN,
-      groupName: ""
-    };
+    const {thread} = props;
+    const {metadata}  = thread;
+    this.previewImage = null;
+    try {
+      this.state = {
+        state: statics.MAIN,
+        groupName: thread.title,
+        groupDesc: thread.description,
+        image: metadata && JSON.parse(metadata).fileHash ? JSON.parse(metadata).fileHash : thread.image
+      };
+    } catch (e) {
+
+    }
+
   }
 
   componentDidMount() {
@@ -74,11 +88,6 @@ export default class ModalThreadInfoGroupSettings extends Component {
     };
 
     setHeaderFooterComponent(HeaderComponent, FooterComponent);
-    this.setState({
-      groupName: thread.title,
-      groupDesc: thread.description,
-      image: thread.image
-    });
   }
 
   onPrevious() {
@@ -87,11 +96,11 @@ export default class ModalThreadInfoGroupSettings extends Component {
   }
 
   onGroupImageChange(evt) {
-    this.props.dispatch(chatUploadImage(evt.target.files[0], this.props.thread.id, image =>
-      this.setState({
-        image
-      })
-    ));
+    const image = evt.target.files[0];
+    this.setState({
+      image
+    });
+    this.previewImage = URL.createObjectURL(image);
   }
 
   groupNameChange(event) {
@@ -108,14 +117,14 @@ export default class ModalThreadInfoGroupSettings extends Component {
 
   onSaveSettings() {
     const {groupDesc, image, groupName} = this.state;
-    const {setStep, steps, thread, dispatch,} = this.props;
+    const {setStep, steps, thread, dispatch} = this.props;
     const baseObject = {
       description: groupDesc, image, title: groupName
     };
     if (image) {
       baseObject.image = image;
     }
-    dispatch(threadMetaUpdate(baseObject, thread.id));
+    dispatch(threadMetaUpdate(thread, baseObject));
     setStep(steps.ON_GROUP_INFO);
   }
 
@@ -126,7 +135,7 @@ export default class ModalThreadInfoGroupSettings extends Component {
 
   render() {
     const {groupName, groupDesc, image} = this.state;
-    const {thread, GapFragment, user} = this.props;
+    const {thread, GapFragment} = this.props;
     return (
       <Container>
         <Container relative>
@@ -144,7 +153,7 @@ export default class ModalThreadInfoGroupSettings extends Component {
                                  className={style.ModalThreadInfoGroupSettings__ImageIcon}/>
                   </Container>
                 </Container>
-                <AvatarImage src={avatarUrlGenerator(image, avatarUrlGenerator.SIZES.MEDIUM)} size="xlg"
+                <AvatarImage src={typeof image === "string" ? avatarUrlGenerator.apply(this, [image, avatarUrlGenerator.SIZES.MEDIUM, thread.metadata]) : this.previewImage} size="xlg"
                              text={avatarNameGenerator(thread.title).letter}
                              textBg={avatarNameGenerator(thread.title).color}/>
               </Container>

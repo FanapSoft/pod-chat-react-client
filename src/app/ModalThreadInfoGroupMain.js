@@ -77,6 +77,7 @@ export function isOwner(thread, user) {
     participantsNextOffset: store.threadParticipantList.nextOffset,
     participantsFetching: store.threadParticipantList.fetching,
     participantsPartialFetching: store.threadParticipantListPartial.fetching,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
   }
 }, null, null, {withRef: true})
 class ModalThreadInfoGroupMain extends Component {
@@ -280,11 +281,12 @@ class ModalThreadInfoGroupMain extends Component {
   }
 
   render() {
-    const {
+    let {
       participants, thread, user, participantsFetching, participantsPartialFetching, notificationPending,
       GapFragment, AvatarModalMediaFragment,
       setScrollBottomThresholdCondition
     } = this.props;
+    AvatarModalMediaFragment = AvatarModalMediaFragment.bind(this);
     const {removingParticipantIds, partialParticipantLoading, query, addMembers, internalStep} = this.state;
     if (internalStep === constants.ON_ADD_MEMBER) {
       return <ModalContactList isShow
@@ -346,7 +348,7 @@ class ModalThreadInfoGroupMain extends Component {
 
           <Container>
             <Avatar>
-              <AvatarImage src={avatarUrlGenerator(thread.image, avatarUrlGenerator.SIZES.LARGE)} size="xlg"
+              <AvatarImage src={avatarUrlGenerator.apply(this, [thread.image, avatarUrlGenerator.SIZES.LARGE, thread.metadata])} size="xlg"
                            text={avatarNameGenerator(thread.title).letter}
                            textBg={avatarNameGenerator(thread.title).color}>
                 <AvatarModalMediaFragment thread={thread}/>

@@ -24,7 +24,7 @@ import {
   threadCheckedMessageList,
   threadNewMessage,
   threadFilesToUpload,
-  threadCreateOnTheFly, threadUnreadMentionedMessageRemove
+  threadCreateOnTheFly, threadUnreadMentionedMessageRemove, threadGoToMessageId
 } from "../actions/threadActions";
 
 //components
@@ -245,7 +245,9 @@ export default class MainMessages extends Component {
     const {hasNext} = threadMessages;
 
     if (threadGoToMessageId !== oldThreadGoToMessageId) {
-      this.goToSpecificMessage(threadGoToMessageId);
+      if (threadGoToMessageId) {
+        this.goToSpecificMessage(threadGoToMessageId);
+      }
       return false;
     }
 
@@ -341,6 +343,9 @@ export default class MainMessages extends Component {
       } else if (threadUnreadMentionedMessages.length) {
         this.fetchUnreadMentionedMessages(true);
       }
+      if (thread.gotoMessage) {
+        return this.goToSpecificMessage(thread.gotoMessage);
+      }
       return this._fetchInitHistory();
     }
 
@@ -350,11 +355,9 @@ export default class MainMessages extends Component {
     }
 
     if (this.lastSeenMessage) {
-      if (this.lastSeenMessage.threadId === threadId) {
-        if (this.windowFocused) {
-          dispatch(messageSeen(this.lastSeenMessage));
-          this.lastSeenMessage = null;
-        }
+      if (this.windowFocused) {
+        dispatch(messageSeen(this.lastSeenMessage));
+        this.lastSeenMessage = null;
       }
     }
 
@@ -481,15 +484,15 @@ export default class MainMessages extends Component {
     if (thread.unreadCount > 0) {
       this.lastSeenMessage = thread.lastMessageVO;
     }
-/*
-    if (messageNew) {
-      if (thread.id === messageNew.threadId) {
-        if (thread.unreadCount > 0) {
-          this.lastSeenMessage = messageNew;
+    /*
+        if (messageNew) {
+          if (thread.id === messageNew.threadId) {
+            if (thread.unreadCount > 0) {
+              this.lastSeenMessage = messageNew;
+            }
+          }
         }
-      }
-    }
-    }*/
+        }*/
 
     this.setState({
       bottomButtonShowing: false
@@ -516,6 +519,10 @@ export default class MainMessages extends Component {
       this.setState({
         highLightMessage: false
       });
+      const {threadGoToMessageId: threadGoToMessageTime, dispatch} = this.props;
+      if (threadGoToMessageTime) {
+        dispatch(threadGoToMessageId(null));
+      }
     }, 2500);
   }
 
@@ -525,10 +532,11 @@ export default class MainMessages extends Component {
     if (!this.scroller) {
       return;
     }
-    if (!this.scroller.current) {
-      return;
+
+    let result;
+    if (this.scroller.current) {
+      result = this.scroller.current.gotoElement(`message-${messageTime}`);
     }
-    const result = this.scroller.current.gotoElement(`message-${messageTime}`);
 
     if (!result) {
       //If last request was the same message and if this message is not exists in history fetch from init

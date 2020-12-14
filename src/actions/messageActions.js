@@ -7,11 +7,12 @@ import {
   MESSAGE_FORWARD,
   MESSAGE_SENDING_ERROR,
   MESSAGE_FILE_UPLOAD_CANCEL,
-  MESSAGE_DELETING, MESSAGE_CANCEL, THREAD_CREATE
+  MESSAGE_DELETING, MESSAGE_CANCEL, THREAD_CREATE, THREAD_NEW_MESSAGE
 } from "../constants/actionTypes";
-import {threadCreateWithExistThread, threadCreateWithUser, threadCreateWithUserWithMessage} from "./threadActions";
-import {getNow} from "../utils/helpers";
+import {threadCreateWithExistThread} from "./threadActions";
+import {getNow, isAudioFile, isImageFile, isVideoFile} from "../utils/helpers";
 import {stateGeneratorState} from "../utils/storeHelper";
+import {types, typesCode} from "../constants/messageTypes";
 
 const {SUCCESS} = stateGeneratorState;
 
@@ -19,22 +20,29 @@ function commonOnTheFlySendMessage(text, file, dispatch, getState) {
   const state = getState();
   const thread = state.thread.thread;
   const chatSDK = state.chatInstance.chatSDK;
+  const uniqueId = `${Math.random()}`;
   let messageMock = {
     threadId: thread.id,
     time: getNow() * Math.pow(10, 6),
-    uniqueId: `${Math.random()}`,
+    uniqueId,
     participant: state.user.user,
     message: text
   };
+
   if (file) {
+    const isImage = isImageFile(file);
+    const isVideo = isVideoFile(file);
+    const isAudio = isAudioFile(file);
+    const messageType = isImage ? types.picture : isVideo ? types.video : isAudio ? types.sound : types.file;
     messageMock = {
       ...messageMock,
       fileObject: file,
+      messageType: typesCode[messageType],
       metadata: {
+        name: file.name,
         file: {
+          link: URL.createObjectURL(file),
           mimeType: file.type,
-          originalName: file.name,
-          link: file.type.startsWith("image/") ? URL.createObjectURL(file) : null,
           size: file.size
         }
       }
@@ -51,12 +59,11 @@ function commonOnTheFlySendMessage(text, file, dispatch, getState) {
       const {pendingMessage} = currentThread;
       if (pendingMessage.length) {
         for (const message of pendingMessage) {
-          const other = {uniqueId: `${message.uniqueId}`};
           const messageText = message.message;
           if (message.fileObject) {
-            dispatch(messageSendFile(message.fileObject, threadId, messageText, other));
+            dispatch(messageSendFile(message.fileObject, thread, messageText, {fileUniqueId: uniqueId}));
           } else {
-            dispatch(messageSend(messageText, thread.id, other));
+            dispatch(messageSend(messageText, thread.id, {uniqueId}));
           }
         }
       }
@@ -80,6 +87,24 @@ export const messageSend = (text, threadId, other) => {
   }
 };
 
+export const messageSendLocation = (thread, lat, lng, options) => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const chatSDK = state.chatInstance.chatSDK;
+    chatSDK.sendLocationMessage(thread, lat, lng, options, message => {
+      dispatch({
+        type: THREAD_NEW_MESSAGE,
+        payload: message
+      });
+    }).then(message=>{
+      dispatch({
+        type: MESSAGE_SEND(SUCCESS),
+        payload: message
+      });
+    })
+  }
+};
+
 export const messageSendOnTheFly = message => {
   return commonOnTheFlySendMessage.bind(null, message, null);
 };
@@ -96,6 +121,22 @@ export const messageSendFile = (file, threadId, message, other) => {
       type: MESSAGE_SEND(),
       payload: chatSDK.sendFileMessage(file, threadId, message, other)
     });
+  }
+};
+
+export const messageGetFile = (hashCode, callBack) => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const chatSDK = state.chatInstance.chatSDK;
+    return chatSDK.getFileFromPodspace(hashCode, callBack);
+  }
+};
+
+export const messageGetImage = (hashCode, size, quality, crop) => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const chatSDK = state.chatInstance.chatSDK;
+    return chatSDK.getImageFromPodspace(hashCode, size, quality, crop);
   }
 };
 
@@ -118,6 +159,14 @@ export const messageCancelFile = (fileUniqueId, threadId) => {
       type: MESSAGE_FILE_UPLOAD_CANCEL(),
       payload: chatSDK.cancelFileUpload(fileUniqueId, threadId)
     });
+  }
+};
+
+export const messageCancelFileDownload = (uniqueId) => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const chatSDK = state.chatInstance.chatSDK;
+    return chatSDK.cancelFileDownload(uniqueId)
   }
 };
 
@@ -195,7 +244,7 @@ export const messageForwardOnTheFly = (messageId, firstMessage) => {
       });
       if (firstMessage) {
         dispatch(messageSend(firstMessage, thread.id));
-        return setTimeout(()=>dispatch(messageForward(thread.id, messageId)), 300)
+        return setTimeout(() => dispatch(messageForward(thread.id, messageId)), 300)
       }
       dispatch(messageForward(thread.id, messageId));
     });

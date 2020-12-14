@@ -30,6 +30,7 @@ import MainPinMessage from "./MainPinMessage";
 //styling
 import style from "../../styles/app/Main.scss";
 import styleVar from "../../styles/variables.scss";
+import MainAudioPlayer from "./MainAudioPlayer";
 
 
 export function isMyThread(thread, user) {
@@ -65,7 +66,8 @@ export function isGroup(thread) {
     thread: store.thread.thread,
     threadFetching: store.thread.fetching,
     threadShowing: store.threadShowing,
-    chatRouterLess: store.chatRouterLess
+    chatRouterLess: store.chatRouterLess,
+    chatAudioPlayer: store.chatAudioPlayer
   };
 })
 class Main extends Component {
@@ -104,7 +106,7 @@ class Main extends Component {
   }
 
   render() {
-    const {thread, threadFetching} = this.props;
+    const {thread, threadFetching, chatAudioPlayer} = this.props;
     const {id, pinMessageVO} = thread;
 
     if (!id && !threadFetching) {
@@ -130,8 +132,13 @@ class Main extends Component {
                  <Container className={style.Main}>
                    <Container className={style.Main__Cover}/>
                    <MainHead/>
+                   {
+                     chatAudioPlayer &&
+                     <MainAudioPlayer thread={thread} chatAudioPlayer={chatAudioPlayer}/>
+                   }
                    {pinMessageVO &&
                    <MainPinMessage thread={thread} messageVo={pinMessageVO} mainMessageRef={this.mainMessagesRef}/>}
+
                    <MainMessages ref={this.mainMessagesRef}/>
                    <MainFooter/>
                  </Container>

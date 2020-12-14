@@ -39,6 +39,7 @@ export function TypingFragment({isGroup, typing, textProps}) {
     smallVersion: store.chatSmallVersion,
     chatState: store.chatState,
     chatRouterLess: store.chatRouterLess,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     thread: store.thread.thread,
     threadShowing: store.threadShowing,
     participants: store.threadParticipantList.participants,
@@ -63,7 +64,7 @@ class BoxHeadThreadInfo extends Component {
   render() {
     const {thread, smallVersion, chatState, participants, user} = this.props;
     const {isDisconnected, timeUntilReconnect, isReconnecting, isConnected} = socketStatus(chatState);
-    const participant = getParticipant(participants, user)
+    const participant = getParticipant(participants, user);
     if (thread.id) {
       const classNames = classnames({
         [style.MainHeadThreadInfo]: true,
@@ -74,7 +75,7 @@ class BoxHeadThreadInfo extends Component {
       return (
         <Container className={classNames} onClick={this.onShowInfoClick} relative>
           <Avatar>
-            <AvatarImage src={avatarUrlGenerator(thread.image, avatarUrlGenerator.SIZES.SMALL)}
+            <AvatarImage src={avatarUrlGenerator.apply(this, [thread.image, avatarUrlGenerator.SIZES.SMALL, thread.metadata])}
                          text={avatarNameGenerator(thread.title).letter}
                          textBg={avatarNameGenerator(thread.title).color}/>
             <AvatarName>

@@ -1,6 +1,9 @@
 import {ifvisible} from "ifvisible.js";
 import queryString from "query-string";
 import {serverConfig} from "../constants/connection";
+import {messageGetImage} from "../actions/messageActions";
+import {threadThumbnailUpdate} from "../actions/threadActions";
+import {chatGetImage, chatFileHashCodeUpdate, chatGetFile, chatCancelFileDownload} from "../actions/chatActions";
 
 export function humanFileSize(bytes, si) {
   const thresh = si ? 1000 : 1024;
@@ -26,7 +29,7 @@ export function mobileCheck() {
   return check;
 }
 
-export function isIosAndSafari(){
+export function isIosAndSafari() {
   var ua = window.navigator.userAgent;
   var iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
   var webkit = !!ua.match(/WebKit/i);
@@ -137,7 +140,129 @@ export function avatarNameGenerator(firstName, lastName) {
 
 }
 
-export function avatarUrlGenerator(url, size) {
+export function getFileDownloadingFromHashMap(id) {
+  const {chatFileHashCodeMap} = this.props;
+  let result = chatFileHashCodeMap.find(e => e.id === id);
+  if (result) {
+    const {result: status} = result;
+    if (status.indexOf("blob") > -1) {
+      return status;
+    } else {
+      if (status === "LOADING") {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+
+export function cancelFileDownloadingFromHashMap(id) {
+  const {dispatch, chatFileHashCodeMap} = this.props;
+  let result = chatFileHashCodeMap.find(e => e.id === id);
+  if (result) {
+    const {result: status, cancelId} = result;
+    if (status === "LOADING") {
+      dispatch(chatCancelFileDownload(cancelId));
+      dispatch(chatFileHashCodeUpdate(id, true));
+      return true;
+    }
+  }
+  return false;
+}
+
+
+export function getImageFromHashMap(hashCode, size, quality) {
+  const id = `${hashCode}-${size}-${quality}`;
+  const {dispatch} = this.props;
+  const downloadingResult = getFileDownloadingFromHashMap.call(this, id);
+  if (downloadingResult) {
+    return downloadingResult;
+  }
+  dispatch(chatFileHashCodeUpdate({id, result: "LOADING"}));
+  dispatch(chatGetImage(hashCode, size, quality)).then(result => {
+    dispatch(chatFileHashCodeUpdate({id, result: URL.createObjectURL(result)}));
+  });
+  return id;
+}
+
+export function getFileDownloadingFromHashMapWindow(id) {
+  if (!window.podspaceHashmap) {
+    window.podspaceHashmap = {};
+  }
+  const result = window.podspaceHashmap[id];
+  if (result) {
+    if (result.indexOf("blob") > -1) {
+      return result;
+    } else {
+      if (result === "LOADING") {
+        return true;
+      }
+    }
+  }
+  return null;
+}
+
+export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, componenet, init) {
+  const id = `${hashCode}-${size}-${quality}`;
+  const {dispatch} = componenet.props;
+  const downloadingResult = getFileDownloadingFromHashMapWindow(id);
+  if (downloadingResult) {
+    return downloadingResult;
+  }
+  const lastResult = window.podspaceHashmap[id] || "";
+  if (lastResult.indexOf("FAIL") < 0) {
+    if (!init) {
+      componenet.setState({
+        [fieldKey]: window.podspaceHashmap[id] = "LOADING"
+      });
+    }
+  }
+  dispatch(chatGetImage(hashCode, size, quality)).then(result => {
+    componenet.setState({
+      [fieldKey]: window.podspaceHashmap[id] = URL.createObjectURL(result)
+    });
+  }, err => {
+    const failCount = +lastResult.split("-")[1] ? +lastResult.split("-")[1] : 1;
+    if (failCount >= 3) {
+      return;
+    }
+    window.podspaceHashmap[id] = `FAIL-${failCount + 1}`;
+    getImageFromHashMapWindow.apply(null, arguments);
+  });
+  return init ? "LOADING" : downloadingResult;
+}
+
+export function getFileFromHashMap(hashCode, metadata) {
+  const id = hashCode;
+  const {dispatch} = this.props;
+  const downloadingResult = getFileDownloadingFromHashMap.call(this, id);
+  if (downloadingResult) {
+    return downloadingResult;
+  }
+  return dispatch(chatGetFile(hashCode, result => {
+    dispatch(chatFileHashCodeUpdate({id, result: URL.createObjectURL(result), metadata}));
+  })).then(downloadingUniqueId => {
+    dispatch(chatFileHashCodeUpdate({id, result: "LOADING", cancelId: downloadingUniqueId, metadata}));
+  });
+}
+
+export function avatarUrlGenerator(url, size, metadata) {
+  if (metadata) {
+    const sizes = {
+      SMALL: 1,
+      MEDIUM: 2,
+      LARGE: 3,
+      XLARGE: 3
+    };
+    if (metadata) {
+      metadata = JSON.parse(metadata);
+      const {fileHash} = metadata;
+      if (fileHash) {
+        return getImageFromHashMap.apply(this, [fileHash, sizes[size], 1]);
+      }
+    }
+  }
   if (!url) {
     return url;
   }
@@ -192,4 +317,151 @@ export function getNow() {
   } else {
     return Date.now();
   }
+}
+
+export function isImageFile(file) {
+  return file.type.match(/image\/jpeg|image\/png/gm);
+}
+
+export function isVideoFile(file) {
+  return file.type.match(/mp4|ogg|3gp|ogv/);
+}
+
+export function isAudioFile(file) {
+  return file.type.match(/audio.*/);
+}
+
+export function isFile(file) {
+  return !isVideoFile(file) && !isImageFile(file);
+}
+
+export function checkForMediaAccess() {
+
+  if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+    // Firefox 38+ seems having support of enumerateDevicesx
+    navigator.enumerateDevices = function (callback) {
+      navigator.mediaDevices.enumerateDevices().then(callback);
+    };
+  }
+
+  var MediaDevices = [];
+  var isHTTPs = location.protocol === 'https:';
+  var canEnumerate = false;
+
+  if (typeof MediaStreamTrack !== 'undefined' && 'getSources' in MediaStreamTrack) {
+    canEnumerate = true;
+  } else if (navigator.mediaDevices && !!navigator.mediaDevices.enumerateDevices) {
+    canEnumerate = true;
+  }
+
+  var hasMicrophone = false;
+  var hasSpeakers = false;
+  var hasWebcam = false;
+
+  var isMicrophoneAlreadyCaptured = false;
+  var isWebcamAlreadyCaptured = false;
+
+  function checkDeviceSupport(callback) {
+    if (!canEnumerate) {
+      return;
+    }
+
+    if (!navigator.enumerateDevices && window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
+      navigator.enumerateDevices = window.MediaStreamTrack.getSources.bind(window.MediaStreamTrack);
+    }
+
+    if (!navigator.enumerateDevices && navigator.enumerateDevices) {
+      navigator.enumerateDevices = navigator.enumerateDevices.bind(navigator);
+    }
+
+    if (!navigator.enumerateDevices) {
+      if (callback) {
+        callback();
+      }
+      return;
+    }
+
+    MediaDevices = [];
+    navigator.enumerateDevices(function (devices) {
+      devices.forEach(function (_device) {
+        var device = {};
+        for (var d in _device) {
+          device[d] = _device[d];
+        }
+
+        if (device.kind === 'audio') {
+          device.kind = 'audioinput';
+        }
+
+        if (device.kind === 'video') {
+          device.kind = 'videoinput';
+        }
+
+        var skip;
+        MediaDevices.forEach(function (d) {
+          if (d.id === device.id && d.kind === device.kind) {
+            skip = true;
+          }
+        });
+
+        if (skip) {
+          return;
+        }
+
+        if (!device.deviceId) {
+          device.deviceId = device.id;
+        }
+
+        if (!device.id) {
+          device.id = device.deviceId;
+        }
+
+        if (!device.label) {
+          device.label = 'Please invoke getUserMedia once.';
+          if (!isHTTPs) {
+            device.label = 'HTTPs is required to get label of this ' + device.kind + ' device.';
+          }
+        } else {
+          if (device.kind === 'videoinput' && !isWebcamAlreadyCaptured) {
+            isWebcamAlreadyCaptured = true;
+          }
+
+          if (device.kind === 'audioinput' && !isMicrophoneAlreadyCaptured) {
+            isMicrophoneAlreadyCaptured = true;
+          }
+        }
+
+        if (device.kind === 'audioinput') {
+          hasMicrophone = true;
+        }
+
+        if (device.kind === 'audiooutput') {
+          hasSpeakers = true;
+        }
+
+        if (device.kind === 'videoinput') {
+          hasWebcam = true;
+        }
+
+        // there is no 'videoouput' in the spec.
+
+        MediaDevices.push(device);
+      });
+
+      if (callback) {
+        callback();
+      }
+    });
+  }
+
+  return new Promise(resolve => {
+    checkDeviceSupport(function () {
+      resolve({
+        hasWebcam,
+        hasMicrophone,
+        isMicrophoneAlreadyCaptured,
+        isWebcamAlreadyCaptured
+      });
+    });
+  })
 }

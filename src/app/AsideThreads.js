@@ -214,6 +214,7 @@ export const statics = {
     chatInstance: store.chatInstance.chatSDK,
     chatRouterLess: store.chatRouterLess,
     chatSearchResult: store.chatSearchResult,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     user: store.user.user
   };
 })
@@ -351,7 +352,7 @@ class AsideThreads extends Component {
   }
 
   render() {
-    const {threads, threadsFetching, threadShowing, chatInstance, chatSearchResult, user, threadsHasNext, threadsPartialFetching} = this.props;
+    const {threads, threadsFetching, threadShowing, chatInstance, chatSearchResult, user, threadsHasNext, threadsPartialFetching, chatFileHashCodeMap} = this.props;
     const {activeThread, isMenuShow} = this.state;
     const isMobile = mobileCheck();
     const {MEDIUM} = avatarUrlGenerator.SIZES;
@@ -504,7 +505,7 @@ class AsideThreads extends Component {
                                          onTouchMove={this.onThreadTouchMove.bind(this, el)}
                                          onTouchEnd={this.onThreadTouchEnd.bind(this, el)}>
                                 <Avatar cssClassNames={style.AsideThreads__AvatarContainer}>
-                                  <AvatarImage src={avatarUrlGenerator(el.image, MEDIUM)} customSize="50px"
+                                  <AvatarImage src={avatarUrlGenerator.apply(this, [el.image, MEDIUM, el.metadata])} customSize="50px"
                                                text={avatarNameGenerator(el.title).letter}
                                                textBg={avatarNameGenerator(el.title).color}/>
                                   <Container className={style.AsideThreads__ThreadCheck} bottomRight

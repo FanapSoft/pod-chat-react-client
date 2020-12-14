@@ -8,6 +8,7 @@ let strings = new LocalizedStrings({
     tryAgain: "تلاش دوباره",
     pleaseStartAThreadFirst: "یه نفرو برای چت انتخاب کن!!",
     pleaseWriteHere: "اینجا بنویسید...",
+    recordingVoice: "در حال ضبط صدا",
     waitingForChatInstance: "در حالت برقراری ارتباط با سرور چت",
     messageInfo: "اطلاعات پیام",
     add: "اضافه کردن",
@@ -200,6 +201,7 @@ let strings = new LocalizedStrings({
     messageDeleted: "پیام پاک شده است",
     forMeOnly: "فقط برای من",
     forMeAndOthers: "برای من و دیگران",
+    sendLocation: "فرستادن موقعیت مکانی",
     removeMessageThatYouCanDeleteForAll: "برای من و اونایی که برای دیگران هم میشه",
     adminList: "لیست مدیران",
     admins: "مدیران",
@@ -241,6 +243,7 @@ let strings = new LocalizedStrings({
       }
       return `ارسال ${count} ${fileText}`;
     },
+    sendFile: "ارسال فایل",
     thereIsNoContact: "مخاطبی وجود ندارد",
     share: "اشتراک گذاری",
     socialNetworks: {
@@ -251,7 +254,8 @@ let strings = new LocalizedStrings({
     },
     areYouSureABoutSendingThisMessage: "از فرستادن این پیام مطئنید",
     gotoMessage: "رفتن به پیام",
-    addToContact: "اضافه کردن به مخطابین",
+    addToContact: "اضافه کردن به مخاطبین",
+    youCannotUseMicrophone: "شما دسترسی به میکروفون سیستم را نداده اید پس نمیتوانید از امکانات ضبط صدا استفاده کنید",
     messageTypes: {
       people: "اعضا",
       picture: "تصاویر",
