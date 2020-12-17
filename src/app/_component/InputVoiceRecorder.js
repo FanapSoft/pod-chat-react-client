@@ -109,7 +109,10 @@ export default class InputEmojiTrigger extends Component {
   }
 
   onStop(recordedBlob) {
-    const {messageEditing, dispatch, thread} = this.props;
+    const {chatAudioRecorder, messageEditing, dispatch, thread} = this.props;
+    if (chatAudioRecorder === "CANCELED") {
+      return dispatch(chatAudioRecorderAction(false));
+    }
     if (this.lastThread.id !== thread.id) {
       return;
     }
@@ -158,7 +161,7 @@ export default class InputEmojiTrigger extends Component {
         <Container style={{display: "none"}}>
           <ReactMic
             mimeType="audio/mp3"
-            record={chatAudioRecorder}
+            record={!(!chatAudioRecorder || chatAudioRecorder === "CANCELED")}
             className="sound-wave"
             onBlock={e => alert("test")}
             onStop={this.onStop}
