@@ -78,6 +78,6 @@
     "redux-promise-middleware": "^6.1.2",
     "redux-thunk": "^2.3.0",
     "sanitize-html": "^2.1.2",
-    "wavesurfer.js": "^4.2.0"
+    "wavesurfer.js": "^4.3.0"
   }
 }

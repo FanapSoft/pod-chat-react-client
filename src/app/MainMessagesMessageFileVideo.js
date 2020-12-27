@@ -1,0 +1,29 @@
+import React, {useRef} from "react";
+import Container from "../../../pod-chat-ui-kit/src/container";
+
+export default function ({message, setPlayTrigger, setPlayAfterDownloadTrigger, setJustMountedTrigger}) {
+  const videoRef = useRef(null);
+  const playVideoRef = useRef(null);
+  setJustMountedTrigger(result => {
+    const videoCurrent = videoRef.current;
+    videoCurrent.src = result;
+  });
+  setPlayTrigger(()=> {
+    const videoCurrent = videoRef.current;
+    const playVideoCurrent = playVideoRef.current;
+    if (videoCurrent.src) {
+      playVideoCurrent.click();
+      return true;
+    }
+  });
+  setPlayAfterDownloadTrigger(result=> {
+    const videoCurrent = videoRef.current;
+    const playVideoCurrent = playVideoRef.current;
+    videoCurrent.src = result;
+    playVideoCurrent.click();
+  });
+  return <Container display="none">
+    <a ref={playVideoRef} href={`#video-${message.id}`} data-fancybox/>
+    <video controls id={`video-${message.id}`} style={{display: "none"}} ref={videoRef}/>
+  </Container>
+}

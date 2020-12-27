@@ -2,10 +2,10 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
+import classnames from "classnames";
 
 //strings
 import strings from "../constants/localization";
-import classnames from "classnames";
 
 //actions
 import {chatSearchResult} from "../actions/chatActions";
@@ -13,10 +13,9 @@ import {threadGetList} from "../actions/threadActions";
 import {contactGetList} from "../actions/contactActions";
 
 //UI components
-import {MdClose} from "react-icons/md";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import {InputText} from "../../../pod-chat-ui-kit/src/input";
-
+import {MdClose} from "react-icons/md";
 
 //styling
 import style from "../../styles/app/AsidSearch.scss";

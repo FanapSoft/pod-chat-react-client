@@ -38,26 +38,6 @@
   overflow: hidden;
 }
 
-.AsideThreads__MenuActionContainer {
-  display: inline-flex;
-  flex: 1 1 0;
-}
-
-.AsideThreads__MobileMenuBack {
-  flex: none;
-  margin-left: 15px;
-}
-
-.AsideThreads__UnpinLine {
-  position: absolute;
-  content: "";
-  width: 24px;
-  border-top: 1px solid $color-white;
-  border-bottom: 2px solid $color-accent;
-  transform: rotate(45deg);
-  top: 9px;
-  left: 2px;
-}
 
 .AsideThreads__PinOverlay {
   background-color: rgba($color-accent, 0.1);

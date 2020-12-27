@@ -40,7 +40,6 @@ import {
 
 //styling
 import styleVar from "../../styles/variables.scss";
-import {isChannel, isGroup} from "./Main";
 import ModalThreadInfoMessageTypes from "./ModalThreadInfoMessageTypes";
 
 

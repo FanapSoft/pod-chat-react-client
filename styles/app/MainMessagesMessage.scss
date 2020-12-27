@@ -99,3 +99,20 @@
   flex: none;
   margin-left: 15px;
 }
+
+.MainMessagesMessage__Container {
+  padding: 2px 5px;
+  min-width: 175px;
+}
+
+.MainMessagesMessage__Container--MaxWidth70Percent {
+  max-width: 70%;
+}
+
+.MainMessagesMessage__Container--MaxWidth60Percent {
+  max-width: 60%;
+}
+
+.MainMessagesMessage__Container--MaxWidth50Percent {
+  max-width: 50%;
+}

@@ -1,7 +1,8 @@
 // src/list/Avatar.scss.js
-import React, {Component} from "react";
+import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
-import {Link, withRouter} from "react-router-dom";
+import {withRouter} from "react-router-dom";
+import classnames from "classnames";
 
 //strings
 import strings from "../constants/localization";
@@ -9,7 +10,6 @@ import {THREAD_LEFT_ASIDE_SEARCH} from "../constants/actionTypes";
 
 //actions
 import {
-  threadShowing,
   threadLeftAsideShowing,
   threadSelectMessageShowing,
   threadInit
@@ -17,30 +17,23 @@ import {
 import {threadModalThreadInfoShowing, threadCheckedMessageList} from "../actions/threadActions";
 
 //UI components
-import {MdChevronLeft, MdSearch, MdCheck, MdClose} from "react-icons/md";
-import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 import Container from "../../../pod-chat-ui-kit/src/container";
-import MainHeadThreadInfo from "./MainHeadThreadInfo";
-import MainHeadBatchActions from "./MainHeadBatchActions";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import Gap from "../../../pod-chat-ui-kit/src/gap";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import {MdChevronLeft, MdSearch, MdCheck, MdClose} from "react-icons/md";
+import MainHeadThreadInfo from "./MainHeadThreadInfo";
+import MainHeadBatchActions from "./MainHeadBatchActions";
 
 //styling
 import style from "../../styles/app/MainHead.scss";
 import styleVar from "../../styles/variables.scss";
-import classnames from "classnames";
-
-
-const statics = {};
 
 @connect(store => {
   return {
     smallVersion: store.chatSmallVersion,
-    thread: store.thread.thread,
-    threadShowing: store.threadShowing,
     threadSelectMessageShowing: store.threadSelectMessageShowing,
-    threadCheckedMessageList: store.threadCheckedMessageList,
-    chatRouterLess: store.chatRouterLess
+    threadCheckedMessageList: store.threadCheckedMessageList
   };
 })
 class MainHead extends Component {
@@ -62,7 +55,7 @@ class MainHead extends Component {
     e.stopPropagation();
     const {dispatch, chatRouterLess, history} = this.props;
     dispatch(threadInit());
-    if(!chatRouterLess){
+    if (!chatRouterLess) {
       history.push("/");
     }
   }
@@ -102,41 +95,46 @@ class MainHead extends Component {
               </Gap>
             </Container>
             :
-            threadSelectMessageShowing ? <MainHeadBatchActions thread={thread} threadCheckedMessageList={threadCheckedMessageList}/> : <MainHeadThreadInfo/>
-        }
-        {!showLoading &&
-        <Container centerLeft>
-          {
-            threadSelectMessageShowing &&
-            <Container>
-              <Container inline>
-                <Text color="gray" light>{strings.messagesCount(threadCheckedMessageList.length)}</Text>
-              </Container>
-              <Container className={style.MainHead__SearchContainer} inline onClick={this.onSelectMessagesHide}>
-                <MdClose size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
-              </Container>
-
-            </Container>
-          }
-
-          {
-            !threadSelectMessageShowing &&
-            <Container>
-              {thread.lastMessageVO &&
-              <Container className={style.MainHead__SearchContainer} inline onClick={this.onSelectMessagesShow}>
-                <MdCheck size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
-              </Container>
+            <Fragment>
+              {
+                threadSelectMessageShowing ?
+                  <MainHeadBatchActions thread={thread} threadCheckedMessageList={threadCheckedMessageList} smallVersion={smallVersion}/>
+                  :
+                  <MainHeadThreadInfo smallVersion={smallVersion} thread={thread}/>
               }
-              <Container className={style.MainHead__SearchContainer} inline onClick={this.onLeftAsideShow}>
-                <MdSearch size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
-              </Container>
-              <Container className={style.MainHead__BackContainer} inline onClick={this.onThreadHide}>
-                <MdChevronLeft size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
-              </Container>
-            </Container>
-          }
+              <Container centerLeft>
+                {
+                  threadSelectMessageShowing &&
+                  <Container>
+                    <Container inline>
+                      <Text color="gray" light>{strings.messagesCount(threadCheckedMessageList.length)}</Text>
+                    </Container>
+                    <Container className={style.MainHead__SearchContainer} inline onClick={this.onSelectMessagesHide}>
+                      <MdClose size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
+                    </Container>
 
-        </Container>
+                  </Container>
+                }
+
+                {
+                  !threadSelectMessageShowing &&
+                  <Container>
+                    {
+                      thread.lastMessageVO &&
+                      <Container className={style.MainHead__SearchContainer} inline onClick={this.onSelectMessagesShow}>
+                        <MdCheck size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
+                      </Container>
+                    }
+                    <Container className={style.MainHead__SearchContainer} inline onClick={this.onLeftAsideShow}>
+                      <MdSearch size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
+                    </Container>
+                    <Container className={style.MainHead__BackContainer} inline onClick={this.onThreadHide}>
+                      <MdChevronLeft size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
+                    </Container>
+                  </Container>
+                }
+              </Container>
+            </Fragment>
         }
       </Container>
     )

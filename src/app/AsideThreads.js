@@ -1,23 +1,16 @@
 // src/list/Avatar.scss.js
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
+import {withRouter} from "react-router-dom";
+import classnames from "classnames";
+import AsideThreadsLastSeenMessage from "./AsideThreadsLastSeenMessage";
+import AsideThreadsContextMenu from "./AsideThreadsContextMenu";
 import {
   avatarNameGenerator,
   avatarUrlGenerator,
-  getNow,
   isIosAndSafari,
-  mobileCheck,
-  isGroup,
-  isChannel
+  mobileCheck
 } from "../utils/helpers";
-import {withRouter} from "react-router-dom";
-import {isFile} from "./MainMessagesMessage";
-import {isMessageByMe} from "./MainMessages";
-import {decodeEmoji} from "./_component/EmojiIcons.js";
-import {clearHtml} from "./_component/Input";
-import classnames from "classnames";
-import date from "../utils/date";
-
 
 //strings
 import strings from "../constants/localization";
@@ -27,31 +20,12 @@ import {ROUTE_THREAD} from "../constants/routes";
 import {
   threadCreateWithExistThread,
   threadCreateWithUser,
-  threadGetList,
-  threadLeave,
-  threadModalThreadInfoShowing, threadNotification, threadPinToTop, threadUnpinFromTop
+  threadGetList
 } from "../actions/threadActions";
-import {chatModalPrompt, chatSearchResult} from "../actions/chatActions";
+import {chatSearchResult} from "../actions/chatActions";
 import {contactChatting} from "../actions/contactActions";
-import {messageSeen} from "../actions/messageActions";
-
 
 //UI components
-import {TypingFragment} from "./MainHeadThreadInfo";
-import {
-  MdGroup,
-  MdRecordVoiceOver,
-  MdDoneAll,
-  MdDone,
-  MdNotificationsOff,
-  MdDelete,
-  MdNotificationsActive,
-  MdArrowBack,
-  MdCheck
-} from "react-icons/md";
-import {
-  AiFillPushpin
-} from "react-icons/ai";
 import Avatar, {AvatarImage, AvatarName, AvatarText} from "../../../pod-chat-ui-kit/src/avatar";
 import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
 import Scroller from "../../../pod-chat-ui-kit/src/scroller";
@@ -62,125 +36,21 @@ import Loading from "../../../pod-chat-ui-kit/src/loading";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import Gap from "../../../pod-chat-ui-kit/src/gap";
 import Message from "../../../pod-chat-ui-kit/src/message";
-import Context, {ContextItem, ContextTrigger} from "../../../pod-chat-ui-kit/src/menu/Context";
-
+import {ContextTrigger} from "../../../pod-chat-ui-kit/src/menu/Context";
+import {
+  MdGroup,
+  MdRecordVoiceOver,
+  MdNotificationsOff,
+  MdCheck
+} from "react-icons/md";
+import {
+  AiFillPushpin
+} from "react-icons/ai";
 
 //styling
 import style from "../../styles/app/AsideThreads.scss";
 import styleVar from "../../styles/variables.scss";
 
-
-function sliceMessage(message) {
-  return decodeEmoji(message);
-}
-
-function prettifyMessageDate(passedTime) {
-  const diff = getNow() - passedTime;
-  const isToday = date.isToday(passedTime);
-  const isYesterday = date.isYesterday(passedTime);
-  const isWithinAWeek = date.isWithinAWeek(passedTime);
-  if (isToday) {
-    return date.format(passedTime, "HH:mm", "en")
-  } else if (isYesterday) {
-    return strings.yesterday;
-  } else if (isWithinAWeek) {
-    return date.format(passedTime, "dddd");
-  }
-  return date.format(passedTime, "YYYY-MM-DD");
-}
-
-function LastMessageTextFragment({isGroup, isChannel, lastMessageVO, lastMessage, draftMessage, inviter, isTyping}) {
-  const isFileReal = isFile(lastMessageVO);
-  const hasLastMessage = lastMessage || lastMessageVO;
-  const isTypingReal = isTyping && isTyping.isTyping;
-  const isTypingUserName = isTyping && isTyping.user.user;
-
-  const draftFragment = <Fragment><Text size="sm" inline color="red" light>{strings.draft}:</Text><Text size="sm" inline
-                                                                                                        color="gray"
-                                                                                                        dark
-                                                                                                        isHTML>{clearHtml(draftMessage, true)}</Text></Fragment>;
-  const sentAFileFragment = <Text size="sm" inline color="gray" dark>{strings.sentAFile}</Text>;
-  const lastMessageFragment = <Text isHTML size="sm" inline color="gray"
-                                    sanitizeRule={sanitizeRule}
-                                    dark>{sliceMessage(lastMessage, 30)}</Text>;
-  const createdAThreadFragment = <Text size="sm" inline
-                                       color="accent">{sliceMessage(strings.createdAThread(inviter && (inviter.contactName || inviter.name), isGroup, isChannel), 30)}</Text>;
-  return (
-    <Container> {
-      isTypingReal ? <TypingFragment isGroup={isGroup || isChannel} typing={isTyping}
-                                     textProps={{size: "sm", color: "yellow", dark: true}}/> :
-        draftMessage ? draftFragment :
-          (
-            isGroup && !isChannel ?
-              hasLastMessage ?
-                <Container display="inline-flex">
-
-                  <Container>
-                    <Text size="sm" inline
-                          color="accent">{isTypingReal ? isTypingUserName : draftMessage ? "Draft:" : lastMessageVO.participant && (lastMessageVO.participant.contactName || lastMessageVO.participant.name)}:</Text>
-                  </Container>
-
-                  <Container>
-                    {isFileReal ? sentAFileFragment : lastMessageFragment}
-                  </Container>
-
-                </Container>
-                :
-                createdAThreadFragment
-              :
-              hasLastMessage ? isFileReal ? sentAFileFragment : lastMessageFragment : createdAThreadFragment
-          )
-    }
-    </Container>
-  )
-}
-
-function LastMessageInfoFragment({isGroup, isChannel, time, lastMessageVO, draftMessage, isMessageByMe}) {
-  return (
-    <Container>
-      <Container topLeft>
-        {
-          lastMessageVO && !isGroup && !isChannel && isMessageByMe &&
-          <Container inline>
-            {draftMessage ? "" : (
-              lastMessageVO.seen ?
-                <MdDoneAll size={style.iconSizeSm} color={style.colorAccent}/> :
-                <MdDone size={style.iconSizeSm} color={style.colorAccent}/>
-            )}
-            <Gap x={3}/>
-          </Container>
-        }
-        <Container inline>
-          <Text size="xs"
-                color="gray">{prettifyMessageDate(time || lastMessageVO.time)}</Text>
-        </Container>
-
-      </Container>
-
-    </Container>)
-
-}
-
-export function LastMessageFragment({thread, user}) {
-  const {group, type, lastMessageVO, lastMessage, inviter, time, isTyping, draftMessage} = thread;
-  const args = {
-    isGroup: group && type !== 8,
-    isChannel: group && type === 8,
-    lastMessageVO,
-    lastMessage,
-    draftMessage,
-    inviter,
-    time,
-    isTyping,
-    isMessageByMe: isMessageByMe(lastMessageVO, user)
-  };
-  return (
-    <Container>
-      <LastMessageTextFragment {...args}/>
-      <LastMessageInfoFragment {...args}/>
-    </Container>
-  )
-}
 
 function PartialLoadingFragment() {
   return (
@@ -189,7 +59,6 @@ function PartialLoadingFragment() {
     </Container>
   )
 }
-
 
 const sanitizeRule = {
   allowedTags: ["img"],
@@ -225,9 +94,6 @@ class AsideThreads extends Component {
     this.onStartChat = this.onStartChat.bind(this);
     this.onScrollBottomThreshold = this.onScrollBottomThreshold.bind(this);
     this.onScroll = this.onScroll.bind(this);
-    this.onLeaveClick = this.onLeaveClick.bind(this);
-    this.onPinClick = this.onPinClick.bind(this);
-    this.onMuteClick = this.onMuteClick.bind(this);
     this.onMenuShow = this.onMenuShow.bind(this);
     this.onMenuHide = this.onMenuHide.bind(this);
     this.contextMenuRefs = {};
@@ -247,34 +113,13 @@ class AsideThreads extends Component {
     }
   }
 
-  onLeaveClick(thread) {
-    const {dispatch} = this.props;
-    const isP2P = !isChannel(thread) && !isGroup(thread);
-    dispatch(chatModalPrompt(true, `${isP2P ? strings.areYouSureRemovingThread : strings.areYouSureAboutLeavingGroup(thread.title, isChannel(thread))}؟`, () => {
-      dispatch(threadLeave(thread.id));
-      dispatch(threadModalThreadInfoShowing());
-      dispatch(chatModalPrompt());
-    }, null, isP2P ? strings.remove : strings.leave));
-  }
-
-  onMuteClick(thread) {
-    const {dispatch} = this.props;
-    dispatch(threadNotification(thread.id, !thread.mute));
-  }
-
-  onPinClick(thread) {
-    const {dispatch} = this.props;
-    dispatch(thread.pin ? threadUnpinFromTop(thread.id) : threadPinToTop(thread.id));
-  }
-
   onScrollBottomThreshold() {
     const {threadsNextOffset, dispatch} = this.props;
     dispatch(threadGetList(threadsNextOffset, statics.count));
   }
 
-  onLastMessageSeen(thread) {
-    const {dispatch} = this.props;
-    dispatch(messageSeen(thread.lastMessageVO));
+  onScroll(e) {
+    this.currentScroll = e.currentTarget.scrollTop;
   }
 
   onThreadTouchStart(thread, e) {
@@ -306,18 +151,16 @@ class AsideThreads extends Component {
     this.touchPosition = `${e.touches[0].pageX}${e.touches[0].pageY}`;
   }
 
-  onMenuShow(e) {
+  onMenuShow(id) {
     this.setState({
-      isMenuShow: e.detail.id
+      isMenuShow: id
     });
   }
 
   onMenuHide() {
-    setTimeout(() => {
-      this.setState({
-        isMenuShow: false
-      });
-    }, 200)
+    this.setState({
+      isMenuShow: false
+    });
   }
 
   onThreadClick(thread, e) {
@@ -353,7 +196,7 @@ class AsideThreads extends Component {
     const classNames = classnames({
       [style.AsideThreads]: true,
       [style["AsideThreads--autoZIndex"]]: isIosAndSafari(),
-      [style["AsideThreads--hiddenOverflow"]]: !isMobile ? isMenuShow && true : false,
+      [style["AsideThreads--hiddenOverflow"]]: isMobile ? false : isMenuShow && true,
       [style["AsideThreads--isThreadShow"]]: threadShowing
     });
     let filteredThreads = threads;
@@ -368,7 +211,7 @@ class AsideThreads extends Component {
       }
     }
     let pinedThread = threads.filter(e => e.pin);
-    if (threadsFetching || !chatInstance || !user.id) {
+    if (!user.id || !chatInstance || threadsFetching) {
       return (
         <Container className={classNames} centerTextAlign>
           <Loading hasSpace><LoadingBlinkDots invert rtl/></Loading>
@@ -390,39 +233,6 @@ class AsideThreads extends Component {
         [style["AsideThreads__ThreadsFullHeight"]]: !isSearchResult
       });
 
-      const MobileContextMenu = ({thread}) => {
-        return <Fragment>
-          <Container className={style.AsideThreads__MenuActionContainer}>
-            <ContextItem onClick={this.onLeaveClick.bind(null, thread)}>
-              <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorAccent}/>
-            </ContextItem>
-
-            <ContextItem onClick={this.onMuteClick.bind(null, thread)}>
-              {
-                thread.mute ? <MdNotificationsActive size={styleVar.iconSizeMd} color={styleVar.colorAccent}/> :
-                  <MdNotificationsOff size={styleVar.iconSizeMd} color={styleVar.colorAccent}/>
-              }
-            </ContextItem>
-            {
-              ((thread.pin && pinedThread.length >= 5) || pinedThread.length < 5) &&
-              <ContextItem onClick={this.onPinClick.bind(null, thread)}>
-                {
-                  thread.pin || pinedThread.length >= 5 ?
-                    <Container relative><Container className={style.AsideThreads__UnpinLine}/><AiFillPushpin
-                      size={styleVar.iconSizeMd} color={styleVar.colorAccent}/></Container> :
-                    <AiFillPushpin size={styleVar.iconSizeMd} color={styleVar.colorAccent}/>
-                }
-              </ContextItem>
-
-            }
-          </Container>
-
-          <ContextItem className={style.AsideThreads__MobileMenuBack}>
-            <MdArrowBack size={styleVar.iconSizeMd} color={styleVar.colorAccent}/>
-          </ContextItem>
-
-        </Fragment>
-      };
       return (
         <Scroller className={classNames}
                   threshold={5}
@@ -445,47 +255,9 @@ class AsideThreads extends Component {
                   {filteredThreads && filteredThreads.length ?
                     filteredThreads.map(el => (
                       <Fragment>
-                        <Context id={el.id} stickyHeader={isMobile} style={isMobile ? {height: "59px"} : null}
-                                 onShow={this.onMenuShow} onHide={this.onMenuHide}>
-                          {isMobile ?
-                            <MobileContextMenu thread={el}/> :
-
-                            <Fragment>
-
-                              <ContextItem onClick={this.onThreadClick.bind(null, el)}>
-                                {strings.openThread}
-                              </ContextItem>
-
-                              <ContextItem onClick={this.onLeaveClick.bind(null, el)}>
-                                {
-                                  (isGroup(el) || isChannel(el)) ? strings.leave : strings.remove
-                                }
-                              </ContextItem>
-
-                              <ContextItem onClick={this.onMuteClick.bind(null, el)}>
-                                {el.mute ? strings.unmute : strings.mute}
-                              </ContextItem>
-
-                              {
-                                ((el.pin && pinedThread.length >= 5) || pinedThread.length < 5) &&
-                                <ContextItem onClick={this.onPinClick.bind(null, el)}>
-                                  {
-                                    (el.pin || pinedThread.length >= 5 ? strings.unpinFromTop : strings.pinToTop)
-                                  }
-                                </ContextItem>
-
-                              }
-
-                              {
-                                el.unreadCount > 0 &&
-                                <ContextItem onClick={this.onLastMessageSeen.bind(this, el)}>
-                                  {strings.seenLastMessage}
-                                </ContextItem>
-
-                              }
-                            </Fragment>
-                          }
-                        </Context>
+                        <AsideThreadsContextMenu onThreadClick={this.onThreadClick} thread={el}
+                                                 onMenuShow={this.onMenuShow} onMenuHide={this.onMenuHide}
+                                                 pinedThread={pinedThread}/>
                         <ContextTrigger id={el.id} holdToDisplay={-1}
                                         contextTriggerRef={e => this.contextMenuRefs[el.id] = e}>
                           <Container relative userSelect="none">
@@ -524,7 +296,7 @@ class AsideThreads extends Component {
                                     }
                                     {el.title}
                                     <AvatarText>
-                                      <LastMessageFragment thread={el} user={user}/>
+                                      <AsideThreadsLastSeenMessage thread={el} user={user}/>
                                     </AvatarText>
                                   </AvatarName>
                                 </Avatar>
@@ -622,4 +394,4 @@ class AsideThreads extends Component {
 }
 
 const exportDefault = withRouter(AsideThreads);
-export {sliceMessage, isFile, sanitizeRule, prettifyMessageDate, exportDefault as default};
+export {sanitizeRule, exportDefault as default};

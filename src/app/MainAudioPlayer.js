@@ -1,28 +1,24 @@
-import React, {Component, Fragment} from "react";
+import React, {Component} from "react";
 import {connect} from "react-redux";
-import classnames from "classnames";
-import checkForPrivilege from "../utils/privilege";
 
 //actions
-import {threadCreateWithExistThread, threadGoToMessageId, threadMessageUnpin} from "../actions/threadActions";
+import {threadCreateWithExistThread, threadGoToMessageId} from "../actions/threadActions";
+import {chatAudioPlayer} from "../actions/chatActions";
 
 //components
 import Container from "../../../pod-chat-ui-kit/src/container";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
-import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
-import {
-  AiFillPushpin
-} from "react-icons/ai";
-
-//styling
 import {
   MdClose,
   MdPlayArrow,
   MdPause
 } from "react-icons/md";
-import style from "../../styles/app/MainPinMessage.scss";
+
+//styling
+import style from "../../styles/app/MainAudioPlayer.scss";
 import styleVar from "../../styles/variables.scss";
-import {chatAudioPlayer} from "../actions/chatActions";
+import {getMessageMetaData} from "../utils/helpers";
+
 
 @connect()
 export default class MainAudioPlayer extends Component {
@@ -60,27 +56,24 @@ export default class MainAudioPlayer extends Component {
   render() {
     const {chatAudioPlayer} = this.props;
     const {message, playing} = chatAudioPlayer;
-    const metaData = typeof message.metadata === "string" ? JSON.parse(message.metadata) : message.metadata;
-    const messageDetailsClassNames = classnames({
-      [style.MainPinMessage__MessageDetails]: true
-    });
-    return <Container className={style.MainPinMessage} onClick={this.onAudioPlayerClick}>
+    const metaData = getMessageMetaData(message);
+    return <Container className={style.MainAudioPlayer} onClick={this.onAudioPlayerClick}>
 
-      <Container className={style.MainPinMessage__Message}>
-        <Container className={style.MainPinMessage__MessageIcon}>
+      <Container className={style.MainAudioPlayer__Message}>
+        <Container className={style.MainAudioPlayer__MessageIcon}>
           {playing ?
             <MdPause size={styleVar.iconSizeMd} color={styleVar.colorAccent} style={{margin: "-3px"}} onClick={this.onPausePlayingClick.bind(this, false)}/>
             :
             <MdPlayArrow size={styleVar.iconSizeMd} color={styleVar.colorAccent} style={{margin: "-3px"}} onClick={this.onPausePlayingClick.bind(this, true)}/>
           }
         </Container>
-        <Container className={messageDetailsClassNames}>
+        <Container className={style.MainAudioPlayer__MessageDetails}>
           <Text isHTML>
             {metaData.name}
           </Text>
         </Container>
       </Container>
-      <Container className={style.MainPinMessage__CloseIcon} onClick={this.onStopPlayingClick}>
+      <Container className={style.MainAudioPlayer__CloseIcon} onClick={this.onStopPlayingClick}>
         <MdClose size={styleVar.iconSizeMd} color={styleVar.colorTextLight}/>
       </Container>
 

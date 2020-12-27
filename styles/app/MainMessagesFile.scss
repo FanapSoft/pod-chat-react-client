@@ -14,13 +14,6 @@
   align-items: center;
 }
 
-.MainMessagesFile__ModalMediaLink {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  z-index: $z-index-3;
-}
-
 .MainMessagesFile__FileContainer--reverseDirection {
   flex-direction: row-reverse;
 }

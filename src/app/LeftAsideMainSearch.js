@@ -17,7 +17,7 @@ import Container from "../../../pod-chat-ui-kit/src/container";
 import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
 import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 import Message from "../../../pod-chat-ui-kit/src/message";
-import {sanitizeRule, sliceMessage} from "./AsideThreads";
+import {sanitizeRule} from "./AsideThreads";
 import {decodeEmoji} from "./_component/EmojiIcons.js";
 
 //styling

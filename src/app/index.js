@@ -55,7 +55,7 @@ import ModalShare from "./ModalShare";
 
 //styling
 import style from "../../styles/app/index.scss";
-import {isChannel, isChannelOwner} from "../utils/helpers";
+import {isChannel, isThreadOwner} from "../utils/helpers";
 
 
 @connect(store => {
@@ -106,7 +106,7 @@ class Index extends Component {
     if (!thread.onTheFly) {
       if ((!oldThread.id && thread.id) || (oldThread.id !== thread.id)) {
         if (isChannel(thread)) {
-          if (isChannelOwner(thread, user)) {
+          if (isThreadOwner(thread, user)) {
             dispatch(threadParticipantList(thread.id));
           }
         } else {

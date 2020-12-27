@@ -2,9 +2,11 @@ import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
 import classnames from "classnames";
 import checkForPrivilege from "../utils/privilege";
+import {decodeEmoji} from "../utils/helpers";
 
 //actions
 import {threadMessageUnpin} from "../actions/threadActions";
+import {messageInfo} from "../actions/messageActions";
 
 //components
 import Container from "../../../pod-chat-ui-kit/src/container";
@@ -21,19 +23,13 @@ import {
 } from "react-icons/md";
 import style from "../../styles/app/MainPinMessage.scss";
 import styleVar from "../../styles/variables.scss";
-import {decodeEmoji} from "./_component/EmojiIcons.js";
-import {messageInfo} from "../actions/messageActions";
+
 import {getMessageEditingText} from "./MainFooterInputEditing";
 import strings from "../constants/localization";
 import {THREAD_ADMIN} from "../constants/privilege";
 
 
-
-@connect(store => {
-  return {
-    user: store.user.user
-  };
-})
+@connect()
 export default class MainPinMessage extends Component {
 
   constructor(props) {
@@ -90,7 +86,7 @@ export default class MainPinMessage extends Component {
   }
 
   render() {
-    const {user, thread} = this.props;
+    const {thread} = this.props;
     const {message, loading} = this.state;
     const messageDeleted = !message;
     const messageDetails = message ? getMessageEditingText(message) : {};

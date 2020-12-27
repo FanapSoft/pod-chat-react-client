@@ -1,6 +1,6 @@
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
-import {avatarNameGenerator, avatarUrlGenerator} from "../utils/helpers";
+import {avatarNameGenerator, avatarUrlGenerator, isChannel} from "../utils/helpers";
 
 //strings
 import strings from "../constants/localization";
@@ -28,7 +28,6 @@ import ModalThreadInfoGroupSettingsAdminList from "./ModalThreadInfoGroupSetting
 import {ContactSearchFragment} from "./ModalContactList";
 import {Button} from "../../../pod-chat-ui-kit/src/button";
 import ModalFooter from "../../../pod-chat-ui-kit/src/modal/ModalFooter";
-import {isChannel} from "./Main";
 import checkForPrivilege, {isOwner} from "../utils/privilege";
 import {THREAD_ADMIN} from "../constants/privilege";
 

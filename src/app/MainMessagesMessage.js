@@ -1,24 +1,36 @@
 // src/list/BoxSceneMessages
 import React, {Component, Fragment} from "react";
+import ReactDOMServer from "react-dom/server";
 import {connect} from "react-redux";
 import classnames from "classnames";
 import "moment/locale/fa";
-import {isMessageByMe} from "./MainMessages"
 import date from "../utils/date";
-
 import {showBlock} from "./MainFooterSpam";
-import MainMessagesMessageFile from "./MainMessagesMessageFile";
-import MainMessagesMessageText from "./MainMessagesMessageText";
 import {MessageDeletePrompt, PinMessagePrompt} from "./_component/prompts";
 import checkForPrivilege from "../utils/privilege";
+import {
+  avatarNameGenerator,
+  findLastSeenMessage,
+  isGroup,
+  isMessageByMe,
+  isMessageIsFile,
+  isMessageIsNewFile,
+  mobileCheck,
+  showMessageNameOrAvatar,
+  decodeEmoji
+} from "../utils/helpers";
 
 //strings
 import strings from "../constants/localization";
+import {THREAD_LEFT_ASIDE_SEEN_LIST} from "../constants/actionTypes";
+import {THREAD_ADMIN} from "../constants/privilege";
 
 //actions
 import {
-  threadLeftAsideShowing, threadMessagePinToTop, threadModalListShowing
+  threadLeftAsideShowing, threadModalListShowing
 } from "../actions/threadActions";
+import {messageEditing} from "../actions/messageActions";
+import {chatModalPrompt} from "../actions/chatActions";
 
 //components
 import Context, {ContextItem, ContextTrigger} from "../../../pod-chat-ui-kit/src/menu/Context";
@@ -26,8 +38,6 @@ import Paper, {PaperFooter} from "../../../pod-chat-ui-kit/src/paper";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import Gap from "../../../pod-chat-ui-kit/src/gap";
-
-//styling
 import {
   MdDoneAll,
   MdShare,
@@ -49,47 +59,22 @@ import {
 import {
   AiFillPushpin
 } from "react-icons/ai";
-import style from "../../styles/app/MainMessagesMessage.scss";
-import styleVar from "../../styles/variables.scss";
-import {THREAD_LEFT_ASIDE_SEEN_LIST} from "../constants/actionTypes";
-import {avatarNameGenerator, getImageFromHashMap, mobileCheck} from "../utils/helpers";
-import {messageEditing} from "../actions/messageActions";
-import {chatModalPrompt} from "../actions/chatActions";
-import {decodeEmoji} from "./_component/EmojiIcons.js";
-import ReactDOMServer from "react-dom/server";
-import {THREAD_ADMIN} from "../constants/privilege";
+import MainMessagesMessageFile from "./MainMessagesMessageFile";
+import MainMessagesMessageText from "./MainMessagesMessageText";
 import MainMessagesMessageShare from "./MainMessagesMessageShare";
 import MainMessagesMessageFileFallback from "./MainMessagesMessageFileFallback";
 import ImageFetcher from "./_component/ImageFetcher";
 import {clearHtml} from "./_component/Input";
 
-function isNewFile({metadata}) {
-  let metaData = metadata;
-  try {
-    metaData = typeof metaData === "string" ? JSON.parse(metaData) : metaData;
-  } catch (e) {
-    return false
-  }
+//styling
+import style from "../../styles/app/MainMessagesMessage.scss";
+import styleVar from "../../styles/variables.scss";
 
-  return metaData.fileHash;
-}
 
 function datePetrification(time) {
   const correctTime = time / Math.pow(10, 6);
   return date.isToday(correctTime) ? date.format(correctTime, "HH:mm") : date.isWithinAWeek(correctTime) ? date.format(correctTime, "dddd HH:mm") : date.format(correctTime, "YYYY-MM-DD  HH:mm");
 }
-
-export function isFile(message) {
-  if (message) {
-    if (message.metadata) {
-      if (typeof message.metadata === "object") {
-        return message.metadata.file;
-      }
-      return JSON.parse(message.metadata).file;
-    }
-  }
-}
-
 
 export function urlify(text) {
   if (!text) {
@@ -322,7 +307,7 @@ export function HighLighterFragment({message, highLightMessage}) {
   );
 }
 
-export function PaperFragment({scope, message, onRepliedMessageClicked, isFirstMessage, isMessageByMe, isGroup, maxReplyFragmentWidth, children}) {
+export function PaperFragment({message, onRepliedMessageClicked, isFirstMessage, isMessageByMe, isGroup, maxReplyFragmentWidth, children}) {
 
   const style = {
     borderRadius: "5px"
@@ -333,7 +318,7 @@ export function PaperFragment({scope, message, onRepliedMessageClicked, isFirstM
   return (
     <Paper style={style} hasShadow colorBackgroundLight={!isMessageByMe} relative>
       {isGroup && PersonNameFragment(message, isFirstMessage, isMessageByMe)}
-      {ReplyFragment(isMessageByMe, message, onRepliedMessageClicked, maxReplyFragmentWidth, scope)}
+      {ReplyFragment(isMessageByMe, message, onRepliedMessageClicked, maxReplyFragmentWidth)}
       {ForwardFragment(message, isMessageByMe)}
       {children}
     </Paper>
@@ -634,20 +619,17 @@ export default class MainMessagesMessage extends Component {
       user,
       thread,
       highLightMessage,
-      showNameOrAvatar,
       onRepliedMessageClicked,
-      isMessageByMe,
       participantsFetching,
       participants,
       threadLeftAsideShowing,
-      lastSeenMessageTime,
       chatFileHashCodeMap
     } = this.props;
+    const lastSeenMessageTime = findLastSeenMessage(messages);
     const {messageControlShow, messageTriggerShow} = this.state;
-    const isGroup = thread.group && thread.type !== 8;
+    const isGroupReal = isGroup(thread);
     const isMessageByMeReal = isMessageByMe(message, user, thread);
     const args = {
-      //new paradigm
       onMessageControlShow: this.onMessageControlShow,
       onMessageSeenListClick: this.onMessageSeenListClick,
       onMessageControlHide: this.onMessageControlHide,
@@ -657,7 +639,7 @@ export default class MainMessagesMessage extends Component {
       onReply: this.onReply,
       onPin: this.onPin,
       onShare: this.onShare,
-      isFirstMessage: showNameOrAvatar(message, messages),
+      isFirstMessage: showMessageNameOrAvatar(message, messages),
       datePetrification: datePetrification.bind(null, message.time),
       messageControlShow,
       messageTriggerShow,
@@ -667,10 +649,10 @@ export default class MainMessagesMessage extends Component {
       isParticipantBlocked: showBlock({user, thread, participantsFetching, participants}),
       isOwner: checkForPrivilege(thread, THREAD_ADMIN),
       chatFileHashCodeMap: chatFileHashCodeMap,
+      isGroup: isGroupReal,
       user,
       thread,
       message,
-      isGroup,
       messages,
       highLightMessage
     };
@@ -678,10 +660,10 @@ export default class MainMessagesMessage extends Component {
     return (
       <Container id={message.uuid}
                  userSelect="none"
-                 inline relative
+                 inline
+                 relative
+                 className={style.MainMessagesMessage__Container}
                  style={{
-                   padding: "2px 5px",
-                   minWidth: "175px",
                    maxWidth: mobileCheck() ? "70%" : threadLeftAsideShowing && window.innerWidth < 1100 ? "60%" : "50%",
                    marginRight: isGroup ? null : isMessageByMeReal ? "5px" : null,
                    marginLeft: isGroup ? null : isMessageByMeReal ? null : "5px"
@@ -696,8 +678,8 @@ export default class MainMessagesMessage extends Component {
                  onMouseLeave={this.onMouseLeave}>
 
         <ContextTrigger id={message.id || Math.random()} holdToDisplay={-1} contextTriggerRef={this.contextTriggerRef}>
-          {isFile(message) ?
-            isNewFile(message) || !message.id ?
+          {isMessageIsFile(message) ?
+            isMessageIsNewFile(message) || !message.id ?
               <MainMessagesMessageFile {...args}/>
               :
               <MainMessagesMessageFileFallback {...args}/>

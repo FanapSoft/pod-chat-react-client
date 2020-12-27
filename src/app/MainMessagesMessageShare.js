@@ -1,10 +1,10 @@
 // src/list/BoxSceneMessages
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
-import classnames from "classnames";
 import "moment/locale/fa";
-import {isMessageByMe} from "./MainMessages"
-import date from "../utils/date";
+import {
+  isMessageIsFile
+} from "../utils/helpers";
 
 import {showBlock} from "./MainFooterSpam";
 import MainMessagesMessageFile from "./MainMessagesMessageFile";
@@ -36,7 +36,6 @@ import style from "../../styles/app/MainMessagesMessageShare.scss";
 import styleVar from "../../styles/variables.scss";
 import Text from "../../../pod-chat-ui-kit/src/typography/Text";
 import Gap from "../../../pod-chat-ui-kit/src/gap";
-import {isFile} from "./MainMessagesMessage";
 
 
 //styling
@@ -87,7 +86,7 @@ export default class MainMessagesMessageShare extends Component {
     const {selectedSocialNetwork} = this.state;
     const {message, dispatch} = this.props;
     let messageText = message.message;
-    const isMessageFile = isFile(message);
+    const isMessageFile = isMessageIsFile(message);
     if (isMessageFile) {
       const metaData = message.metadata;
       messageText = `${(typeof metaData === "string" ? JSON.parse(metaData).file : metaData.file).link}`;

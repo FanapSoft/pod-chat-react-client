@@ -1,5 +1,6 @@
 // src/list/BoxScene.js
 import React, {Component, Fragment} from "react";
+import {isChannel, isGroup, isMessageIsFile, isMessageByMe} from "../utils/helpers";
 import {connect} from "react-redux";
 import "moment/locale/fa";
 import Push from "push.js";
@@ -10,8 +11,6 @@ import MetaTags from "react-meta-tags";
 //actions
 import {threadCreateWithExistThread} from "../actions/threadActions";
 import strings from "../constants/localization";
-import {isFile} from "./MainMessagesMessage";
-import {isChannel, isGroup} from "./Main";
 import notifcationSound from "../constants/notification-sound.mp3"
 import checkForPrivilege from "../utils/privilege";
 import {THREAD_ADMIN} from "../constants/privilege";
@@ -20,14 +19,6 @@ import {THREAD_ADMIN} from "../constants/privilege";
 
 //styling
 const defaultAvatar = "../../../styles/images/_common/default-avatar.png";
-
-function isMessageByMe(message, user) {
-  if (user) {
-    if (message) {
-      return message.participant.id === user.id;
-    }
-  }
-}
 
 @connect(store => {
   return {
@@ -101,7 +92,7 @@ export default class Notification extends Component {
     if (messageToNotify instanceof Array) {
       notificationMessage = strings.batchMessageSentToThread(messageToNotify.length, isGroup(thread), isChannel(thread))
     } else {
-      const isMessageFile = isFile(messageToNotify);
+      const isMessageFile = isMessageIsFile(messageToNotify);
       const tag = document.createElement("div");
       tag.innerHTML = messageToNotify.message;
       const newMessageText = messageToNotify.message;

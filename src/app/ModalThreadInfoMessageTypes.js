@@ -28,14 +28,12 @@ import {
   MdClose
 } from "react-icons/md";
 import {IndexModalMediaFragment} from "./index";
-import ReactDOMServer from "react-dom/server";
 import {
   getFileDownloadingFromHashMap,
   getFileFromHashMap,
   getImageFromHashMapWindow,
   humanFileSize
 } from "../utils/helpers";
-import {getImage, isImage} from "./MainMessagesMessageFile";
 
 @connect(store => {
   return {

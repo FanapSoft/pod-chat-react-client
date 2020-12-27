@@ -1,9 +1,18 @@
+import React from "react";
 import {ifvisible} from "ifvisible.js";
 import queryString from "query-string";
-import {serverConfig} from "../constants/connection";
-import {messageGetImage} from "../actions/messageActions";
-import {threadThumbnailUpdate} from "../actions/threadActions";
 import {chatGetImage, chatFileHashCodeUpdate, chatGetFile, chatCancelFileDownload} from "../actions/chatActions";
+import {emoji, emojiCategories, emojiSpriteDimensions, emojiSpriteMeta} from "../constants/emoji";
+import sanitizeHTML from "sanitize-html";
+import {sanitizeRule} from "../app/_component/Input";
+import date from "./date";
+import strings from "../constants/localization";
+import classnames from "classnames";
+import emojiStyle from "../../styles/utils/emoji.scss";
+import oneoneImage from "../../styles/images/_common/oneone.png";
+import ReactDOMServer from "react-dom/server";
+import {typesCode} from "../constants/messageTypes";
+
 
 export function humanFileSize(bytes, si) {
   const thresh = si ? 1000 : 1024;
@@ -203,9 +212,9 @@ export function getFileDownloadingFromHashMapWindow(id) {
   return null;
 }
 
-export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, componenet, init) {
+export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, componenet, init, directCall) {
   const id = `${hashCode}-${size}-${quality}`;
-  const {dispatch} = componenet.props;
+  const dispatch = directCall ? componenet : componenet.props.dispatch;
   const downloadingResult = getFileDownloadingFromHashMapWindow(id);
   if (downloadingResult) {
     return downloadingResult;
@@ -213,15 +222,24 @@ export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, com
   const lastResult = window.podspaceHashmap[id] || "";
   if (lastResult.indexOf("FAIL") < 0) {
     if (!init) {
-      componenet.setState({
-        [fieldKey]: window.podspaceHashmap[id] = "LOADING"
-      });
+      if(directCall) {
+        fieldKey(window.podspaceHashmap[id] = "LOADING")
+      } else {
+        componenet.setState({
+          [fieldKey]: window.podspaceHashmap[id] = "LOADING"
+        });
+      }
     }
   }
   dispatch(chatGetImage(hashCode, size, quality)).then(result => {
-    componenet.setState({
-      [fieldKey]: window.podspaceHashmap[id] = URL.createObjectURL(result)
-    });
+    if(directCall) {
+      fieldKey(window.podspaceHashmap[id] = URL.createObjectURL(result))
+    } else {
+      componenet.setState({
+        [fieldKey]: window.podspaceHashmap[id] = URL.createObjectURL(result)
+      });
+    }
+
   }, err => {
     const failCount = +lastResult.split("-")[1] ? +lastResult.split("-")[1] : 1;
     if (failCount >= 3) {
@@ -303,7 +321,9 @@ avatarUrlGenerator.SIZES = {
 };
 
 
-export function OnWindowFocusInOut(onFocusedOut= ()=>{}, onFocusedIn = ()=>{}) {
+export function OnWindowFocusInOut(onFocusedOut = () => {
+}, onFocusedIn = () => {
+}) {
   ifvisible.on("blur", onFocusedOut);
   ifvisible.on("focus", onFocusedIn);
   window.addEventListener("blur", onFocusedOut);
@@ -333,6 +353,65 @@ export function isAudioFile(file) {
 
 export function isFile(file) {
   return !isVideoFile(file) && !isImageFile(file);
+}
+
+export function isMessageIsFile(message) {
+  if (message) {
+    if (message.metadata) {
+      if (typeof message.metadata === "object") {
+        return message.metadata.file;
+      }
+      return JSON.parse(message.metadata).file;
+    }
+  }
+}
+export function isMessageIsNewFile({metadata}) {
+  let metaData = metadata;
+  try {
+    metaData = typeof metaData === "string" ? JSON.parse(metaData) : metaData;
+  } catch (e) {
+    return false
+  }
+
+  return metaData.fileHash;
+}
+
+export function isMessageByMe(message, user, thread) {
+  if (thread && user) {
+    const isGroup = thread.group;
+    if (isGroup) {
+      if (thread.type === 8) {
+        if (thread.inviter.id === user.id) {
+          return true;
+        }
+      }
+    }
+  }
+  if (message) {
+    if (message) {
+      if (!message.id) {
+        return true;
+      }
+      if (user) {
+        return message.participant.id === user.id;
+      }
+    }
+  }
+}
+
+
+export function prettifyMessageDate(passedTime) {
+  const isToday = date.isToday(passedTime);
+  const isYesterday = date.isYesterday(passedTime);
+  const isWithinAWeek = date.isWithinAWeek(passedTime);
+  if (isToday) {
+    return date.format(passedTime, "HH:mm", "en")
+  } else if (isYesterday) {
+    return strings.yesterday;
+  } else if (isWithinAWeek) {
+    return date.format(passedTime, "dddd");
+  }
+  return date.format(passedTime, "YYYY-MM-DD");
 }
 
 export function checkForMediaAccess() {
@@ -488,7 +567,10 @@ export function isP2PThread(thread) {
   return !(isGroup(thread) && isChannel(thread));
 }
 
-export function isChannelOwner(thread, user) {
+export function isThreadOwner(thread, user) {
+  if (!thread || !user) {
+    return false
+  }
   return thread.inviter.id === user.id;
 }
 
@@ -502,5 +584,190 @@ export function socketStatus(chatState) {
 export function routeChange(history, route, chatRouterLess) {
   if (!chatRouterLess) {
     history.push(route);
+  }
+}
+
+
+function buildEmojiIcon(sizeX, sizeY, catName, emoji) {
+  const {scale} = emojiSpriteMeta;
+  const classNames = classnames({
+    [emojiStyle.emoji]: true,
+    [emojiStyle["emoji-inline"]]: true,
+    [emojiStyle[`emojisprite-${catName}`]]: true
+  });
+  const img = <img className={classNames}
+                   alt={emoji}
+                   src={oneoneImage}
+                   style={{backgroundPosition: `${+sizeX / scale}px ${+sizeY / scale}px`}}/>;
+  return ReactDOMServer.renderToStaticMarkup(img);
+}
+
+
+//EMOJI DECODER SECTION
+const {size, scale} = emojiSpriteMeta;
+
+function emojiUnicode(emojie) {
+  for (const em in emoji) {
+    if (emoji[em][0] === emojie) {
+      return em;
+    }
+  }
+}
+
+export function emojiRegex() {
+  return new RegExp('\\u0023\\u20E3|\\u00a9|\\u00ae|\\u203c|\\u2049|\\u2139|[\\u2194-\\u2199]|\\u21a9|\\u21aa|\\u231a|\\u231b|\\u23e9|[\\u23ea-\\u23ec]|\\u23f0|\\u24c2|\\u25aa|\\u25ab|\\u25b6|\\u2611|\\u2614|\\u26fd|\\u2705|\\u2709|[\\u2795-\\u2797]|\\u27a1|\\u27b0|\\u27bf|\\u2934|\\u2935|[\\u2b05-\\u2b07]|\\u2b1b|\\u2b1c|\\u2b50|\\u2b55|\\u3030|\\u303d|\\u3297|\\u3299|[\\uE000-\\uF8FF\\u270A-\\u2764\\u2122\\u25C0\\u25FB-\\u25FE\\u2615\\u263a\\u2648-\\u2653\\u2660-\\u2668\\u267B\\u267F\\u2693\\u261d\\u26A0-\\u26FA\\u2708\\u2702\\u2601\\u260E]|[\\u2600\\u26C4\\u26BE\\u23F3\\u2764]|\\uD83D[\\uDC00-\\uDFFF]|\\uD83C[\\uDDE8-\\uDDFA\uDDEC]\\uD83C[\\uDDEA-\\uDDFA\uDDE7]|[0-9]\\u20e3|\\uD83C[\\uDC00-\\uDFFF]', "ig")
+}
+
+function generatePosition(emojiCat, index) {
+  const {columns} = emojiSpriteDimensions[emojiCat];
+  const currentColumn = Math.floor(index / columns);
+  return {
+    x: index > 0 ? -(index * size) : 0,
+    y: -(currentColumn * size)
+  };
+}
+
+export function decodeEmoji(string) {
+  if (!string) {
+    return string;
+  }
+
+  let decodedEmoji = string.replace(emojiRegex(), match => {
+    let cat = 0;
+    for (const emojiCategory of emojiCategories) {
+      let emojiIndex = emojiCategory.findIndex(e => emoji[e][0] === match);
+      if (emojiIndex > -1) {
+        const {x, y} = generatePosition(cat, emojiIndex);
+        return buildEmojiIcon(x, y, cat, match)
+      }
+      cat++;
+    }
+    return match;
+  });
+
+  return decodedEmoji.replace(/:emoji#.+?:/g, match => {
+    const realMatch = match.substring(1, match.length - 1);
+    const split = realMatch.split("#");
+    if (!split[2]) {
+      return string;
+    }
+    const size = split[2].split("*");
+    return buildEmojiIcon(size[0], size[1], 0, match);
+  });
+}
+
+//**************//
+
+export function clearHtml(html, clearTags) {
+  if (!html) {
+    return html;
+  }
+  const document = window.document.createElement("div");
+  document.innerHTML = html;
+  const children = Array.from(document.childNodes);
+  const removingIndexes = [];
+  const clonedChildren = [...children].reverse();
+  for (let child of clonedChildren) {
+    if (child.data) {
+      break;
+    }
+    if (child.innerText === "\n") {
+      removingIndexes.push(children.indexOf(child));
+      continue;
+    }
+    break;
+  }
+  let filterChildren = [];
+  if (removingIndexes.length) {
+    let index = 0;
+    for (const child of children) {
+      if (removingIndexes.indexOf(index) === -1) {
+        filterChildren.push(child);
+      }
+      index++;
+    }
+  } else {
+    filterChildren = children;
+  }
+  const newText = window.document.createElement("div");
+
+  filterChildren.map(e => {
+    let node = e;
+    if (clearTags) {
+      if (e.tagName === "BR") {
+        node = window.document.createTextNode("\n");
+      } else if (e.tagName === "DIV") {
+        let countOfN = "";
+        if (e.children.length) {
+          for (const child of e.children) {
+            if (child.tagName === "BR") {
+              countOfN += "\n";
+            }
+          }
+        } else {
+          countOfN = `\n${e.innerText}`
+        }
+        node = window.document.createTextNode(countOfN);
+      }
+    }
+    newText.appendChild(node)
+  });
+  return sanitizeHTML(newText.innerHTML.trim(), sanitizeRule(clearTags)).trim();
+}
+
+export function getMessageMetaData(message) {
+  return typeof message.metadata === "string" ? JSON.parse(message.metadata) : message.metadata;
+}
+
+export function showMessageNameOrAvatar(message, messages) {
+  const msgOwnerId = message.participant.id;
+  const msgId = message.id || message.uniqueId;
+  const index = messages.findIndex(e => e.id === msgId || e.uniqueId === msgId);
+  if (~index) {
+    const lastMessage = messages[index - 1];
+    if (lastMessage) {
+      if (lastMessage.participant.id === msgOwnerId) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+export function messageSelectedCondition(message, threadCheckedMessageList) {
+  const fileIndex = threadCheckedMessageList.findIndex((msg => msg.uniqueId === message.uniqueId));
+  return fileIndex >= 0;
+}
+
+export function findLastSeenMessage(messages) {
+  const newMessages = [...messages].reverse();
+  for (const message of newMessages) {
+    if (message.seen) {
+      return message.time;
+    }
+  }
+}
+
+export function isImage({messageType}) {
+  if (messageType) {
+    return messageType === typesCode.POD_SPACE_PICTURE;
+  }
+}
+
+export function isVideo({messageType}) {
+  if (messageType) {
+    return messageType === typesCode.POD_SPACE_VIDEO;
+  }
+}
+
+export function isSound({messageType}) {
+  if (messageType) {
+    return messageType === typesCode.POD_SPACE_SOUND;
+  }
+}
+
+export function isVoice({messageType}) {
+  if (messageType) {
+    return messageType === typesCode.POD_SPACE_VOICE;
   }
 }
