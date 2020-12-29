@@ -1,0 +1,8 @@
+@import "scope";
+@import "../mixin/responsive";
+
+.MainMessagesMessageFileImage {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}

@@ -229,7 +229,7 @@ class Index extends Component {
                render={() => <ModalThreadInfo smallVersion={small}/>}/>
         <ModalThreadList smallVersion={small} ref={this.modalThreadListRef}/>
         <ModalImageCaption smallVersion={small} ref={this.modalImageCaptionRef}/>
-        <ModalMedia selector={`.${style.Index__MediaTrigger} a:visible`}
+        <ModalMedia selector={`.${style.Index__MediaTrigger} a`}
                     ref={this.modalMediaRef}
                     lang="fa"
                     i18n={{fa: strings.modalMedia}}
@@ -258,11 +258,12 @@ class Index extends Component {
 export default withRouter(Index);
 
 
-export function IndexModalMediaFragment({link, caption, linkClassName, children, options}) {
+export function IndexModalMediaFragment({link, linkClassName, children, options, linkRef}) {
   const fixedOptions = options || {};
 
   return <Container className={style.Index__MediaTrigger} inline>
     <Text link={link}
+          ref={linkRef}
           target={"_blank"}
           className={linkClassName}
           linkClearStyle

@@ -1,4 +1,7 @@
 import React from "react";
+
+import Paper from "../../../pod-chat-ui-kit/src/paper";
+
 import MainMessagesMessageBoxPersonName from "./MainMessagesMessageBoxPersonName";
 import MainMessagesMessageBoxReply from "./MainMessagesMessageBoxReply";
 import MainMessagesMessageBoxForward from "./MainMessagesMessageBoxForward";

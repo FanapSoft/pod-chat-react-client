@@ -12,6 +12,9 @@ import emojiStyle from "../../styles/utils/emoji.scss";
 import oneoneImage from "../../styles/images/_common/oneone.png";
 import ReactDOMServer from "react-dom/server";
 import {typesCode} from "../constants/messageTypes";
+import checkForPrivilege from "./privilege";
+import {THREAD_ADMIN} from "../constants/privilege";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 
 
 export function humanFileSize(bytes, si) {
@@ -222,7 +225,7 @@ export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, com
   const lastResult = window.podspaceHashmap[id] || "";
   if (lastResult.indexOf("FAIL") < 0) {
     if (!init) {
-      if(directCall) {
+      if (directCall) {
         fieldKey(window.podspaceHashmap[id] = "LOADING")
       } else {
         componenet.setState({
@@ -232,7 +235,7 @@ export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, com
     }
   }
   dispatch(chatGetImage(hashCode, size, quality)).then(result => {
-    if(directCall) {
+    if (directCall) {
       fieldKey(window.podspaceHashmap[id] = URL.createObjectURL(result))
     } else {
       componenet.setState({
@@ -365,6 +368,7 @@ export function isMessageIsFile(message) {
     }
   }
 }
+
 export function isMessageIsNewFile({metadata}) {
   let metaData = metadata;
   try {
@@ -748,26 +752,111 @@ export function findLastSeenMessage(messages) {
   }
 }
 
-export function isImage({messageType}) {
+export function isMessageIsImage({messageType}) {
   if (messageType) {
     return messageType === typesCode.POD_SPACE_PICTURE;
   }
 }
 
-export function isVideo({messageType}) {
+export function isMessageIsVideo({messageType}) {
   if (messageType) {
     return messageType === typesCode.POD_SPACE_VIDEO;
   }
 }
 
-export function isSound({messageType}) {
+export function isMessageIsSound({messageType}) {
   if (messageType) {
     return messageType === typesCode.POD_SPACE_SOUND;
   }
 }
 
-export function isVoice({messageType}) {
+export function isMessageIsVoice({messageType}) {
   if (messageType) {
     return messageType === typesCode.POD_SPACE_VOICE;
   }
+}
+
+export function isMessageIsDownloadable(message) {
+  if (isMessageIsFile(message)) {
+    return message.id;
+  }
+  return false;
+}
+
+export function isMessageIsUploading(message) {
+  return !message.id;
+}
+
+export function isMessageHasError(message) {
+  if (message.state === "UPLOAD_ERROR") {
+    return true;
+  }
+}
+
+export function messageDeleteForAllCondition(message, user, thread) {
+  return checkForPrivilege(thread, THREAD_ADMIN) || (message.deletable && ((isMessageByMe(message, user))));
+}
+
+export function getImage({link, file}, isFromServer, smallVersion) {
+  let imageLink = file.link;
+  let width = file.actualWidth;
+  let height = file.actualHeight;
+
+  const ratio = height / width;
+  if (ratio < 0.15 || ratio > 7) {
+    return false;
+  }
+  const maxWidth = smallVersion || window.innerWidth <= 700 ? 190 : ratio >= 2 ? 200 : 300;
+  height = Math.ceil(maxWidth * ratio);
+  if (!isFromServer) {
+    return {imageLink, width: maxWidth, height};
+  }
+  return {
+    width: maxWidth,
+    height
+  };
+}
+
+export function messageDatePetrification(time) {
+  const correctTime = time / Math.pow(10, 6);
+  return date.isToday(correctTime) ? date.format(correctTime, "HH:mm") : date.isWithinAWeek(correctTime) ? date.format(correctTime, "dddd HH:mm") : date.format(correctTime, "YYYY-MM-DD  HH:mm");
+}
+
+export function urlify(text) {
+  if (!text) {
+    return "";
+  }
+  text = text.replace(/<br\s*[\/]?>/gi, "\n");
+  var urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, function (url) {
+    const urlReal = url.replace(/&amp;/g, "&");
+    return ReactDOMServer.renderToStaticMarkup(<Text link={urlReal} target="_blank" wordWrap="breakWord"
+                                                     title={urlReal}>{urlReal}</Text>)
+  })
+}
+
+export function mentionify(text, onClick) {
+  if (!text) {
+    return "";
+  }
+  text = text.replace(/<br\s*[\/]?>/gi, "\n");
+  var mentionRegex = /(?:^|[^a-zA-Z0-9_＠!@#$%&*])(?:(?:@|＠)(?!\/))([a-zA-Z0-9/._-]{1,15})(?:\b(?!@|＠)|$)/g;
+  return text.replace(mentionRegex, function (username) {
+    const realUserName = username.replace(/&amp;/g, "&");
+    return `<span onClick='window.onUserNameClick(this)'>${ReactDOMServer.renderToStaticMarkup(
+      <Text color="accent" dark bold wordWrap="breakWord" inline title={realUserName}>{realUserName}</Text>)}</span>`;
+  })
+}
+
+export function emailify(text) {
+  if (!text) {
+    return "";
+  }
+  text = text.replace(/<br\s*[\/]?>/gi, "\n");
+  var mailRegex = /(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/g;
+  return text.replace(mailRegex, function (mail) {
+    const urlReal = mail.replace(/&amp;/g, "&");
+    return ReactDOMServer.renderToStaticMarkup(<Text link={`mailto:${urlReal}`} target="_blank" wordWrap="breakWord"
+                                                     title={urlReal}>{urlReal}</Text>)
+  });
 }

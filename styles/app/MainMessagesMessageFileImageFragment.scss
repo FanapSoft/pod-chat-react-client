@@ -1,0 +1,17 @@
+@import "scope";
+@import "../mixin/responsive";
+
+.MainMessagesMessageFileImageFragment {
+  max-width: 100%;
+  cursor: pointer;
+  border-radius: 5px;
+  position: relative;
+  z-index: 1;
+}
+
+@include grid("md") {
+  :not(.MainMessagesMessageFileImageFragment--smallVersion).MainMessagesMessageFileImageFragment {
+    max-width: 400px;
+  }
+}
+

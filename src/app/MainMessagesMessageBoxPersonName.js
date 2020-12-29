@@ -1,4 +1,7 @@
 import React from "react";
+
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+
 import {avatarNameGenerator} from "../utils/helpers";
 
 

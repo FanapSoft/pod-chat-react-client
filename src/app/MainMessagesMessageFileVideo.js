@@ -8,12 +8,14 @@ export default function ({message, setPlayTrigger, setPlayAfterDownloadTrigger, 
     const videoCurrent = videoRef.current;
     videoCurrent.src = result;
   });
-  setPlayTrigger(()=> {
+  setPlayTrigger(result => {
     const videoCurrent = videoRef.current;
     const playVideoCurrent = playVideoRef.current;
     if (videoCurrent.src) {
       playVideoCurrent.click();
-      return true;
+    } else if(result) {
+      videoCurrent.src = result;
+      playVideoCurrent.click();
     }
   });
   setPlayAfterDownloadTrigger(result=> {

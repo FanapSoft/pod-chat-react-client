@@ -1,10 +1,9 @@
-// src/list/BoxSceneMessagesText
+// src/MainMessagesMessageFileFallback
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import "moment/locale/fa";
-import {humanFileSize, mobileCheck} from "../utils/helpers";
-import {urlify, mentionify, emailify} from "./MainMessagesMessage";
+import {humanFileSize, mobileCheck,emailify, mentionify, urlify} from "../utils/helpers";
 import classnames from "classnames";
 
 //strings
@@ -17,19 +16,18 @@ import {
 } from "../actions/messageActions";
 
 //components
+import MainMessagesMessageBox from "./MainMessagesMessageBox";
+import MainMessagesMessageBoxFooter from "./MainMessagesMessageBoxFooter";
+import MainMessagesMessageBoxSeen from "./MainMessagesMessageBoxSeen";
+import MainMessagesMessageBoxControl from "./MainMessagesMessageBoxControl";
+import MainMessagesMessageBoxHighLighter from "./MainMessagesMessageBoxHighLighter";
 import {IndexModalMediaFragment} from "./index";
 import Image from "../../../pod-chat-ui-kit/src/image";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
 import Gap from "../../../pod-chat-ui-kit/src/gap";
-import {
-  PaperFragment,
-  PaperFooterFragment,
-  ControlFragment,
-  HighLighterFragment,
-  SeenFragment
-} from "./MainMessagesMessage";
+
 
 //styling
 import {
@@ -37,11 +35,12 @@ import {
   MdPlayArrow,
   MdClose
 } from "react-icons/md";
-import style from "../../styles/app/MainMessagesFile.scss";
+import style from "../../styles/app/MainMessagesMessageFile.scss";
 import styleVar from "../../styles/variables.scss";
 import {ContextItem} from "../../../pod-chat-ui-kit/src/menu/Context";
 import strings from "../constants/localization";
 import {decodeEmoji} from "./_component/EmojiIcons.js";
+
 
 
 export function getImage(metaData, isFromServer, smallVersion) {
@@ -94,13 +93,8 @@ class MainMessagesMessageFile extends Component {
 
   constructor(props) {
     super(props);
-    this.onImageClick = this.onImageClick.bind(this);
     this.onCancel = this.onCancel.bind(this);
     this.onRetry = this.onRetry.bind(this);
-  }
-
-  onImageClick(e) {
-    e.stopPropagation();
   }
 
   componentDidUpdate() {
@@ -176,28 +170,31 @@ class MainMessagesMessageFile extends Component {
       isImage = false;
     }
     const mainMessagesFileImageClassNames = classnames({
-      [style.MainMessagesFile__Image]: true,
+      [style.MainMessagesMessageFile__Image]: true,
       [style["MainMessagesFile__Image--smallVersion"]]: smallVersion
     });
 
     return (
-      <Container className={style.MainMessagesFile} key={message.uuid}>
+      <Container className={style.MainMessagesMessageFile} key={message.uuid}>
 
         {isUploading(message) ?
-          <Container className={style.MainMessagesFile__ProgressContainer}>
-            <Container className={style.MainMessagesFile__Progress}
+          <Container className={style.MainMessagesMessageFile__ProgressContainer}>
+            <Container className={style.MainMessagesMessageFile__Progress}
                        absolute
                        bottomLeft
                        style={{width: `${message.progress ? message.progress : 0}%`}}
                        title={`${message.progress && message.progress}`}/>
           </Container>
           : ""}
-        <PaperFragment message={message} onRepliedMessageClicked={onRepliedMessageClicked}
-                       maxReplyFragmentWidth={isImage && `${imageSizeLink.width}px`}
-                       isChannel={isChannel} isGroup={isGroup}
-                       isFirstMessage={isFirstMessage} isMessageByMe={isMessageByMe}>
-          <HighLighterFragment message={message} highLightMessage={highLightMessage}/>
-          <ControlFragment
+        <MainMessagesMessageBox message={message}
+                                onRepliedMessageClicked={onRepliedMessageClicked}
+                                maxReplyFragmentWidth={isImage && `${imageSizeLink.width}px`}
+                                isChannel={isChannel}
+                                isGroup={isGroup}
+                                isFirstMessage={isFirstMessage}
+                                isMessageByMe={isMessageByMe}>
+          <MainMessagesMessageBoxHighLighter message={message} highLightMessage={highLightMessage}/>
+          <MainMessagesMessageBoxControl
             isParticipantBlocked={isParticipantBlocked}
             isOwner={isOwner}
             isMessageByMe={isMessageByMe}
@@ -214,15 +211,14 @@ class MainMessagesMessageFile extends Component {
               {mobileCheck() ?
                 <MdArrowDownward color={styleVar.colorAccent} size={styleVar.iconSizeMd}/> : strings.download}
             </ContextItem>
-          </ControlFragment>
+          </MainMessagesMessageBoxControl>
           <Container>
             <Container relative
-                       className={style.MainMessagesFile__FileContainer}>
+                       className={style.MainMessagesMessageFile__FileContainer}>
               {isImage ?
                 <Container style={{width: `${imageSizeLink.width}px`}}>
                   <IndexModalMediaFragment link={imageSizeLink.imageLinkOrig} options={{caption: message.message}}>
                     <Image className={mainMessagesFileImageClassNames}
-                           onClick={this.onImageClick}
                            src={imageSizeLink.imageLink}
                            style={{maxWidth: `${imageSizeLink.width}px`, height: `${imageSizeLink.height}px`}}/>
                   </IndexModalMediaFragment>
@@ -234,7 +230,7 @@ class MainMessagesMessageFile extends Component {
 
                 </Container>
                 :
-                <Container className={style.MainMessagesFile__FileName}>
+                <Container className={style.MainMessagesMessageFile__FileName}>
                   {isVideo ?
                     <video controls id={`video-${message.id}`} style={{display: "none"}} src={metaData.link}/> : ""
                   }
@@ -247,10 +243,11 @@ class MainMessagesMessageFile extends Component {
 
                 </Container>
               }
-              <Container className={style.MainMessagesFile__FileControlIcon} topCenter={isImage} style={isImage ? {
-                maxWidth: `${imageSizeLink.width}px`,
-                height: `${imageSizeLink.height}px`
-              } : null}>
+              <Container className={style.MainMessagesMessageFile__FileControlIcon} topCenter={isImage}
+                         style={isImage ? {
+                           maxWidth: `${imageSizeLink.width}px`,
+                           height: `${imageSizeLink.height}px`
+                         } : null}>
                 {(isDownloadable(message) && !isImage) || isUploading(message) || hasError(message) ?
                   <Gap x={isImage ? 0 : 10}>
                     <Container center={isImage}>
@@ -284,15 +281,15 @@ class MainMessagesMessageFile extends Component {
             </Container>
             }
           </Container>
-          <PaperFooterFragment message={message} onMessageControlShow={onMessageControlShow}
+          <MainMessagesMessageBoxFooter message={message} onMessageControlShow={onMessageControlShow}
                                isMessageByMe={isMessageByMe}
                                onMessageControlHide={onMessageControlHide}
                                messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
-            <SeenFragment isMessageByMe={isMessageByMe} message={message} thread={thread} forceSeen={forceSeen}
+            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread} forceSeen={forceSeen}
                           onMessageSeenListClick={onMessageSeenListClick} onRetry={this.onRetry}
                           onCancel={this.onCancel}/>
-          </PaperFooterFragment>
-        </PaperFragment>
+          </MainMessagesMessageBoxFooter>
+        </MainMessagesMessageBox>
       </Container>
     )
   }

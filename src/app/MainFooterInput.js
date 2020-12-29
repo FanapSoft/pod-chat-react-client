@@ -147,7 +147,7 @@ export default class MainFooterInput extends Component {
       } else {
         dispatch(threadDraft(isThreadHide ? threadId : oldThreadId));
       }
-      let draftMessage = Cookies.get(thread.id) || (threadId ? Cookies.get(threadId) : null);
+      let draftMessage = threadId ? Cookies.get(threadId) ? Cookies.get(threadId) : null : null;
       if (draftMessage) {
         draftMessage = this._analyzeDraft(draftMessage);
       }

@@ -1,5 +1,11 @@
-import strings from "../constants/localization";
 import React from "react";
+
+import strings from "../constants/localization";
+
+import Paper from "../../../pod-chat-ui-kit/src/paper";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 export default function({message, isMessageByMe}) {
   const forwardInfo = message.forwardInfo;

@@ -63,15 +63,13 @@ export default class MainFooterAttachmentAttach extends Component {
   }
 
   render() {
-
     return (
       <Container className={style.MainFooterAttachmentAttach} inline relative onClick={this.onClick.bind(this)}>
         <List>
 
           <ListItem key="send-file"
                     selection={true}
-                    invert={true}
-                    onSelect={e => dispatch(chatModalPrompt())}>
+                    invert={true}>
             <Container display="flex">
               <MdInsertDriveFile size={styleVar.iconSizeMd} color={styleVar.colorAccent} style={{margin: "2px 0 0 6px"}}/>
               <Text bold color="accent">

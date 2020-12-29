@@ -7,13 +7,19 @@ import {
   cancelFileDownloadingFromHashMap,
   getFileDownloadingFromHashMap,
   getFileFromHashMap,
+  getImage,
   getMessageMetaData,
-  humanFileSize,
+  humanFileSize, isMessageHasError,
+  isMessageIsDownloadable,
+  isMessageIsImage,
+  isMessageIsSound,
+  isMessageIsUploading,
+  isMessageIsVideo,
+  isMessageIsVoice,
   mobileCheck
 } from "../utils/helpers";
 
 //strings
-import {typesCode} from "../constants/messageTypes";
 import strings from "../constants/localization";
 
 //actions
@@ -31,82 +37,24 @@ import {
 import Container from "../../../pod-chat-ui-kit/src/container";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import {ContextItem} from "../../../pod-chat-ui-kit/src/menu/Context";
-import {
-  PaperFragment,
-  PaperFooterFragment,
-  ControlFragment,
-  HighLighterFragment,
-  SeenFragment
-} from "./MainMessagesMessage";
+
 import MainMessagesMessageFileVideo from "./MainMessagesMessageFileVideo";
 import MainMessagesMessageFileSound from "./MainMessagesMessageFileSound";
 import MainMessagesMessageFileImage from "./MainMessagesMessageFileImage";
 import MainMessagesMessageFileProgress from "./MainMessagesMessageFileProgress";
 import MainMessagesMessageFileControlIcon from "./MainMessagesMessageFileControlIcon";
 import MainMessagesMessageFileCaption from "./MainMessagesMessageFileCaption";
+import MainMessagesMessageBox from "./MainMessagesMessageBox";
+import MainMessagesMessageBoxHighLighter from "./MainMessagesMessageBoxHighLighter";
+import MainMessagesMessageBoxControl from "./MainMessagesMessageBoxControl";
+import MainMessagesMessageBoxFooter from "./MainMessagesMessageBoxFooter";
+import MainMessagesMessageBoxSeen from "./MainMessagesMessageBoxSeen";
 
 //styling
-import style from "../../styles/app/MainMessagesFile.scss";
+import style from "../../styles/app/MainMessagesMessageFile.scss";
 import styleVar from "../../styles/variables.scss";
 
 
-export function isImage({messageType}) {
-  if (messageType) {
-    return messageType === typesCode.POD_SPACE_PICTURE;
-  }
-}
-
-export function isVideo({messageType}) {
-  if (messageType) {
-    return messageType === typesCode.POD_SPACE_VIDEO;
-  }
-}
-
-export function isSound({messageType}) {
-  if (messageType) {
-    return messageType === typesCode.POD_SPACE_SOUND;
-  }
-}
-
-export function isVoice({messageType}) {
-  if (messageType) {
-    return messageType === typesCode.POD_SPACE_VOICE;
-  }
-}
-
-export function getImage({link, file}, isFromServer, smallVersion) {
-  let imageLink = file.link;
-  let width = file.actualWidth;
-  let height = file.actualHeight;
-
-  const ratio = height / width;
-  if (ratio < 0.15 || ratio > 7) {
-    return false;
-  }
-  const maxWidth = smallVersion || window.innerWidth <= 700 ? 190 : ratio >= 2 ? 200 : 300;
-  height = Math.ceil(maxWidth * ratio);
-  if (!isFromServer) {
-    return {imageLink, width: maxWidth, height};
-  }
-  return {
-    width: maxWidth,
-    height
-  };
-}
-
-function isDownloadable(message) {
-  return message.id;
-}
-
-function isUploading(message) {
-  return !message.id;
-}
-
-function hasError(message) {
-  if (message.state === "UPLOAD_ERROR") {
-    return true;
-  }
-}
 
 @connect(store => {
   return {
@@ -119,16 +67,16 @@ class MainMessagesMessageFile extends Component {
 
   constructor(props) {
     super(props);
-    const {leftAsideShowing, smallVersion, message, chatAudioPlayer} = props;
+    const {leftAsideShowing, smallVersion, message} = props;
     const metaData = getMessageMetaData(message);
-    const isImageReal = isImage(message) || (isImage(message) && !message.id);
+    const isImageReal = isMessageIsImage(message) || (isMessageIsImage(message) && !message.id);
     this.state = {
       isImage: isImageReal,
       imageIsSuitableSize: isImageReal && getImage(metaData, message.id, smallVersion || leftAsideShowing),
-      isVideo: isVideo(message),
-      isSound: isSound(message),
-      isVoice: isVoice(message),
-      isFile: !isSound(message) && !isVideo(message) && !isImageReal,
+      isVideo: isMessageIsVideo(message),
+      isSound: isMessageIsSound(message),
+      isVoice: isMessageIsVoice(message),
+      isFile: !isMessageIsSound(message) && !isMessageIsVideo(message) && !isImageReal,
       metaData
     };
     this.onCancelDownload = this.onCancelDownload.bind(this);
@@ -168,7 +116,7 @@ class MainMessagesMessageFile extends Component {
     if (message) {
       if (message.progress) {
         if (!message.hasError) {
-          if (hasError(message)) {
+          if (isMessageHasError(message)) {
             dispatch(messageSendingError(message.threadId, message.uniqueId));
           }
         }
@@ -218,15 +166,15 @@ class MainMessagesMessageFile extends Component {
   onDownload(isPlayable, e) {
     (e || isPlayable).stopPropagation && (e || isPlayable).stopPropagation();
     const {metaData} = this.state;
+    const downloadRef = this.downloadTriggerRef.current;
     if (isPlayable) {
       if (this.playTrigger) {
-        const result = this.playTrigger(isPlayable);
-        if (result) {
+        const result = this.playTrigger(downloadRef.href);
+        if (downloadRef.href) {
           return;
         }
       }
     }
-    const downloadRef = this.downloadTriggerRef.current;
     if (downloadRef.href) {
       return downloadRef.click();
     }
@@ -249,14 +197,13 @@ class MainMessagesMessageFile extends Component {
     dispatch(messageCancelFile(message.uniqueId, message.threadId));
   }
 
-  setShowProgress(newShowProgress, newProgress) {
-    const {showProgress, progress} = this.state;
-    if (newShowProgress === showProgress && newProgress === progress) {
+  setShowProgress(newShowProgress) {
+    const {showProgress} = this.state;
+    if (newShowProgress === showProgress) {
       return;
     }
     this.setState({
-      showProgress: newShowProgress,
-      progress: newProgress
+      showProgress: newShowProgress
     })
   }
 
@@ -314,31 +261,32 @@ class MainMessagesMessageFile extends Component {
       imageIsSuitableSize,
       showProgress
     } = this.state;
+    const downloadable = isMessageIsDownloadable(message);
     const downloading = this.isDownloading && getFileDownloadingFromHashMap.call(this, metaData.fileHash) === true;
-    const uploading = isUploading(message);
+    const uploading = isMessageIsUploading(message);
     const audioPlaying = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.playing;
     const showProgressFinalDecision = showProgress || uploading || downloading;
     if (!imageIsSuitableSize) {
       isImage = false;
     }
-    const renderControlIconCondition = (isDownloadable(message) && !isImage) || downloading || uploading || hasError(message);
+    const renderControlIconCondition = !isImage && (downloadable || downloading || uploading || isMessageHasError(message));
     return (
-      <Container className={style.MainMessagesFile} key={message.uuid}>
+      <Container className={style.MainMessagesMessageFile} key={message.uuid}>
         <Container display="none">
           <a ref={this.downloadTriggerRef}/>
         </Container>
         {showProgressFinalDecision &&
         <MainMessagesMessageFileProgress isDownloading={showProgress === "downloading" || downloading}
                                          progress={message.progress}/>}
-        <PaperFragment message={message}
-                       onRepliedMessageClicked={onRepliedMessageClicked}
-                       maxReplyFragmentWidth={isImage && `${imageIsSuitableSize.width}px`}
-                       isChannel={isChannel}
-                       isGroup={isGroup}
-                       isFirstMessage={isFirstMessage}
-                       isMessageByMe={isMessageByMe}>
-          <HighLighterFragment message={message} highLightMessage={highLightMessage}/>
-          <ControlFragment
+        <MainMessagesMessageBox message={message}
+                                onRepliedMessageClicked={onRepliedMessageClicked}
+                                maxReplyFragmentWidth={isImage && `${imageIsSuitableSize.width}px`}
+                                isChannel={isChannel}
+                                isGroup={isGroup}
+                                isFirstMessage={isFirstMessage}
+                                isMessageByMe={isMessageByMe}>
+          <MainMessagesMessageBoxHighLighter message={message} highLightMessage={highLightMessage}/>
+          <MainMessagesMessageBoxControl
             isParticipantBlocked={isParticipantBlocked}
             isOwner={isOwner}
             isMessageByMe={isMessageByMe}
@@ -351,25 +299,26 @@ class MainMessagesMessageFile extends Component {
             onMessageSeenListClick={onMessageSeenListClick}
             onMessageControlHide={onMessageControlHide}
             onDelete={onDelete} onForward={onForward} onReply={onReply}>
-            <ContextItem onClick={this.onDownload.bind(this)}>
+            <ContextItem onClick={this.onDownload.bind(this, false)}>
               {mobileCheck() ?
                 <MdArrowDownward color={styleVar.colorAccent} size={styleVar.iconSizeMd}/> : strings.download}
             </ContextItem>
-          </ControlFragment>
+          </MainMessagesMessageBoxControl>
           <Container>
             <Container relative
-                       className={style.MainMessagesFile__FileContainer}>
+                       className={style.MainMessagesMessageFile__FileContainer}>
               {isImage ?
                 <MainMessagesMessageFileImage imageSizeLink={imageIsSuitableSize}
+                                              onCancel={uploading || isMessageHasError(message) ? this.onCancel : this.onCancelDownload}
+                                              isUploading={uploading}
                                               message={message}
                                               setShowProgress={this.setShowProgress}
                                               smallVersion={smallVersion}
-                                              isUploading={uploading}
+                                              showCancelIcon={downloading || uploading}
                                               dispatch={dispatch}
                                               metaData={metaData}/>
                 :
-                //MainMessagesMessageFileOther
-                <Container className={style.MainMessagesFile__FileName}>
+                <Container className={style.MainMessagesMessageFile__FileName}>
                   {isVideo &&
                   <MainMessagesMessageFileVideo setPlayTrigger={this.setPlayTrigger}
                                                 setJustMountedTrigger={this.setJustMountedTrigger}
@@ -404,17 +353,10 @@ class MainMessagesMessageFile extends Component {
               {
                 renderControlIconCondition &&
                 <MainMessagesMessageFileControlIcon
-                  inlineStyle={isImage &&
-                  {
-                    marginRight: 0,
-                    maxWidth: `${imageIsSuitableSize.width}px`,
-                    height: `${imageIsSuitableSize.height}px`
-                  }}
-                  onClick={isDownloadable(message) ? downloading ? this.onCancelDownload : this.onDownload.bind(this, isVideo || isSound || isVoice) : this.onCancel.bind(this, message)}
-                  fixCenter={isImage}
-                  isCancel={(uploading || hasError(message)) || (isDownloadable(message) && downloading)}
+                  onClick={downloadable ? downloading ? this.onCancelDownload : this.onDownload.bind(this, isVideo || isSound || isVoice) : this.onCancel.bind(this, message)}
+                  isCancel={(uploading || isMessageHasError(message)) || (downloadable && downloading)}
                   isMedia={(isSound || isVoice) && audioPlaying ? "playing" : ((isSound || isVoice) && !audioPlaying) || isVideo ? "pause" : false}
-                  isDownload={!isVideo && !isSound && !isImage && !isVoice}/>
+                  isDownload={!isVideo && !isSound && !isVoice}/>
               }
 
             </Container>
@@ -424,15 +366,15 @@ class MainMessagesMessageFile extends Component {
             }
 
           </Container>
-          <PaperFooterFragment message={message} onMessageControlShow={onMessageControlShow}
+          <MainMessagesMessageBoxFooter message={message} onMessageControlShow={onMessageControlShow}
                                isMessageByMe={isMessageByMe}
                                onMessageControlHide={onMessageControlHide}
                                messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
-            <SeenFragment isMessageByMe={isMessageByMe} message={message} thread={thread} forceSeen={forceSeen}
+            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread} forceSeen={forceSeen}
                           onMessageSeenListClick={onMessageSeenListClick} onRetry={this.onRetry}
                           onCancel={this.onCancel}/>
-          </PaperFooterFragment>
-        </PaperFragment>
+          </MainMessagesMessageBoxFooter>
+        </MainMessagesMessageBox>
       </Container>
     )
   }

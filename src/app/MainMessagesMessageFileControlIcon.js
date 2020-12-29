@@ -14,19 +14,16 @@ import styleVar from "../../styles/variables.scss";
 
 export default function ({inlineStyle, fixCenter, onClick, isCancel, isMedia, isDownload}) {
 
-  return <Container className={style.MainMessagesMessageFileControlIcon} style={inlineStyle || null}>
-    <Container center={fixCenter}>
-      <Shape color="accent"
-             size="lg"
-             onDoubleClick={e => e.stopPropagation()}
-             onClick={onClick}>
-        <ShapeCircle>
-          {
-            isCancel &&
+  return <Container className={style.MainMessagesMessageFileControlIcon} style={inlineStyle || null} center={fixCenter}>
+    <Shape color="accent"
+           size="lg"
+           onDoubleClick={e => e.stopPropagation()}
+           onClick={onClick}>
+      <ShapeCircle>
+        {
+          isCancel ?
             <MdClose style={{marginTop: "8px"}} size={styleVar.iconSizeSm}/>
-          }
-          {
-            !isCancel &&
+            :
             <Fragment>
 
               {
@@ -43,11 +40,9 @@ export default function ({inlineStyle, fixCenter, onClick, isCancel, isMedia, is
               }
 
             </Fragment>
-          }
-
-        </ShapeCircle>
-      </Shape>
-    </Container>
+        }
+      </ShapeCircle>
+    </Shape>
   </Container>
 }
 

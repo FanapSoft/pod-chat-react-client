@@ -59,7 +59,7 @@ class Main extends Component {
       return (
         <Container className={style.Main}>
           <Container className={style.Main__Cover}/>
-          <MainIntro chatRouterLess={chatRouterLess}/>
+          <MainIntro chatRouterLess={chatRouterLess} history={history}/>
         </Container>
       )
     }

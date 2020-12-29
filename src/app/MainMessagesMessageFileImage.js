@@ -1,15 +1,19 @@
-import React, {Fragment, useState, useEffect} from "react";
-import {getImageFromHashMapWindow} from "../utils/helpers";
+import React, {Fragment, useState, useEffect, useRef} from "react";
+import ReactDOM from "react-dom";
 import classnames from "classnames";
 import {IndexModalMediaFragment} from "./index";
+import {getImageFromHashMapWindow, isMessageHasError} from "../utils/helpers";
 
 
 import Image from "../../../pod-chat-ui-kit/src/image";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 import MainMessagesMessageFileCaption from "./MainMessagesMessageFileCaption";
+import MainMessagesMessageFileControlIcon from "./MainMessagesMessageFileControlIcon";
 
-import style from "../../styles/app/MainMessagesMessageImage.scss";
+import style from "../../styles/app/MainMessagesMessageFileImage.scss";
+import imageFragmentStyle from "../../styles/app/MainMessagesMessageFileImageFragment.scss";
 
 
 const imageQualities = {
@@ -60,9 +64,12 @@ function updateSlide(imageModalPreview, imageThumb, instance) {
 }
 
 
-function MainMessagesMessageFileImageFragment({message, classNames, isBlurry, imageThumbLowQuality, imageThumb, imageSizeLink, gettingImageThumb}) {
-  return <Image className={classNames}
-                onClick={e => e.stopPropagation()}
+function MainMessagesMessageFileImageFragment({smallVersion, message, isBlurry, imageThumbLowQuality, imageThumb, imageSizeLink, gettingImageThumb, ...other}) {
+  const mainMessagesFileImageClassNames = classnames({
+    [imageFragmentStyle.MainMessagesMessageFileImageFragment]: true,
+    [imageFragmentStyle["MainMessagesMessageFileImageFragment--smallVersion"]]: smallVersion
+  });
+  return <Image className={mainMessagesFileImageClassNames}
                 src={message.id ? isBlurry ? imageThumbLowQuality : imageThumb : imageSizeLink.imageLink}
                 style={{
                   backgroundColor: gettingImageThumb ? "#fff" : "none",
@@ -70,10 +77,12 @@ function MainMessagesMessageFileImageFragment({message, classNames, isBlurry, im
                   width: `${imageSizeLink.width}px`,
                   height: `${imageSizeLink.height}px`,
                   filter: isBlurry || gettingImageThumb ? "blur(8px)" : "none"
-                }}/>;
+                }} {...other}/>;
 }
 
-export default function ({isUploading, message, metaData, smallVersion, imageSizeLink, setShowProgress, dispatch}) {
+export default function ({isUploading, showCancelIcon, message, metaData, smallVersion, imageSizeLink, setShowProgress, onCancel, dispatch}) {
+  const linkRef = useRef(null);
+
   const fileHash = metaData.fileHash;
   const isLocationMap = metaData.mapLink;
 
@@ -93,9 +102,8 @@ export default function ({isUploading, message, metaData, smallVersion, imageSiz
   const gettingImageThumb = !isUploading && (!imageThumbLowQuality && !imageThumb);
   const isBlurry = imageThumbLowQuality && !imageThumb && !isUploading;
 
-  setShowProgress(gettingImageThumb);
-
   useEffect(function () {
+    setShowProgress(gettingImageThumb ? "downloading" : false);
     if (modalMediaInstance) {
       updateSlide(imageModalPreview, imageThumb, modalMediaInstance);
     }
@@ -106,18 +114,14 @@ export default function ({isUploading, message, metaData, smallVersion, imageSiz
     updateSlide(imageModalPreview, imageThumb, instance);
   });
 
-  const mainMessagesFileImageClassNames = classnames({
-    [style.MainMessagesMessageFileImage]: true,
-    [style["MainMessagesMessageFileImage--smallVersion"]]: smallVersion
-  });
 
-  return <Container style={{width: `${imageSizeLink.width}px`}}>
+  return <Container style={{width: `${imageSizeLink.width}px`}} className={style.MainMessagesMessageFileImage}>
     {
       isLocationMap ?
         <Text link={isLocationMap} linkClearStyle target={"_blank"}>
           <MainMessagesMessageFileImageFragment imageSizeLink={imageSizeLink}
                                                 message={message}
-                                                classNames={mainMessagesFileImageClassNames}
+                                                smallVersion={smallVersion}
                                                 gettingImageThumb={gettingImageThumb}
                                                 imageThumb={imageThumb}
                                                 imageThumbLowQuality={imageThumbLowQuality}
@@ -125,20 +129,47 @@ export default function ({isUploading, message, metaData, smallVersion, imageSiz
         </Text>
         :
         <Fragment>
-          <IndexModalMediaFragment link={imageModalPreview || imageThumb}
-                                   linkClassName={style.MainMessagesMessageFileImage__ModalMediaLink}/>
-          <MainMessagesMessageFileImageFragment imageSizeLink={imageSizeLink}
-                                                classNames={mainMessagesFileImageClassNames}
-                                                message={message}
-                                                gettingImageThumb={gettingImageThumb}
-                                                imageThumb={imageThumb}
-                                                imageThumbLowQuality={imageThumbLowQuality}
-                                                isBlurry={isBlurry}/>
+          <Container display="none">
+            <IndexModalMediaFragment link={imageModalPreview || imageThumb}
+                                     linkRef={linkRef}/>
+          </Container>
+
+          <Container display="flex" relative>
+
+            {showCancelIcon &&
+            <MainMessagesMessageFileControlIcon
+              isCancel
+              inlineStyle={
+                {
+                  marginRight: 0,
+                  marginTop: "-10px",
+                  maxWidth: `${imageSizeLink.width}px`,
+                  zIndex: style.zIndex1
+                }}
+              onClick={onCancel}
+              fixCenter/>
+            }
+
+            <MainMessagesMessageFileImageFragment imageSizeLink={imageSizeLink}
+                                                  onClick={() => ReactDOM.findDOMNode(linkRef.current).click()}
+                                                  smallVersion={smallVersion}
+                                                  message={message}
+                                                  gettingImageThumb={gettingImageThumb}
+                                                  imageThumb={imageThumb}
+                                                  imageThumbLowQuality={imageThumbLowQuality}
+                                                  isBlurry={isBlurry}/>
+          </Container>
         </Fragment>
 
     }
+    {
+      message.message &&
+      <Fragment>
+        <Gap y={5}/>
+        <MainMessagesMessageFileCaption message={message.message}/>
+      </Fragment>
+    }
 
-    <MainMessagesMessageFileCaption message={message.message}/>
 
   </Container>
 }

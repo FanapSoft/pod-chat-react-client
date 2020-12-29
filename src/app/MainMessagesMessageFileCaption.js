@@ -1,6 +1,5 @@
 import React from "react";
-import {mobileCheck, decodeEmoji, clearHtml} from "../utils/helpers";
-import {emailify, mentionify, urlify} from "./MainMessagesMessage";
+import {mobileCheck, decodeEmoji, clearHtml, emailify, mentionify, urlify} from "../utils/helpers";
 
 import Container from "../../../pod-chat-ui-kit/src/container";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";

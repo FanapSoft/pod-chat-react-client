@@ -9,7 +9,7 @@ export default function ({message, thread, setPlayTrigger, setPlayAfterDownloadT
   const soundRef = useRef(null);
 
 
-  setPlayTrigger(() => {
+  setPlayTrigger((result) => {
     if (soundPlayer) {
       soundPlayer.playPause();
       dispatch(chatAudioPlayerAction({
@@ -19,6 +19,8 @@ export default function ({message, thread, setPlayTrigger, setPlayAfterDownloadT
         thread
       }));
       return true;
+    } else if (result) {
+      createPlayer(result, true);
     }
   });
 
@@ -27,34 +29,22 @@ export default function ({message, thread, setPlayTrigger, setPlayAfterDownloadT
     if (soundPlayer) {
       soundPlayerContainer.current.appendChild(soundPlayer.container);
     } else {
-      const wavesurfer = soundPlayer = createPlayer();
-      wavesurfer.on('finish', function () {
-        dispatch(chatAudioPlayerAction({message, player: wavesurfer, thread, playing: false}));
-      });
-      wavesurfer.load(result);
+      createPlayer(result);
     }
 
   });
 
   setPlayAfterDownloadTrigger(result => {
-    const wavesurfer = createPlayer();
-    wavesurfer.on('ready', function () {
-      dispatch(chatAudioPlayerAction({message, player: wavesurfer, thread, playing: true}));
-      wavesurfer.play();
-    });
-    wavesurfer.on('finish', function () {
-      dispatch(chatAudioPlayerAction({message, player: wavesurfer, thread, playing: false}));
-    });
-    wavesurfer.load(result);
+    createPlayer(result, true);
   });
 
-  function createPlayer() {
-    return soundPlayer = WaveSurfer.create({
+  function createPlayer(result, playAfterCreation) {
+    const wavesurfer = soundPlayer = WaveSurfer.create({
       container: soundRef.current,
       waveColor: styleVar.colorAccentLight,
       progressColor: styleVar.colorAccent,
       normalize: true,
-      backend: 'MediaElement',
+      backend: "MediaElement",
       cursorColor: styleVar.colorAccentDark,
       height: 20,
       barWidth: 2,
@@ -63,6 +53,16 @@ export default function ({message, thread, setPlayTrigger, setPlayAfterDownloadT
       cursorWidth: 2,
       barGap: 1
     });
+    if (playAfterCreation) {
+      wavesurfer.on("ready", function () {
+        dispatch(chatAudioPlayerAction({message, player: wavesurfer, thread, playing: true}));
+        wavesurfer.play();
+      });
+    }
+    wavesurfer.on("finish", function () {
+      dispatch(chatAudioPlayerAction({message, player: wavesurfer, thread, playing: false}));
+    });
+    wavesurfer.load(result);
   }
 
 
