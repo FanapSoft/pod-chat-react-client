@@ -1,6 +1,6 @@
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
-import {avatarNameGenerator, avatarUrlGenerator} from "../utils/helpers";
+import {avatarNameGenerator, avatarUrlGenerator, getMessageMetaData} from "../utils/helpers";
 
 //strings
 import strings from "../constants/localization";
@@ -15,18 +15,18 @@ import {
 import {messageEditing} from "../actions/messageActions";
 
 //UI components
-import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../uikit/src/modal";
-import {Button} from "../../../uikit/src/button";
-import {Heading} from "../../../uikit/src/typography";
-import Gap from "../../../uikit/src/gap";
-import List, {ListItem} from "../../../uikit/src/list";
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import {Text} from "../../../uikit/src/typography";
-import Container from "../../../uikit/src/container";
+import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../pod-chat-ui-kit/src/modal";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import {Heading} from "../../../pod-chat-ui-kit/src/typography";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import {ContactSearchFragment, NoResultFragment, PartialLoadingFragment} from "./ModalContactList";
 import {contactGetList} from "../actions/contactActions";
 import {ContactList} from "./_component/contactList";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 
 //styling
 
@@ -42,9 +42,10 @@ const constants = {
     threadsHasNext: store.threads.hasNext,
     isShow: store.threadModalListShowing.isShowing,
     message: store.threadModalListShowing.message,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     user: store.user.user
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class ModalThreadList extends Component {
 
   constructor(props) {
@@ -131,7 +132,6 @@ export default class ModalThreadList extends Component {
 
   onSelect(thread, isContact) {
     const {dispatch, message} = this.props;
-    let targetId;
     if (isContact && isContact.id) {
       const user = {
         id: isContact.id,
@@ -202,7 +202,7 @@ export default class ModalThreadList extends Component {
                       <Container relative>
 
                         <Avatar>
-                          <AvatarImage src={avatarUrlGenerator(el.image, avatarUrlGenerator.SIZES.SMALL)}
+                          <AvatarImage src={avatarUrlGenerator.apply(this, [el.image, avatarUrlGenerator.SIZES.SMALL, getMessageMetaData(el)])}
                                        text={avatarNameGenerator(el.title).letter}
                                        textBg={avatarNameGenerator(el.title).color}/>
                           <AvatarName>{el.title}</AvatarName>
@@ -215,7 +215,7 @@ export default class ModalThreadList extends Component {
                 {remainingThreadsPartialFetching && <PartialLoadingFragment/>}
               </Container>
               :
-              <NoResultFragment>{queryThreadsSearching ? `${strings.searchingForThreads}...` : strings.thereIsNoContactWithThis}</NoResultFragment>
+              <NoResultFragment>{queryThreadsSearching ? `${strings.searchingForThreads}...` : strings.thereIsNoThreadsWithThisKeyword()}</NoResultFragment>
           }
           {isQueriedResult &&
           <Fragment>
@@ -232,7 +232,7 @@ export default class ModalThreadList extends Component {
                              contacts={queryContacts}/>
               </Container>
               :
-              <NoResultFragment>{queryContactsSearching ? `${strings.searchingForContacts}...` : strings.thereIsNoContact}</NoResultFragment>
+              <NoResultFragment>{queryContactsSearching ? `${strings.searchingForContacts}...` : strings.thereIsNoContactWithThisKeyword()}</NoResultFragment>
           }
 
         </ModalBody>

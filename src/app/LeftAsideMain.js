@@ -15,8 +15,8 @@ import LeftAsideMainSeenList from "./LeftAsideMainSeenList";
 //styling
 import style from "../../styles/app/LeftAsideMain.scss";
 import classnames from "classnames";
-import Container from "../../../uikit/src/container";
-import Scroller from "../../../uikit/src/scroller";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Scroller from "../../../pod-chat-ui-kit/src/scroller";
 
 @connect(store => {
   return {

@@ -10,7 +10,7 @@ import {connect} from "react-redux";
 import AsideHead from "./AsideHead";
 import AsideSearch from "./AsideSearch";
 import AsideThreads from "./AsideThreads";
-import Container from "../../../uikit/src/container";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //styling
 import style from "../../styles/app/Aside.scss";

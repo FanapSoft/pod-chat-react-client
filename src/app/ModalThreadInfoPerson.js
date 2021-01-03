@@ -18,15 +18,15 @@ import {threadLeave, threadModalThreadInfoShowing, threadNotification} from "../
 import {chatModalPrompt} from "../actions/chatActions";
 
 //UI components
-import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../uikit/src/modal";
-import {Button} from "../../../uikit/src/button";
-import Gap from "../../../uikit/src/gap";
-import {Heading, Text} from "../../../uikit/src/typography";
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import Container from "../../../uikit/src/container";
-import List, {ListItem} from "../../../uikit/src/list";
+import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../pod-chat-ui-kit/src/modal";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {Heading, Text} from "../../../pod-chat-ui-kit/src/typography";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
 import date from "../utils/date";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 import {
   MdPersonAdd,
   MdPerson,
@@ -40,7 +40,6 @@ import {
 
 //styling
 import styleVar from "../../styles/variables.scss";
-import {isChannel, isGroup} from "./Main";
 import ModalThreadInfoMessageTypes from "./ModalThreadInfoMessageTypes";
 
 
@@ -63,7 +62,7 @@ export function getParticipant(participants, user) {
     chatRouterLess: store.chatRouterLess,
     contacts: store.contactGetList.contacts
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class ModalThreadInfo extends Component {
 
   constructor(props) {
@@ -79,12 +78,38 @@ export default class ModalThreadInfo extends Component {
   }
 
   componentDidMount() {
-    const {participants, user, dispatch, contacts} = this.props;
+    const {participants, user, dispatch, contacts, thread} = this.props;
+    if (!thread.onTheFly && (!participants || !participants.length)) {
+      return;
+    }
+    const participant = thread.onTheFly ? thread.participant : getParticipant(participants, user);
+    if (!participant.id) {
+      return;
+    }
+    if (!thread.onTheFly && !participant.contactId) {
+      return;
+    }
+    if (contacts && contacts.length) {
+      let contact = contacts.findIndex(contact => contact.id === participant.contactId);
+      if (contact > -1) {
+        return this.setState({contact: contacts[contact]});
+      }
+    }
+    dispatch(contactSearch({id: participant.contactId})).then(contact => {
+      this.setState({contact})
+    });
+  }
+
+  componentDidUpdate({participants: oldParticipants}) {
+    const {participants, user, dispatch, contacts, thread} = this.props;
     if (!participants || !participants.length) {
       return;
     }
     const participant = getParticipant(participants, user);
-    if (!participant.id) {
+    const oldParticipant = getParticipant(oldParticipants, user);
+    if (!participant.id && !oldParticipant.id) {
+      return;
+    } else if (participant.id === oldParticipant.id) {
       return;
     }
     if (!participant.contactId) {
@@ -101,21 +126,12 @@ export default class ModalThreadInfo extends Component {
     });
   }
 
-  componentDidUpdate({participants: oldParticipants}) {
+  getContact() {
     const {participants, user, dispatch, contacts} = this.props;
     if (!participants || !participants.length) {
       return;
     }
     const participant = getParticipant(participants, user);
-    const oldParticipant = getParticipant(oldParticipants, user);
-    if (!participant.id && !oldParticipant.id) {
-      return;
-    } else if (participant.id === oldParticipant.id) {
-      return;
-    }
-    if (!participant.contactId) {
-      return;
-    }
     if (contacts && contacts.length) {
       let contact = contacts.findIndex(contact => contact.id === participant.contactId);
       if (contact > -1) {
@@ -233,52 +249,56 @@ export default class ModalThreadInfo extends Component {
                 {isMyContact ?
 
                   <Fragment>
+                    {(contact.cellphoneNumber || (participant.username || (contact.linkedUser && contact.linkedUser.username))) &&
+                      <Container userSelect="text">
 
-                    {contact.cellphoneNumber &&
-                    <ListItem invert>
+                        {contact.cellphoneNumber &&
+                        <ListItem invert>
 
-                      <Container>
-                        <MdPhone size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text inline>{contact.cellphoneNumber}</Text>
-                        </Gap>
+                          <Container>
+                            <MdPhone size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                            <Gap x={20}>
+                              <Text inline>{contact.cellphoneNumber}</Text>
+                            </Gap>
+                          </Container>
+
+                        </ListItem>
+                        }
+                        {(participant.username || (contact.linkedUser && contact.linkedUser.username)) &&
+                        <ListItem invert>
+
+                          <Container>
+                            <MdPerson size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                            <Gap x={20}>
+                              <Text inline>{participant.username || contact.linkedUser.username}</Text>
+                            </Gap>
+                          </Container>
+
+                        </ListItem>
+                        }
                       </Container>
-
-                    </ListItem>
-                    }
-                    {(participant.username || (contact.linkedUser && contact.linkedUser.username)) &&
-                    <ListItem invert>
-
-                      <Container>
-                        <MdPerson size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text inline>{participant.username || contact.linkedUser.username}</Text>
-                        </Gap>
-                      </Container>
-
-                    </ListItem>
-                    }
-
-                    {
-                    <ListItem selection invert onSelect={this.onEdit.bind(this, participant, contact)}>
-                      <Container relative>
-                        <MdEdit size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text>{strings.edit}</Text>
-                        </Gap>
-                      </Container>
-                    </ListItem>
                     }
 
                     {
-                    <ListItem selection invert onSelect={this.onRemove.bind(this, participant)}>
-                      <Container relative>
-                        <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text>{strings.remove}</Text>
-                        </Gap>
-                      </Container>
-                    </ListItem>
+                      <ListItem selection invert onSelect={this.onEdit.bind(this, participant, contact)}>
+                        <Container relative>
+                          <MdEdit size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                          <Gap x={20}>
+                            <Text>{strings.edit}</Text>
+                          </Gap>
+                        </Container>
+                      </ListItem>
+                    }
+
+                    {
+                      <ListItem selection invert onSelect={this.onRemove.bind(this, participant)}>
+                        <Container relative>
+                          <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                          <Gap x={20}>
+                            <Text>{strings.remove}</Text>
+                          </Gap>
+                        </Container>
+                      </ListItem>
                     }
 
                   </Fragment>

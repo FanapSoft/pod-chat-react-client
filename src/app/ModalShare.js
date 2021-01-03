@@ -14,14 +14,14 @@ import {chatModalPrompt} from "../actions/chatActions";
 import {ROUTE_ADD_CONTACT, ROUTE_INDEX, ROUTE_SHARE} from "../constants/routes";
 import {withRouter} from "react-router-dom";
 import {threadModalListShowing} from "../actions/threadActions";
-import Text from "../../../uikit/src/typography/Text";
-import Container from "../../../uikit/src/container";
-import Paper from "../../../uikit/src/paper";
-import Gap from "../../../uikit/src/gap";
+import Text from "../../../pod-chat-ui-kit/src/typography/Text";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Paper from "../../../pod-chat-ui-kit/src/paper";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 //styling
 
-@connect(null, null, null, {withRef: true})
+@connect(null, null, null, {forwardRef: true})
 class ModalShare extends Component {
 
   constructor(props) {

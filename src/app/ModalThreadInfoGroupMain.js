@@ -8,7 +8,7 @@ import {THREAD_ADMIN} from "../constants/privilege";
 
 //strings
 import strings from "../constants/localization";
-import {avatarNameGenerator, avatarUrlGenerator} from "../utils/helpers";
+import {avatarNameGenerator, avatarUrlGenerator, getMessageMetaData} from "../utils/helpers";
 
 //actions
 import {
@@ -25,13 +25,13 @@ import {chatModalPrompt} from "../actions/chatActions";
 //UI components
 import {ContactList} from "./_component/contactList";
 import {ContactSearchFragment, PartialLoadingFragment} from "./ModalContactList";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import {Button} from "../../../uikit/src/button";
-import Gap from "../../../uikit/src/gap";
-import {Heading, Text} from "../../../uikit/src/typography";
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import Container from "../../../uikit/src/container";
-import List, {ListItem} from "../../../uikit/src/list";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {Heading, Text} from "../../../pod-chat-ui-kit/src/typography";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
 
 //styling
 import {MdGroupAdd, MdArrowBack, MdSettings, MdBlock, MdNotifications, MdPersonAdd} from "react-icons/md";
@@ -77,8 +77,9 @@ export function isOwner(thread, user) {
     participantsNextOffset: store.threadParticipantList.nextOffset,
     participantsFetching: store.threadParticipantList.fetching,
     participantsPartialFetching: store.threadParticipantListPartial.fetching,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
   }
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 class ModalThreadInfoGroupMain extends Component {
 
   constructor(props) {
@@ -280,11 +281,12 @@ class ModalThreadInfoGroupMain extends Component {
   }
 
   render() {
-    const {
+    let {
       participants, thread, user, participantsFetching, participantsPartialFetching, notificationPending,
       GapFragment, AvatarModalMediaFragment,
       setScrollBottomThresholdCondition
     } = this.props;
+    AvatarModalMediaFragment = AvatarModalMediaFragment.bind(this);
     const {removingParticipantIds, partialParticipantLoading, query, addMembers, internalStep} = this.state;
     if (internalStep === constants.ON_ADD_MEMBER) {
       return <ModalContactList isShow
@@ -346,7 +348,7 @@ class ModalThreadInfoGroupMain extends Component {
 
           <Container>
             <Avatar>
-              <AvatarImage src={avatarUrlGenerator(thread.image, avatarUrlGenerator.SIZES.LARGE)} size="xlg"
+              <AvatarImage src={avatarUrlGenerator.apply(this, [thread.image, avatarUrlGenerator.SIZES.LARGE, getMessageMetaData(thread)])} size="xlg"
                            text={avatarNameGenerator(thread.title).letter}
                            textBg={avatarNameGenerator(thread.title).color}>
                 <AvatarModalMediaFragment thread={thread}/>

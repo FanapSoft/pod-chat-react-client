@@ -1,10 +1,11 @@
 // src/list/BoxSceneMessages
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
-import classnames from "classnames";
 import "moment/locale/fa";
-import {isMessageByMe} from "./MainMessages"
-import date from "../utils/date";
+import {
+  getMessageMetaData,
+  isMessageIsFile
+} from "../utils/helpers";
 
 import {showBlock} from "./MainFooterSpam";
 import MainMessagesMessageFile from "./MainMessagesMessageFile";
@@ -19,7 +20,7 @@ import strings from "../constants/localization";
 import {chatModalPrompt} from "../actions/chatActions";
 
 //components
-import Container from "../../../uikit/src/container";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import {
   FaWhatsapp,
   FaTelegram,
@@ -29,14 +30,13 @@ import {
   FiTwitter
 } from "react-icons/fi";
 
-import {Button} from "../../../uikit/src/button";
-import ListItem from "../../../uikit/src/list/ListItem";
-import List from "../../../uikit/src/list";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import ListItem from "../../../pod-chat-ui-kit/src/list/ListItem";
+import List from "../../../pod-chat-ui-kit/src/list";
 import style from "../../styles/app/MainMessagesMessageShare.scss";
 import styleVar from "../../styles/variables.scss";
-import Text from "../../../uikit/src/typography/Text";
-import Gap from "../../../uikit/src/gap";
-import {isFile} from "./MainMessagesMessage";
+import Text from "../../../pod-chat-ui-kit/src/typography/Text";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 
 //styling
@@ -87,10 +87,15 @@ export default class MainMessagesMessageShare extends Component {
     const {selectedSocialNetwork} = this.state;
     const {message, dispatch} = this.props;
     let messageText = message.message;
-    const isMessageFile = isFile(message);
+    const isMessageFile = isMessageIsFile(message);
     if (isMessageFile) {
       const metaData = message.metadata;
-      messageText = `${(typeof metaData === "string" ? JSON.parse(metaData).file : metaData.file).link}`;
+      try {
+        messageText = `${getMessageMetaData(message).file.link}`;
+      } catch (e) {
+
+      }
+
     }
     window.open(selectedSocialNetwork.socialNetworksObject.link(messageText, isMessageFile && message.message), '_blank');
     dispatch(chatModalPrompt());

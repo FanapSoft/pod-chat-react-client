@@ -10,9 +10,9 @@ import {messageEditing} from "../actions/messageActions";
 import {threadIsSendingMessage} from "../actions/threadActions";
 
 //components
-import Paper from "../../../uikit/src/paper";
-import Container from "../../../uikit/src/container";
-import {Text} from "../../../uikit/src/typography";
+import Paper from "../../../pod-chat-ui-kit/src/paper";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 
 //styling
 import {MdClose, MdEdit, MdReply} from "react-icons/md";
@@ -21,6 +21,7 @@ import style from "../../styles/app/MainFooterInputEditing.scss";
 import styleVar from "../../styles/variables.scss";
 import utilsStlye from "../../styles/utils/utils.scss";
 import {decodeEmoji} from "./_component/EmojiIcons.js";
+import {getMessageMetaData} from "../utils/helpers";
 
 const constants = {
   replying: "REPLYING",
@@ -57,7 +58,7 @@ export function getMessageEditingText(message) {
       editObject.text = strings.messagesCount(message.length);
     } else {
       if (message.metadata) {
-        const file = JSON.parse(message.metadata).file;
+        const file = getMessageMetaData(message).file;
         if (file) {
           const isVideo = file.mimeType.match(/mp4|ogg|3gp|ogv/);
           let width = file.width;
@@ -95,7 +96,7 @@ export default class MainFooterInputEditing extends Component {
       if (messageEditing.type !== constants.replying) {
         if (prevProps.messageEditing !== messageEditing) {
           if (messageEditing.type !== constants.replying && messageEditing.type !== constants.forwarding) {
-            if(!messageEditing.message.draftMode) {
+            if (!messageEditing.message.draftMode) {
               setInputText(decodeEmoji(messageEditing.message.message));
             }
           } else {

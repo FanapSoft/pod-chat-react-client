@@ -15,8 +15,8 @@ export function emojiRegex() {
 //actions
 
 //components
-import Scroller from "../../../../uikit/src/Scroller";
-import Container from "../../../../uikit/src/container";
+import Scroller from "../../../../pod-chat-ui-kit/src/Scroller";
+import Container from "../../../../pod-chat-ui-kit/src/container";
 
 //styling
 import emojiStyle from "../../../styles/utils/emoji.scss";
@@ -32,8 +32,8 @@ import {
   emojiCatName,
   emojiCookieName
 } from "../../constants/emoji";
-import Text from "../../../../uikit/src/typography/Text";
-import Gap from "../../../../uikit/src/gap";
+import Text from "../../../../pod-chat-ui-kit/src/typography/Text";
+import Gap from "../../../../pod-chat-ui-kit/src/gap";
 import EmojiIconsNav from "./EmojiIconsNav";
 import Cookies from "js-cookie";
 
@@ -68,7 +68,6 @@ function buildEmojiIcon(sizeX, sizeY, catName, emoji) {
                    alt={emoji}
                    src={oneoneImage}
                    style={{backgroundPosition: `${+sizeX / scale}px ${+sizeY / scale}px`}}/>;
-
   return ReactDOMServer.renderToStaticMarkup(img);
 }
 

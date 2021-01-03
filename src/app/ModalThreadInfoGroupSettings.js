@@ -1,6 +1,6 @@
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
-import {avatarNameGenerator, avatarUrlGenerator} from "../utils/helpers";
+import {avatarNameGenerator, avatarUrlGenerator, getMessageMetaData, isChannel} from "../utils/helpers";
 
 //strings
 import strings from "../constants/localization";
@@ -12,23 +12,22 @@ import {
 import {chatUploadImage} from "../actions/chatActions";
 
 //UI components
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import Container from "../../../uikit/src/container";
-import {InputText} from "../../../uikit/src/input";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {InputText} from "../../../pod-chat-ui-kit/src/input";
 
 //styling
 import {MdArrowBack, MdBlock, MdCameraAlt, MdVerifiedUser} from "react-icons/md";
 import styleVar from "../../styles/variables.scss";
 import style from "../../styles/app/ModalThreadInfoGroupSettings.scss";
-import List, {ListItem} from "../../../uikit/src/list";
-import Gap from "../../../uikit/src/gap";
-import {Text} from "../../../uikit/src/typography";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import {ContactList} from "./_component/contactList";
 import ModalThreadInfoGroupSettingsAdminList from "./ModalThreadInfoGroupSettingsAdminList";
 import {ContactSearchFragment} from "./ModalContactList";
-import {Button} from "../../../uikit/src/button";
-import ModalFooter from "../../../uikit/src/modal/ModalFooter";
-import {isChannel} from "./Main";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import ModalFooter from "../../../pod-chat-ui-kit/src/modal/ModalFooter";
 import checkForPrivilege, {isOwner} from "../utils/privilege";
 import {THREAD_ADMIN} from "../constants/privilege";
 
@@ -37,7 +36,11 @@ const statics = {
   MAIN: "MAIN"
 };
 
-@connect(null, null, null, {withRef: true})
+@connect(store => {
+  return {
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+  };
+}, null, null, {forwardRef: true})
 export default class ModalThreadInfoGroupSettings extends Component {
 
   constructor(props) {
@@ -47,9 +50,14 @@ export default class ModalThreadInfoGroupSettings extends Component {
     this.groupNameChange = this.groupNameChange.bind(this);
     this.onSaveSettings = this.onSaveSettings.bind(this);
     this.onPrevious = this.onPrevious.bind(this);
+    const {thread} = props;
+    const metadata = getMessageMetaData(thread);
+    this.previewImage = null;
     this.state = {
       state: statics.MAIN,
-      groupName: ""
+      groupName: thread.title,
+      groupDesc: thread.description,
+      image: metadata && metadata.fileHash ? metadata.fileHash : thread.image
     };
   }
 
@@ -74,11 +82,6 @@ export default class ModalThreadInfoGroupSettings extends Component {
     };
 
     setHeaderFooterComponent(HeaderComponent, FooterComponent);
-    this.setState({
-      groupName: thread.title,
-      groupDesc: thread.description,
-      image: thread.image
-    });
   }
 
   onPrevious() {
@@ -87,11 +90,11 @@ export default class ModalThreadInfoGroupSettings extends Component {
   }
 
   onGroupImageChange(evt) {
-    this.props.dispatch(chatUploadImage(evt.target.files[0], this.props.thread.id, image =>
-      this.setState({
-        image
-      })
-    ));
+    const image = evt.target.files[0];
+    this.setState({
+      image
+    });
+    this.previewImage = URL.createObjectURL(image);
   }
 
   groupNameChange(event) {
@@ -108,14 +111,14 @@ export default class ModalThreadInfoGroupSettings extends Component {
 
   onSaveSettings() {
     const {groupDesc, image, groupName} = this.state;
-    const {setStep, steps, thread, dispatch,} = this.props;
+    const {setStep, steps, thread, dispatch} = this.props;
     const baseObject = {
       description: groupDesc, image, title: groupName
     };
     if (image) {
       baseObject.image = image;
     }
-    dispatch(threadMetaUpdate(baseObject, thread.id));
+    dispatch(threadMetaUpdate(thread, baseObject));
     setStep(steps.ON_GROUP_INFO);
   }
 
@@ -126,7 +129,7 @@ export default class ModalThreadInfoGroupSettings extends Component {
 
   render() {
     const {groupName, groupDesc, image} = this.state;
-    const {thread, GapFragment, user} = this.props;
+    const {thread, GapFragment} = this.props;
     return (
       <Container>
         <Container relative>
@@ -144,9 +147,11 @@ export default class ModalThreadInfoGroupSettings extends Component {
                                  className={style.ModalThreadInfoGroupSettings__ImageIcon}/>
                   </Container>
                 </Container>
-                <AvatarImage src={avatarUrlGenerator(image, avatarUrlGenerator.SIZES.MEDIUM)} size="xlg"
-                             text={avatarNameGenerator(thread.title).letter}
-                             textBg={avatarNameGenerator(thread.title).color}/>
+                <AvatarImage
+                  src={typeof image === "string" ? avatarUrlGenerator.apply(this, [image, avatarUrlGenerator.SIZES.MEDIUM, getMessageMetaData(thread.metadata)]) : this.previewImage}
+                  size="xlg"
+                  text={avatarNameGenerator(thread.title).letter}
+                  textBg={avatarNameGenerator(thread.title).color}/>
               </Container>
               <AvatarName>
                 <InputText onChange={this.groupNameChange.bind(this)}

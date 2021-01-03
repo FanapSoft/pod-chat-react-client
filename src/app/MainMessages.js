@@ -1,18 +1,18 @@
 // src/list/BoxSceneMessages
-import React, {Component, Fragment} from "react";
+import React, {Component} from "react";
 import {connect} from "react-redux";
 import classnames from "classnames";
 import "moment/locale/fa";
 import {
-  avatarNameGenerator,
   OnWindowFocusInOut,
   mobileCheck,
-  avatarUrlGenerator,
-  isIosAndSafari
+  isIosAndSafari,
+  isGroup,
+  isMessageByMe, messageSelectedCondition, findLastSeenMessage
 } from "../utils/helpers";
+import isElementVisible from "../utils/dom";
 
 //strings
-import strings from "../constants/localization";
 
 //actions
 import {messageSeen} from "../actions/messageActions";
@@ -24,109 +24,33 @@ import {
   threadCheckedMessageList,
   threadNewMessage,
   threadFilesToUpload,
-  threadCreateOnTheFly, threadUnreadMentionedMessageRemove
+  threadCreateOnTheFly, threadUnreadMentionedMessageRemove, threadGoToMessageId
 } from "../actions/threadActions";
 
 //components
-import {ButtonFloating} from "../../../uikit/src/button";
-import List, {ListItem} from "../../../uikit/src/list";
-import Avatar, {AvatarImage} from "../../../uikit/src/avatar";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import Container from "../../../uikit/src/container";
-import Message from "../../../uikit/src/message";
-import Scroller from "../../../uikit/src/scroller";
+import {ButtonFloating} from "../../../pod-chat-ui-kit/src/button";
+import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Scroller from "../../../pod-chat-ui-kit/src/scroller";
+import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
+import MainMessagesMessage from "./MainMessagesMessage";
+import MainMessagesUnreadBar from "./MainMessagesUnreadBar";
+import MainMessagesLoading from "./MainMessagesLoading";
+import MainMessagesNoMessages from "./MainMessagesNoMessages";
+import MainMessagesAvatar from "./MainMessagesAvatar";
+import MainMessagesTick from "./MainMessagesTick";
 
 //styling
 import {
-  MdChatBubbleOutline,
   MdExpandMore,
 } from "react-icons/md";
 import style from "../../styles/app/MainMessages.scss";
-import styleVar from "../../styles/variables.scss";
-import MainMessagesMessage from "./MainMessagesMessage";
-import Shape, {ShapeCircle} from "../../../uikit/src/shape";
-import MainMessagesUnreadBar from "./MainMessagesUnreadBar";
-import isElementVisible from "../utils/dom";
 
 export const statics = {
   historyFetchCount: 20,
   historyUnseenMentionedFetchCount: 100,
 };
-
-export function isMessageByMe(message, user, thread) {
-  if (thread && user) {
-    const isGroup = thread.group;
-    if (isGroup) {
-      if (thread.type === 8) {
-        if (thread.inviter.id === user.id) {
-          return true;
-        }
-      }
-    }
-  }
-  if (message) {
-    if (message) {
-      if (!message.id) {
-        return true;
-      }
-      if (user) {
-        return message.participant.id === user.id;
-      }
-    }
-  }
-
-}
-
-function messageSelectedCondition(message, threadCheckedMessageList) {
-  const fileIndex = threadCheckedMessageList.findIndex((msg => msg.uniqueId === message.uniqueId));
-  return fileIndex >= 0;
-}
-
-function showNameOrAvatar(message, messages) {
-  const msgOwnerId = message.participant.id;
-  const msgId = message.id || message.uniqueId;
-  const index = messages.findIndex(e => e.id === msgId || e.uniqueId === msgId);
-  if (~index) {
-    const lastMessage = messages[index - 1];
-    if (lastMessage) {
-      if (lastMessage.participant.id === msgOwnerId) {
-        return false;
-      }
-    }
-    return true;
-  }
-}
-
-function findLastSeenMessage(messages) {
-  const newMessages = [...messages].reverse();
-  for (const message of newMessages) {
-    if (message.seen) {
-      return message.time;
-    }
-  }
-}
-
-function NoMessageFragment() {
-  return (
-    <Container className={style.MainMessages}>
-      <Container center centerTextAlign relative style={{width: "100%"}}>
-        <div className={style.MainMessages__Empty}/>
-        <Message size="lg">{strings.thereIsNoMessageToShow}</Message>
-        <MdChatBubbleOutline size={styleVar.iconSizeXlg} color={styleVar.colorAccent}/>
-      </Container>
-    </Container>
-  )
-}
-
-function LoadingFragment() {
-  return (
-    <Container className={style.MainMessages}>
-      <Container center centerTextAlign style={{width: "100%"}}>
-        <Loading hasSpace><LoadingBlinkDots/></Loading>
-      </Container>
-    </Container>
-  )
-}
 
 function PartialLoadingFragment() {
   return (
@@ -136,37 +60,8 @@ function PartialLoadingFragment() {
   )
 }
 
-function messageTickFragment(message, onAddToCheckedMessage, threadCheckedMessageList) {
-  const isExisted = messageSelectedCondition(message, threadCheckedMessageList);
-  const classNames = classnames({
-    [style.MainMessages__Tick]: true,
-    [style["MainMessages__Tick--selected"]]: isExisted
-  });
-  return <Container className={classNames} onClick={onAddToCheckedMessage.bind(null, message, !isExisted)}/>;
-}
-
-function getAvatar(message, messages, onAvatarClick, thread, user) {
-  const showAvatar = showNameOrAvatar(message, messages);
-  const enableClickCondition = !isMessageByMe(message, user, thread) && thread.group;
-  const fragment =
-    showAvatar ?
-      <Avatar onClick={enableClickCondition ? onAvatarClick.bind(null, message.participant) : null}
-              cursor={enableClickCondition ? "pointer" : null}>
-        <AvatarImage src={avatarUrlGenerator(message.participant.image, avatarUrlGenerator.SIZES.SMALL)}
-                     text={avatarNameGenerator(message.participant.name).letter}
-                     textBg={avatarNameGenerator(message.participant.name).color}/>
-      </Avatar>
-      :
-      <div style={{width: "50px", display: "inline-block"}}/>;
-  return showAvatar ?
-    <Container inline inSpace style={{maxWidth: "50px", verticalAlign: "top"}}>
-      {fragment}
-    </Container> : fragment;
-}
-
 @connect(store => {
   return {
-    thread: store.thread.thread,
     threadMessages: store.threadMessages,
     threadUnreadMentionedMessages: store.threadUnreadMentionedMessages.messages,
     threadMessagesPartialFetching: store.threadMessagesPartial.fetching,
@@ -177,7 +72,7 @@ function getAvatar(message, messages, onAvatarClick, thread, user) {
     messageNew: store.messageNew,
     user: store.user.user,
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class MainMessages extends Component {
 
   constructor(props) {
@@ -197,7 +92,6 @@ export default class MainMessages extends Component {
     this.onScrollTop = this.onScrollTop.bind(this);
     this.onGotoBottomClicked = this.onGotoBottomClicked.bind(this);
     this.onMentionedClicked = this.onMentionedClicked.bind(this);
-    this.onAvatarClick = this.onAvatarClick.bind(this);
     this.onDragEnter = this.onDragEnter.bind(this);
     this.onDragOver = this.onDragOver.bind(this);
     this.onFileDrop = this.onFileDrop.bind(this);
@@ -225,7 +119,7 @@ export default class MainMessages extends Component {
   }
 
   componentDidMount() {
-    const {thread} = this.props;
+    const {threadUnreadMentionedMessages, thread} = this.props;
     if (thread) {
       if (thread.onTheFly) {
         return;
@@ -233,6 +127,8 @@ export default class MainMessages extends Component {
       if (thread.id) {
         if (thread.mentioned) {
           this.fetchUnreadMentionedMessages();
+        } else if (threadUnreadMentionedMessages.length) {
+          this.fetchUnreadMentionedMessages(true);
         }
         this._fetchInitHistory();
       }
@@ -245,7 +141,9 @@ export default class MainMessages extends Component {
     const {hasNext} = threadMessages;
 
     if (threadGoToMessageId !== oldThreadGoToMessageId) {
-      this.goToSpecificMessage(threadGoToMessageId);
+      if (threadGoToMessageId) {
+        this.goToSpecificMessage(threadGoToMessageId);
+      }
       return false;
     }
 
@@ -341,6 +239,9 @@ export default class MainMessages extends Component {
       } else if (threadUnreadMentionedMessages.length) {
         this.fetchUnreadMentionedMessages(true);
       }
+      if (thread.gotoMessage) {
+        return this.goToSpecificMessage(thread.gotoMessage);
+      }
       return this._fetchInitHistory();
     }
 
@@ -350,11 +251,9 @@ export default class MainMessages extends Component {
     }
 
     if (this.lastSeenMessage) {
-      if (this.lastSeenMessage.threadId === threadId) {
-        if (this.windowFocused) {
-          dispatch(messageSeen(this.lastSeenMessage));
-          this.lastSeenMessage = null;
-        }
+      if (this.windowFocused) {
+        dispatch(messageSeen(this.lastSeenMessage));
+        this.lastSeenMessage = null;
       }
     }
 
@@ -455,24 +354,30 @@ export default class MainMessages extends Component {
       for (const msg of threadUnreadMentionedMessages) {
         const id = `message-${msg.time}`;
         const elem = document.getElementById(id);
-        if (elem && isElementVisible(elem)) {
+        elem && isElementVisible(elem, () => {
+          const {threadUnreadMentionedMessages, dispatch} = this.props;
+          if (!threadUnreadMentionedMessages.length) {
+            return;
+          }
+          if (!threadUnreadMentionedMessages.find(e => e.id === msg.id)) {
+            return;
+          }
           dispatch(threadUnreadMentionedMessageRemove(msg.id));
           if (this.highLightMentionStack.indexOf(msg.time) < 0) {
             this.highLightMentionStack.push(msg.time);
           }
-        }
+          if (this.highLightMentionStack.length) {
+            clearInterval(this.highLightInterval);
+            this.highlightMessage(this.highLightMentionStack.shift());
+            if (!this.highLightMentionStack.length) {
+              return;
+            }
+            this.highLightInterval = setInterval(() => {
+              this.highlightMessage(this.highLightMentionStack.shift());
+            }, 2000);
+          }
+        });
       }
-    }
-
-    if (this.highLightMentionStack.length) {
-      clearInterval(this.highLightInterval);
-      this.highlightMessage(this.highLightMentionStack.shift());
-      if (!this.highLightMentionStack.length) {
-        return;
-      }
-      this.highLightInterval = setInterval(() => {
-        this.highlightMessage(this.highLightMentionStack.shift());
-      }, 2000)
     }
   }
 
@@ -481,15 +386,15 @@ export default class MainMessages extends Component {
     if (thread.unreadCount > 0) {
       this.lastSeenMessage = thread.lastMessageVO;
     }
-/*
-    if (messageNew) {
-      if (thread.id === messageNew.threadId) {
-        if (thread.unreadCount > 0) {
-          this.lastSeenMessage = messageNew;
+    /*
+        if (messageNew) {
+          if (thread.id === messageNew.threadId) {
+            if (thread.unreadCount > 0) {
+              this.lastSeenMessage = messageNew;
+            }
+          }
         }
-      }
-    }
-    }*/
+        }*/
 
     this.setState({
       bottomButtonShowing: false
@@ -516,6 +421,10 @@ export default class MainMessages extends Component {
       this.setState({
         highLightMessage: false
       });
+      const {threadGoToMessageId: threadGoToMessageTime, dispatch} = this.props;
+      if (threadGoToMessageTime) {
+        dispatch(threadGoToMessageId(null));
+      }
     }, 2500);
   }
 
@@ -525,10 +434,11 @@ export default class MainMessages extends Component {
     if (!this.scroller) {
       return;
     }
-    if (!this.scroller.current) {
-      return;
+
+    let result;
+    if (this.scroller.current) {
+      result = this.scroller.current.gotoElement(`message-${messageTime}`);
     }
-    const result = this.scroller.current.gotoElement(`message-${messageTime}`);
 
     if (!result) {
       //If last request was the same message and if this message is not exists in history fetch from init
@@ -561,18 +471,6 @@ export default class MainMessages extends Component {
       return;
     }
     this.goToSpecificMessage(time);
-  }
-
-  onAddToCheckedMessage(message, isAdd, e) {
-    e.stopPropagation();
-    if (!message.id) {
-      return;
-    }
-    this.props.dispatch(threadCheckedMessageList(isAdd, message));
-  }
-
-  onAvatarClick(participant) {
-    this.props.dispatch(threadCreateOnTheFly(participant.coreUserId, participant));
   }
 
   onDragOver(e) {
@@ -614,32 +512,24 @@ export default class MainMessages extends Component {
       threadUnreadMentionedMessages,
       threadSelectMessageShowing
     } = this.props;
-    const {messages, fetching} = threadMessages;
-    const {hasPrevious, hasNext} = threadMessages;
     const {highLightMessage, bottomButtonShowing, unreadBar} = this.state;
+    const {messages, fetching, hasPrevious, hasNext} = threadMessages;
     const MainMessagesMessageContainerClassNames = message => classnames({
       [style.MainMessages__MessageContainer]: true,
       [style["MainMessages__MessageContainer--left"]]: !isMessageByMe(message, user, thread)
     });
 
     if (!thread.id || fetching || threadGetMessageListByMessageIdFetching) {
-      return <LoadingFragment/>;
+      return <MainMessagesLoading className={style.MainMessages}/>;
     }
 
     if (!messages.length) {
-      return <NoMessageFragment/>;
+      return <MainMessagesNoMessages className={style.MainMessages}
+                                     onDragEnter={this.onDragEnter}
+                                     onDragOver={this.onDragOver}
+                                     onDrop={this.onFileDrop}/>
     }
 
-    const args = {
-      thread,
-      messages,
-      user,
-      highLightMessage,
-      lastSeenMessageTime: findLastSeenMessage(messages),
-      onRepliedMessageClicked: this.onRepliedMessageClicked,
-      isMessageByMe,
-      showNameOrAvatar
-    };
     return (
       <Container className={style.MainMessages}
                  style={isIosAndSafari() ? {zIndex: "auto"} : null}
@@ -659,24 +549,40 @@ export default class MainMessages extends Component {
                   onScrollTopThreshold={this.onScrollTopThreshold}
                   onScrollTopThresholdCondition={hasPrevious && !threadMessagesPartialFetching && !threadGetMessageListByMessageIdFetching}>
           <List>
-            {messages.map(message =>
-              <ListItem key={message.time}
-                        data={message}
-                        active={threadSelectMessageShowing && messageSelectedCondition(message, threadCheckedMessageList)}
-                        activeColor="gray"
-                        noPadding>
-                <Container className={MainMessagesMessageContainerClassNames(message)}
-                           id={`message-${message.time}`}
-                           relative>
-                  {thread.group && thread.type !== 8 && !isMessageByMe(message, user, thread) && getAvatar(message, messages, this.onAvatarClick, thread, user)}
-                  <MainMessagesMessage {...args} message={message}/>
-                  {threadSelectMessageShowing && messageTickFragment(message, this.onAddToCheckedMessage.bind(this), threadCheckedMessageList)}
-                </Container>
-                {
-                  unreadBar === message.time && <MainMessagesUnreadBar thread={thread}/>
-                }
-              </ListItem>
-            )}
+            {
+              messages.map(message =>
+                <ListItem key={message.time}
+                          active={threadSelectMessageShowing && messageSelectedCondition(message, threadCheckedMessageList)}
+                          activeColor="gray"
+                          noPadding>
+                  <Container className={MainMessagesMessageContainerClassNames(message)}
+                             id={`message-${message.time}`}
+                             relative>
+                    {
+                      (isGroup(thread) && !isMessageByMe(message, user, thread)) &&
+                      <MainMessagesAvatar message={message}
+                                          messages={messages}
+                                          thread={thread}
+                                          user={user}/>
+                    }
+
+                    <MainMessagesMessage thread={thread}
+                                         messages={messages}
+                                         user={user}
+                                         highLightMessage={highLightMessage}
+                                         onRepliedMessageClicked={this.onRepliedMessageClicked} message={message}/>
+
+                    {
+                      threadSelectMessageShowing &&
+                      <MainMessagesTick message={message} threadCheckedMessageList={threadCheckedMessageList}/>
+                    }
+
+                  </Container>
+                  {
+                    unreadBar === message.time && <MainMessagesUnreadBar thread={thread}/>
+                  }
+                </ListItem>
+              )}
 
           </List>
 

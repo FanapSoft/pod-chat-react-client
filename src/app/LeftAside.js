@@ -9,7 +9,7 @@ import {connect} from "react-redux";
 //components
 import LeftAsideHead from "./LeftAsideHead";
 import LeftAsideMain from "./LeftAsideMain";
-import Container from "../../../uikit/src/container";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //styling
 import style from "../../styles/app/LeftAside.scss";

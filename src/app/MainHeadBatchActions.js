@@ -1,37 +1,31 @@
 // /src/app/MainHeadBatchActions
-
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import classnames from "classnames";
-import {isChannel, isMyThread} from "./Main";
+import {isChannel, isThreadOwner} from "../utils/helpers";
 
 //strings
 import strings from "../constants/localization";
 
 //actions
-import {
-  threadSelectMessageShowing,
-  threadModalListShowing, threadCheckedMessageList
-} from "../actions/threadActions";
-import {messageDelete} from "../actions/messageActions";
+import {threadModalListShowing} from "../actions/threadActions";
 import {chatModalPrompt} from "../actions/chatActions";
 
 //UI components
-import Gap from "../../../uikit/src/gap";
-import Container from "../../../uikit/src/container";
-import {Text} from "../../../uikit/src/typography";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import {MdDelete} from "react-icons/md";
 import {TiArrowForward} from "react-icons/ti";
+import {MessageDeletePrompt} from "./_component/prompts";
 
 //styling
 import style from "../../styles/app/MainHeadBatchActions.scss";
 import styleVar from "../../styles/variables.scss";
-import {MessageDeletePrompt} from "./_component/prompts";
 
 @connect(store => {
   return {
-    user: store.user.user,
-    smallVersion: store.chatSmallVersion
+    user: store.user.user
   };
 })
 export default class MainHeadBatchActions extends Component {
@@ -68,7 +62,7 @@ export default class MainHeadBatchActions extends Component {
         {threadCheckedMessageList && threadCheckedMessageList.length ?
           <Container>
 
-            {(!isChannel(thread) || isMyThread(thread, user)) &&
+            {(!isChannel(thread) || isThreadOwner(thread, user)) &&
             <Container className={style.MainHeadBatchActions__DeleteContainer} inline onClick={this.onDelete}>
               <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
             </Container>

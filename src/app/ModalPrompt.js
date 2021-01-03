@@ -8,10 +8,10 @@ import strings from "../constants/localization";
 import {chatModalPrompt} from "../actions/chatActions";
 
 //UI components
-import Modal, {ModalBody, ModalFooter} from "../../../uikit/src/modal";
-import {Button} from "../../../uikit/src/button";
-import {Text} from "../../../uikit/src/typography";
-import Container from "../../../uikit/src/container";
+import Modal, {ModalBody, ModalFooter} from "../../../pod-chat-ui-kit/src/modal";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //styling
 
@@ -19,7 +19,7 @@ import Container from "../../../uikit/src/container";
   return {
     chatModalPrompt: store.chatModalPrompt
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class ModalPrompt extends Component {
 
   constructor(props) {

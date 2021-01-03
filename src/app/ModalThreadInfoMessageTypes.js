@@ -10,29 +10,36 @@ import {
 } from "../actions/threadActions";
 
 //UI components
-import Container from "../../../uikit/src/container";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //UI components
 
 //styling
 import style from "../../styles/app/ModalThreadInfoMessageTypes.scss";
-import Text from "../../../uikit/src/typography/Text";
+import Text from "../../../pod-chat-ui-kit/src/typography/Text";
 import strings from "../constants/localization";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import Image from "../../../uikit/src/image";
-import Shape, {ShapeCircle} from "../../../uikit/src/shape";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import Image from "../../../pod-chat-ui-kit/src/image";
+import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
 import styleVar from "../../styles/variables.scss";
 import {
   MdArrowDownward,
   MdPlayArrow,
   MdClose
 } from "react-icons/md";
-import {BoxModalMediaFragment} from "./index";
-import ReactDOMServer from "react-dom/server";
-import {avatarUrlGenerator, humanFileSize} from "../utils/helpers";
-import {getImage} from "./MainMessagesMessageFile";
+import {IndexModalMediaFragment} from "./index";
+import {
+  getFileDownloadingFromHashMap,
+  getFileFromHashMap,
+  getImageFromHashMapWindow, getMessageMetaData,
+  humanFileSize
+} from "../utils/helpers";
 
-@connect()
+@connect(store => {
+  return {
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+  };
+})
 export default class ModalThreadInfoMessageTypes extends Component {
 
   constructor(props) {
@@ -80,6 +87,8 @@ export default class ModalThreadInfoMessageTypes extends Component {
         loading: true,
         hasNext: false,
         nextOffset: 0,
+        thumb: null,
+        blurryThumb: null,
         messages: []
       });
     }
@@ -129,15 +138,47 @@ export default class ModalThreadInfoMessageTypes extends Component {
   buildComponent(type, message) {
     const {dispatch} = this.props;
     const idMessage = `${message.id}-message-types-${type}`;
+    const idMessageTrigger = `${idMessage}-trigger`;
+    const metaData = getMessageMetaData(message).file;
+    if (!metaData) {
+      return null;
+    }
+    const {originalName, size} = metaData;
     const gotoMessage = () => {
       dispatch(threadModalThreadInfoShowing());
       window.modalMediaRef.close();
       dispatch(threadGoToMessageId(message.time));
     };
-    let metaData = message.metadata;
-    metaData = typeof metaData === "string" ? JSON.parse(metaData).file : metaData.file;
-    const {link, originalName, size} = metaData;
+    const setOrGetAttributeFromLinkTrigger = value => {
+      const elem = document.getElementById(idMessageTrigger);
+      if (value === true) {
+        if (elem) {
+          return elem;
+        }
+        return {
+          click: e => {
+          }
+        };
+      }
+      if (elem) {
+        if (value) {
+          return elem.setAttribute("play", value);
+        }
+        return elem.getAttribute("play");
+      }
+    };
+    const onPlayClick = result => {
+      if (result) {
+        return document.getElementById(idMessageTrigger).click();
+      }
+      setOrGetAttributeFromLinkTrigger("true");
+      getFileFromHashMap.apply(this, [metaData.fileHash])
+    };
+
     if (type === "picture") {
+      const thumb = getImageFromHashMapWindow(metaData.fileHash, 3, null, "thumb", this);
+      const blurryThumb = getImageFromHashMapWindow(metaData.fileHash, 1, 0.01, "blurryThumb", this);
+      const isBlurry = blurryThumb && (!thumb || thumb === true);
       const onFancyBoxClick = e => {
         //window.modalMediaRef.getFancyBox().open()
         setTimeout(e => {
@@ -147,17 +188,30 @@ export default class ModalThreadInfoMessageTypes extends Component {
       return (
         <Container className={style.ModalThreadInfoMessageTypes__ImageContainer} data-fancybox key={idMessage}
                    onClick={onFancyBoxClick}>
-          <BoxModalMediaFragment
+          <IndexModalMediaFragment
             options={{buttons: ["goto", "slideShow", "close"], caption: message.message}}
-            link={link}>
+            link={thumb}>
             <Image className={style.ModalThreadInfoMessageTypes__Image}
                    setOnBackground
-                   src={getImage(metaData, true, true).imageLink}/>
-          </BoxModalMediaFragment>
+                   style={{
+                     filter: isBlurry ? "blur(8px)" : "none"
+                   }}
+                   src={isBlurry ? blurryThumb : thumb}/>
+          </IndexModalMediaFragment>
 
         </Container>
       )
-    } else if (type === "file" || type === "sound" || type === "video") {
+    } else if (type === "file" || type === "sound" || type === "video" || type === "voice") {
+      const fileResult = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]);
+      const result = typeof fileResult === "string" && fileResult.indexOf("blob") > -1 ? fileResult : null;
+      const isDownloading = fileResult === true;
+      const isPlaying = result && setOrGetAttributeFromLinkTrigger() === "true";
+      if (isPlaying) {
+        setTimeout(e => {
+          setOrGetAttributeFromLinkTrigger(true).click();
+          setOrGetAttributeFromLinkTrigger("false");
+        }, 300);
+      }
       return (
         <Container className={style.ModalThreadInfoMessageTypes__FileContainer} onClick={gotoMessage} key={idMessage}>
           <Container maxWidth="calc(100% - 30px)">
@@ -171,21 +225,27 @@ export default class ModalThreadInfoMessageTypes extends Component {
             <Text size="xs" color="gray">{humanFileSize(size, true)}</Text>
           </Container>
           <Container centerLeft onClick={e => e.stopPropagation()}>
+            {type === "file" ?
+              <Text id={idMessageTrigger} link={`#${idMessage}`} download={originalName} href={result} linkClearStyle/>
+              :
+              <Text id={idMessageTrigger} link={`#${idMessage}`} linkClearStyle data-fancybox/>
+            }
             {type === "video" ?
               <video controls id={idMessage} style={{display: "none"}}
-                     src={link}/> :
-              type === "sound" ? <audio controls id={idMessage} style={{display: "none"}}
-                                        src={link}/> : ""
+                     src={result}/> :
+              type === "sound" || type === "voice" ? <audio controls id={idMessage} style={{display: "none"}}
+                                                            src={result}/> : ""
             }
-            {type === "file" ?
-              <Text link={`${link}&downloadable=true`} target="_blank" linkClearStyle>
-                <MdArrowDownward style={{cursor: "pointer"}} color={styleVar.colorAccent} size={styleVar.iconSizeSm}/>
-              </Text>
-              :
-              <Text link={`#${idMessage}`} linkClearStyle data-fancybox>
-                <MdPlayArrow style={{cursor: "pointer"}} color={styleVar.colorAccent} size={styleVar.iconSizeSm}/>
-              </Text>
-
+            {
+              isDownloading ?
+                <Loading><LoadingBlinkDots size="sm"/></Loading>
+                :
+                type === "file" ?
+                  <MdArrowDownward style={{cursor: "pointer"}} color={styleVar.colorAccent} size={styleVar.iconSizeSm}
+                                   onClick={onPlayClick.bind(this, result)}/>
+                  :
+                  <MdPlayArrow style={{cursor: "pointer"}} color={styleVar.colorAccent} size={styleVar.iconSizeSm}
+                               onClick={onPlayClick.bind(this, result)}/>
             }
           </Container>
         </Container>

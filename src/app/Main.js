@@ -6,73 +6,39 @@ import {mobileCheck} from "../utils/helpers";
 
 //strings
 import {
-  ROUTE_THREAD,
-  ROUTE_ADD_CONTACT,
-  ROUTE_CONTACTS, ROUTE_USERNAME,
+  ROUTE_THREAD
 } from "../constants/routes";
-import strings from "../constants/localization";
 
 //actions
-import {contactAdding, contactListShowing} from "../actions/contactActions";
-import {threadInit, threadMessageGetList, threadParticipantList, threadShowing} from "../actions/threadActions";
+import {threadInit} from "../actions/threadActions";
 
 //components
+import Container from "../../../pod-chat-ui-kit/src/container";
 import MainHead from "./MainHead";
 import MainMessages from "./MainMessages";
 import MainFooter from "./MainFooter";
-import Message from "../../../uikit/src/message";
-import Gap from "../../../uikit/src/gap";
-import {MdChat} from "react-icons/md";
-import {Button} from "../../../uikit/src/button";
-import Container from "../../../uikit/src/container";
 import MainPinMessage from "./MainPinMessage";
+import MainIntro from "./MainIntro";
+import MainAudioPlayer from "./MainAudioPlayer";
 
 //styling
 import style from "../../styles/app/Main.scss";
-import styleVar from "../../styles/variables.scss";
+import coverImage from "../../styles/images/Main/cover.jpg";
 
-
-export function isMyThread(thread, user) {
-  if (!thread || !user) {
-    return false
-  }
-  if (thread.inviter.id === user.id) {
-    return true
-  }
-}
-
-export function isChannel(thread) {
-  if (thread.group) {
-    if (thread.type === 8) {
-      return true;
-    }
-  }
-  return false;
-}
-
-export function isGroup(thread) {
-  if (thread.group) {
-    if (thread.type !== 8) {
-      return true;
-    }
-  }
-  return false;
-}
 
 
 @connect(store => {
   return {
     thread: store.thread.thread,
     threadFetching: store.thread.fetching,
-    threadShowing: store.threadShowing,
-    chatRouterLess: store.chatRouterLess
+    chatRouterLess: store.chatRouterLess,
+    chatAudioPlayer: store.chatAudioPlayer
   };
 })
 class Main extends Component {
+
   constructor(props) {
     super(props);
-    this.onContactListShow = this.onContactListShow.bind(this);
-    this.onAddMember = this.onAddMember.bind(this);
     this.mainMessagesRef = React.createRef();
   }
 
@@ -87,52 +53,41 @@ class Main extends Component {
     }
   }
 
-  onContactListShow() {
-    const {history, chatRouterLess, dispatch} = this.props;
-    dispatch(contactListShowing(true));
-    if (!chatRouterLess) {
-      history.push(ROUTE_CONTACTS);
-    }
-  }
-
-  onAddMember() {
-    const {history, chatRouterLess, dispatch} = this.props;
-    dispatch(contactAdding(true));
-    if (!chatRouterLess) {
-      history.push(ROUTE_ADD_CONTACT);
-    }
-  }
-
   render() {
-    const {thread, threadFetching} = this.props;
+    const {thread, chatRouterLess, threadFetching, chatAudioPlayer, history} = this.props;
     const {id, pinMessageVO} = thread;
 
     if (!id && !threadFetching) {
       return (
         <Container className={style.Main}>
-          <Container className={style.Main__Cover}/>
-          <Container center centerTextAlign>
-            <Message size="lg">{strings.pleaseStartAThreadFirst}</Message>
-            <Gap y={10} block/>
-            <MdChat size={48} style={{color: styleVar.colorAccent}}/>
-            <Container>
-              <Button outlined onClick={this.onAddMember}>{strings.addContact}</Button>
-              <Button outlined onClick={this.onContactListShow}>{strings.contactList}</Button>
-            </Container>
-          </Container>
+          <Container className={style.Main__Cover} style={{
+            backgroundImage: `url("${coverImage}")`
+          }}/>
+          <MainIntro chatRouterLess={chatRouterLess} history={history}/>
         </Container>
-      );
+      )
     }
+
     return (
       <Route path={[ROUTE_THREAD, ""]}
-             render={props => {
+             render={() => {
                return (
                  <Container className={style.Main}>
-                   <Container className={style.Main__Cover}/>
-                   <MainHead/>
-                   {pinMessageVO &&
-                   <MainPinMessage thread={thread} messageVo={pinMessageVO} mainMessageRef={this.mainMessagesRef}/>}
-                   <MainMessages ref={this.mainMessagesRef}/>
+                   <Container className={style.Main__Cover} style={{
+                     backgroundImage: `url("${coverImage}")`
+                   }}/>
+                   <MainHead thread={thread} chatRouterLess={chatRouterLess} history={history}/>
+
+                   {
+                     chatAudioPlayer &&
+                     <MainAudioPlayer thread={thread} chatAudioPlayer={chatAudioPlayer}/>
+                   }
+                   {
+                     pinMessageVO &&
+                     <MainPinMessage thread={thread} messageVo={pinMessageVO} mainMessageRef={this.mainMessagesRef}/>
+                   }
+
+                   <MainMessages thread={thread} ref={this.mainMessagesRef}/>
                    <MainFooter/>
                  </Container>
                )

@@ -1,9 +1,8 @@
 import React, {Fragment} from "react";
-import List, {ListItem} from "../../../../uikit/src/list";
-import {Text, Heading} from "../../../../uikit/src/typography";
-import Gap from "../../../../uikit/src/gap";
+import List, {ListItem} from "../../../../pod-chat-ui-kit/src/list";
+import {Text, Heading} from "../../../../pod-chat-ui-kit/src/typography";
+import Gap from "../../../../pod-chat-ui-kit/src/gap";
 import strings from "../../constants/localization";
-import {deleteForAllCondition} from "../MainMessagesMessage";
 import {messageDelete} from "../../actions/messageActions";
 import {chatModalPrompt} from "../../actions/chatActions";
 import {
@@ -11,16 +10,17 @@ import {
   threadMessagePinToTop,
   threadSelectMessageShowing
 } from "../../actions/threadActions";
+import {messageDeleteForAllCondition} from "../../utils/helpers";
 
 export function MessageDeletePrompt(props) {
   const {message, dispatch, thread, user} = props;
 
   const isBatchMessage = message instanceof Array;
-  let isAbleToRemoveForAll = isBatchMessage ? true : deleteForAllCondition(message, user, thread);
+  let isAbleToRemoveForAll = isBatchMessage ? true : messageDeleteForAllCondition(message, user, thread);
   let isThereAnyThatYouCanRemoveForOther = false;
   if (isBatchMessage) {
     for (const msg of message) {
-      const result = deleteForAllCondition(msg, user, thread);
+      const result = messageDeleteForAllCondition(msg, user, thread);
       if (isAbleToRemoveForAll) {
         if (!result) {
           isAbleToRemoveForAll = result;
@@ -46,7 +46,7 @@ export function MessageDeletePrompt(props) {
     }
     if (isBatchMessage) {
       for (const msg of message) {
-        dispatch(messageDelete(msg.id, forMeOnly ? false : removeIfYouCanForBothSide ? deleteForAllCondition(msg, user, thread) : true));
+        dispatch(messageDelete(msg.id, forMeOnly ? false : removeIfYouCanForBothSide ? messageDeleteForAllCondition(msg, user, thread) : true));
       }
     } else {
       dispatch(messageDelete(message.id, !forMeOnly));

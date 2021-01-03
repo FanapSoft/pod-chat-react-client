@@ -11,18 +11,19 @@ import {
 import {ROUTE_THREAD_INFO} from "../constants/routes";
 
 //UI components
-import Gap from "../../../uikit/src/gap";
-import Container from "../../../uikit/src/container";
-import Divider from "../../../uikit/src/divider";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Divider from "../../../pod-chat-ui-kit/src/divider";
 
 //UI components
 
-import {BoxModalMediaFragment} from "./index";
+import {IndexModalMediaFragment} from "./index";
 import ModalThreadInfoGroup from "./ModalThreadInfoGroup";
 import ModalThreadInfoPerson from "./ModalThreadInfoPerson";
 
 //styling
 import style from "../../styles/app/ModalThreadInfo.scss";
+import {getFileFromHashMap, getImageFromHashMapWindow, getMessageMetaData} from "../utils/helpers";
 
 function GapFragment() {
   return (
@@ -34,17 +35,24 @@ function GapFragment() {
   )
 }
 
-function AvatarModalMediaFragment({participant, thread}) {
+function AvatarModalMediaFragment({participant, thread,}) {
   let image, caption;
   if (participant) {
     image = participant.image;
     caption = getName(participant);
   } else {
-    image = thread.image;
+    if (thread.metadata) {
+      const fileHash = getMessageMetaData(thread).fileHash;
+      if (fileHash) {
+        image = getImageFromHashMapWindow(fileHash, 2, null, "avatarImage", this);
+      }
+    } else {
+      image = thread.image;
+    }
     caption = thread.title;
   }
-  return image ? <BoxModalMediaFragment link={image} options={{caption}}
-                                        linkClassName={style.ModalThreadInfo__ModalMediaLink}/> : null;
+  return image ? <IndexModalMediaFragment link={image} options={{caption}}
+                                          linkClassName={style.ModalThreadInfo__ModalMediaLink}/> : null;
 }
 
 @connect(store => {
@@ -57,7 +65,7 @@ function AvatarModalMediaFragment({participant, thread}) {
     contacts: store.contactGetList.contacts,
     chatRouterLess: store.chatRouterLess
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 class ModalThreadInfo extends Component {
 
   constructor(props) {

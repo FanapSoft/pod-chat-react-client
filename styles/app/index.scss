@@ -1,6 +1,6 @@
 @import "../mixin/responsive";
 
-.Box {
+.Index {
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   font-size: 12px;
@@ -10,7 +10,7 @@
   margin: 0;
 }
 
-.Box {
+.Index {
   display: flex;
   height: 100%;
   width: 100%;
@@ -19,7 +19,7 @@
   background-color: $color-background;
 }
 
-.Box * {
+.Index * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
   tap-highlight-color: transparent;
@@ -28,87 +28,87 @@
   }
 }
 
-.Box__Aside {
+.Index__Aside {
   flex: 0 0 100%;
   position: relative;
   overflow: hidden;
 }
 
-.Box__AsideLeft {
+.Index__AsideLeft {
   flex: 0 0 100%;
   display: none;
 }
 
-.Box__Aside * {
+.Index__Aside * {
   user-select: none;
 }
 
-.Box__Main {
+.Index__Main {
   flex: 0 0 100%;
   position: relative;
 }
 
-.Box--isThreadShow {
-  .Box__Aside {
+.Index--isThreadShow {
+  .Index__Aside {
     display: none;
   }
 
-  .Box__Main {
+  .Index__Main {
     display: block;
   }
 }
 
-.Box--isAsideLeftShow {
-  .Box__Aside {
+.Index--isAsideLeftShow {
+  .Index__Aside {
     display: none;
   }
 
-  .Box__Main {
+  .Index__Main {
     display: none;
   }
 
-  .Box__AsideLeft {
+  .Index__AsideLeft {
     display: block;
   }
 }
 
 @include grid("md") {
-  :not(.Box--small).Box--isThreadShow {
-    .Box__Aside,
-    .Box__Main {
+  :not(.Index--small).Index--isThreadShow {
+    .Index__Aside,
+    .Index__Main {
       display: block;
     }
   }
 
-  :not(.Box--small) > .Box__Aside {
+  :not(.Index--small) > .Index__Aside {
     flex: 0 0 30%;
     position: relative;
   }
 
-  :not(.Box--small) > .Box__Main {
+  :not(.Index--small) > .Index__Main {
     flex: 0 0 70%;
     position: relative;
   }
 
-  :not(.Box--small).Box--isAsideLeftShow {
-    .Box__Main {
+  :not(.Index--small).Index--isAsideLeftShow {
+    .Index__Main {
       flex: 0 0 40%;
       display: block;
     }
-    .Box__Aside {
+    .Index__Aside {
       display: block;
     }
-    .Box__AsideLeft {
+    .Index__AsideLeft {
       flex: 0 0 30%;
       display: block;
     }
   }
 }
 
-.Box__MediaTrigger {
+.Index__MediaTrigger {
   display: block;
 }
 
-.Box__MediaTriggerLink {
+.Index__MediaTriggerLink {
   display: block;
 }

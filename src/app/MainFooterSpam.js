@@ -12,12 +12,12 @@ import {threadNotification, threadSpamPv} from "../actions/threadActions";
 import {chatModalPrompt} from "../actions/chatActions";
 
 //components
-import Container from "../../../uikit/src/container";
-import Text from "../../../uikit/src/typography/Text";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import Text from "../../../pod-chat-ui-kit/src/typography/Text";
 
 //styling
 import style from "../../styles/app/MainFooterSpam.scss";
-import Gap from "../../../uikit/src/gap";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 
 function showMuteForChannel(props) {
@@ -138,7 +138,7 @@ function ActionBaseFragment({onClick, classNamesObject, text}) {
     participantsFetching: store.threadParticipantList.fetching,
     user: store.user.user
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class MainFooterSpam extends Component {
 
   constructor() {

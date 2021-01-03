@@ -1,0 +1,115 @@
+@import "scope";
+@import "../mixin/responsive";
+
+.MainMessagesMessageFile {
+
+}
+
+.MainMessagesMessageFile__ImageContainer {
+  display: block;
+}
+
+.MainMessagesMessageFile__FileContainer {
+  display: flex;
+  align-items: center;
+}
+
+.MainMessagesMessageFile__FileContainer--reverseDirection {
+  flex-direction: row-reverse;
+}
+
+.MainMessagesMessageFile__FileName {
+  flex-grow: 1;
+  word-break: break-word;
+}
+
+.MainMessagesMessageFile__FileControlIcon {
+  margin-right: 10px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.MainMessagesMessageFile__FileControlIcon--image {
+  margin-right: 0;
+}
+
+.MainMessagesMessageFile__Image {
+  max-width: 100%;
+  border-radius: 5px;
+  position: relative;
+  z-index: 1;
+}
+
+.MainMessagesMessageFile__ProgressContainer {
+  position: absolute;
+  bottom: 2px;
+  left: 5px;
+  z-index: 1;
+  width: calc(100% - 10px);
+}
+
+.MainMessagesMessageFile__ProgressContainer--downloading {
+  overflow-x: hidden;
+  height: 4px;
+}
+
+.MainMessagesMessageFile__Progress {
+  height: 4px;
+  background-color: $color-accent;
+  border-radius: 5px;
+  transition: width 0.5s ease-in-out;
+}
+
+.MainMessagesMessageFile__ProgressLine {
+  position: absolute;
+  opacity: 0.4;
+  background: $color-accent;
+  width: 150%;
+  height: 4px;
+}
+
+.MainMessagesMessageFile__ProgressSubLine {
+  position: absolute;
+  background: $color-accent;
+  height: 4px;
+}
+
+.MainMessagesMessageFile__ProgressSubLine--inc {
+  animation: increase 2s infinite;
+}
+
+.MainMessagesMessageFile__ProgressSubLine--dec {
+  animation: decrease 2s 0.5s infinite;
+}
+
+@keyframes increase {
+  from {
+    left: -5%;
+    width: 5%;
+  }
+  to {
+    left: 130%;
+    width: 100%;
+  }
+}
+
+@keyframes decrease {
+  from {
+    left: -80%;
+    width: 80%;
+  }
+  to {
+    left: 110%;
+    width: 10%;
+  }
+}
+
+.MainMessagesMessageFile__ImagePaperContainer {
+  padding: 0;
+}
+
+@include grid("md") {
+  :not(.MainMessagesMessageFile__Image--smallVersion).MainMessagesMessageFile__Image {
+    max-width: 400px;
+  }
+}

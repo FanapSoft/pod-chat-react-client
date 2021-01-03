@@ -36,7 +36,12 @@ import {
   THREAD_GO_TO_MESSAGE,
   THREAD_GET_MESSAGE_LIST,
   THREAD_CREATE,
-  THREAD_GET_MESSAGE_LIST_PARTIAL, MESSAGE_SEND, CHAT_DESTROY
+  THREAD_GET_MESSAGE_LIST_PARTIAL,
+  MESSAGE_SEND,
+  CHAT_DESTROY,
+  THREAD_THUMBNAIL_UPDATE,
+  CHAT_FILE_HASH_CODE_UPDATE,
+  CHAT_AUDIO_PLAYER, CHAT_FILE_HASH_CODE_REMOVE, CHAT_AUDIO_RECORDER
 } from "../constants/actionTypes";
 import {messageInfo} from "./messageActions";
 import {statics} from "../app/MainMessages";
@@ -199,12 +204,44 @@ export const chatSetInstance = config => {
           dispatch(restoreChatState());
         }
         firstReadyPassed = true;
-        window.instance = e;
         dispatch({
           type: CHAT_GET_INSTANCE("SUCCESS"),
           payload: e
         })
       }
+    });
+  }
+};
+
+export const chatGetImage = (hashCode, size, quality, crop) => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const chatSDK = state.chatInstance.chatSDK;
+    return chatSDK.getImageFromPodspace(hashCode, size, quality, crop);
+  }
+};
+
+export const chatGetFile = (hashCode, callBack) => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const chatSDK = state.chatInstance.chatSDK;
+    return chatSDK.getFileFromPodspace(hashCode, callBack);
+  }
+};
+
+export const chatCancelFileDownload = (uniqueId) => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const chatSDK = state.chatInstance.chatSDK;
+    return chatSDK.cancelFileDownload(uniqueId)
+  }
+};
+
+export const chatFileHashCodeUpdate = (payload, isCancel) => {
+  return (dispatch) => {
+    dispatch({
+      type: isCancel ? CHAT_FILE_HASH_CODE_REMOVE : CHAT_FILE_HASH_CODE_UPDATE,
+      payload
     });
   }
 };
@@ -370,6 +407,31 @@ export const chatClearCache = () => {
     const state = getState();
     const chatSDK = state.chatInstance.chatSDK;
     chatSDK.clearCache();
+  }
+};
+
+export const chatAudioPlayer = data => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const chatAudioPlayer = state.chatAudioPlayer;
+    if (chatAudioPlayer) {
+      const {player, message} = chatAudioPlayer;
+      if (!data || data.message.id !== message.id) {
+        player.stop();
+      }
+    }
+    dispatch({
+      type: CHAT_AUDIO_PLAYER,
+      payload: data ? data : null
+    });
+  }
+};
+export const chatAudioRecorder = recording => {
+  return (dispatch, getState) => {
+    dispatch({
+      type: CHAT_AUDIO_RECORDER,
+      payload: recording
+    });
   }
 };
 

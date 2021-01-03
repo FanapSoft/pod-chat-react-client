@@ -20,6 +20,8 @@ export const buildPromiseMessage = (baseMessage, type) => {
 };
 
 export const CHAT_GET_INSTANCE = buildPromiseMessage.bind(null, "CHAT_GET_INSTANCE");
+export const CHAT_AUDIO_PLAYER = "CHAT_AUDIO_PLAYER";
+export const CHAT_AUDIO_RECORDER = "CHAT_AUDIO_RECORDER";
 export const CHAT_SMALL_VERSION = "CHAT_SMALL_VERSION";
 export const CHAT_ROUTER_LESS = "CHAT_ROUTER_LESS";
 export const CHAT_NOTIFICATION = "CHAT_NOTIFICATION";
@@ -33,6 +35,8 @@ export const CHAT_SEARCH_SHOW = "CHAT_SEARCH_SHOW";
 export const CHAT_STOP_TYPING = "CHAT_STOP_TYPING";
 export const CHAT_IS_TYPING = "CHAT_IS_TYPING";
 export const CHAT_DESTROY = "CHAT_DESTROY";
+export const CHAT_FILE_HASH_CODE_UPDATE = "CHAT_FILE_HASH_CODE_UPDATE";
+export const CHAT_FILE_HASH_CODE_REMOVE = "CHAT_FILE_HASH_CODE_REMOVE";
 export const CONTACT_GET_LIST = buildPromiseMessage.bind(null, "CONTACT_GET_LIST");
 export const CONTACT_GET_LIST_PARTIAL = buildPromiseMessage.bind(null, "CONTACT_GET_LIST_PARTIAL");
 export const THREAD_GET_PARTICIPANT_ROLES = buildPromiseMessage.bind(null, "THREAD_GET_PARTICIPANT_ROLES");
@@ -68,6 +72,7 @@ export const THREAD_PARTICIPANTS_REMOVED = "THREAD_PARTICIPANTS_REMOVED";
 export const THREAD_ADMIN_LIST = buildPromiseMessage.bind(null, "THREAD_ADMIN_LIST");
 export const THREAD_ADMIN_LIST_REMOVE = "THREAD_ADMIN_LIST_REMOVE";
 export const THREAD_ADMIN_LIST_ADD = "THREAD_ADMIN_LIST_ADD";
+export const THREAD_THUMBNAIL_UPDATE = "THREAD_THUMBNAIL_UPDATE";
 export const THREAD_GET_MESSAGE_LIST = buildPromiseMessage.bind(null, "THREAD_GET_MESSAGE_LIST");
 export const THREAD_UNREAD_MENTIONED_MESSAGE_LIST = buildPromiseMessage.bind(null, "THREAD_UNREAD_MENTIONED_MESSAGE_LIST");
 export const THREAD_UNREAD_MENTIONED_MESSAGE_REMOVE = "THREAD_UNREAD_MENTIONED_MESSAGE_REMOVE";

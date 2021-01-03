@@ -3,7 +3,7 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import classnames from "classnames";
 import sanitizeHTML from "sanitize-html";
-import {mobileCheck} from "../utils/helpers";
+import {humanFileSize, mobileCheck} from "../utils/helpers";
 import Cookies from "js-cookie";
 import {clearHtml, getCursorMentionMatch} from "./_component/Input"
 
@@ -23,17 +23,20 @@ import {threadDraft, threadEmojiShowing, threadIsSendingMessage} from "../action
 
 //components
 import MainFooterInputEditing, {messageEditingCondition} from "./MainFooterInputEditing";
-import Container from "../../../uikit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import Input from "./_component/Input";
 import {codeEmoji, emojiRegex} from "./_component/EmojiIcons.js";
-import {startTyping, stopTyping} from "../actions/chatActions";
+import {chatAudioRecorder as chatAudioRecorderAction, startTyping, stopTyping} from "../actions/chatActions";
 import ParticipantSuggestion from "./_component/ParticipantSuggestion";
+import {MdClose} from "react-icons/md";
 
 //styling
 import style from "../../styles/app/MainFooterInput.scss";
 import OutsideClickHandler from "react-outside-click-handler";
 import {emojiCookieName} from "../constants/emoji";
 import {MESSAGE_SHARE} from "../constants/cookie-keys";
+import styleVar from "../../styles/variables.scss";
 
 export const constants = {
   replying: "REPLYING",
@@ -43,12 +46,13 @@ export const constants = {
 @connect(store => {
   return {
     messageEditing: store.messageEditing,
+    isSendingText: store.threadIsSendingMessage,
     thread: store.thread.thread,
     threadMessages: store.threadMessages,
     user: store.user.user,
     threadShowing: store.threadShowing
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 export default class MainFooterInput extends Component {
 
   constructor(props) {
@@ -64,14 +68,17 @@ export default class MainFooterInput extends Component {
     this.onShowParticipant = this.onShowParticipant.bind(this);
     this.onParticipantSelect = this.onParticipantSelect.bind(this);
     this.onEmojiShowing = this.onEmojiShowing.bind(this);
+    this.onRecordingCancel = this.onRecordingCancel.bind(this);
     this.resetParticipantSuggestion = this.resetParticipantSuggestion.bind(this);
     this.participantSuggestionsRef = React.createRef();
+    this.recorderTimerId = null;
     this.typingSet = false;
     this.forwardMessageSent = false;
     this.inputNode = React.createRef();
     this.inputClassNode = React.createRef();
     this.lastTypingText = null;
     this.state = {
+      recorderTimer: 0,
       showParticipant: false,
       messageText: ""
     };
@@ -107,14 +114,29 @@ export default class MainFooterInput extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const {dispatch, thread, messageEditing: msgEditing, threadMessages, threadShowing} = this.props;
-    const {threadMessages: oldThreadMessages, threadShowing: oldThreadShowing} = prevProps;
+    const {dispatch, thread, messageEditing: msgEditing, threadMessages, threadShowing, chatAudioRecorder} = this.props;
+    const {threadMessages: oldThreadMessages, threadShowing: oldThreadShowing, chatAudioRecorder: oldChatAudioRecorder} = prevProps;
+    if (chatAudioRecorder !== oldChatAudioRecorder) {
+      if (chatAudioRecorder === true) {
+        this.recorderTimerId = setInterval(e => {
+          const {recorderTimer} = this.state;
+          this.setState({
+            recorderTimer: recorderTimer === null ? 0 : recorderTimer + 1
+          })
+        }, 1000);
+      } else {
+        this.setState({
+          recorderTimer: 0
+        });
+        this.recorderTimerId = clearInterval(this.recorderTimerId);
+      }
+    }
     const threadId = thread.id;
     const {id: oldThreadId} = prevProps.thread;
     const isThreadHide = oldThreadShowing && !threadShowing;
     const storeDraftCondition = oldThreadId !== threadId || isThreadHide;
     if (msgEditing !== prevProps.messageEditing) {
-      if(this.state.messageText){
+      if (this.state.messageText) {
         this._setDraft(threadId, this.state.messageText);
       }
       this.focus();
@@ -125,7 +147,7 @@ export default class MainFooterInput extends Component {
       } else {
         dispatch(threadDraft(isThreadHide ? threadId : oldThreadId));
       }
-      let draftMessage = Cookies.get(thread.id) || (threadId ? Cookies.get(threadId) : null);
+      let draftMessage = threadId ? Cookies.get(threadId) ? Cookies.get(threadId) : null : null;
       if (draftMessage) {
         draftMessage = this._analyzeDraft(draftMessage);
       }
@@ -289,7 +311,7 @@ export default class MainFooterInput extends Component {
     this.lastTypingText = null;
   }
 
-  _analyzeDraft(text) {
+  _analyzeDraft(text = "") {
     const splitedText = text.split("|");
     setTimeout(() => {
       if (splitedText.length > 1) {
@@ -348,11 +370,18 @@ export default class MainFooterInput extends Component {
     if (this.props.thread.group) {
       const {showParticipant} = this.state;
       const {keyCode} = evt;
+      if (evt.keyCode === 13 && evt.shiftKey) {
+        return;
+      } else if (keyCode === 27) {
+        if (!showParticipant) {
+          return this.resetParticipantSuggestion();
+        }
+      }
       if (showParticipant) {
         if (keyCode === 27) {
-          this.resetParticipantSuggestion();
+          return this.resetParticipantSuggestion();
         }
-        this.participantSuggestionsRef.current.getWrappedInstance().keyDownSignal(evt);
+        this.participantSuggestionsRef.current.keyDownSignal(evt);
       }
     }
   }
@@ -377,7 +406,7 @@ export default class MainFooterInput extends Component {
     const {thread, dispatch} = this.props;
     const threadId = thread.id;
     if (isTyping) {
-      dispatch(startTyping(threadId));
+      return dispatch(startTyping(threadId));
     }
     dispatch(stopTyping());
   }
@@ -423,9 +452,14 @@ export default class MainFooterInput extends Component {
     dispatch(threadIsSendingMessage(false));
   }
 
+  onRecordingCancel() {
+    this.props.dispatch(chatAudioRecorderAction("CANCELED"));
+  }
+
   render() {
-    const {messageEditing, thread, user, emojiShowing} = this.props;
-    const {messageText, showParticipant, filterString} = this.state;
+    const {messageEditing, thread, user, emojiShowing, chatAudioRecorder, isSendingText} = this.props;
+    const {messageText, showParticipant, filterString, recorderTimer} = this.state;
+    const voiceIsPresent = (!messageEditing || messageEditing.type === constants.replying) && !isSendingText;
     const editBoxClassNames = classnames({
       [style.MainFooterInput__EditBox]: true,
       [style["MainFooterInput__EditBox--halfBorder"]]: messageEditingCondition(messageEditing)
@@ -435,10 +469,16 @@ export default class MainFooterInput extends Component {
         [style.MainFooterInput__ParticipantPositionContainer]: true,
         [style["MainFooterInput__ParticipantPositionContainer--mobile"]]: mobileCheck()
       });
+    const editBoxInputContainerClassNames = classnames({
+      [style.MainFooterInput__EditBoxInputContainer]: true,
+      [style["MainFooterInput__EditBoxInputContainer--voiceIsPresent"]]: voiceIsPresent
+    });
+
+
     return (
       <Container className={style.MainFooterInput}>
         <OutsideClickHandler onOutsideClick={this.resetParticipantSuggestion}>
-          {showParticipant &&
+          {(showParticipant && !chatAudioRecorder ) &&
 
           <Container className={style.MainFooterInput__ParticipantContainer}>
             <Container className={participantsPositionContainerClassNames}>
@@ -447,23 +487,46 @@ export default class MainFooterInput extends Component {
                                      thread={thread}/>
             </Container>
           </Container>
-
           }
-          <Container className={style.MainFooterInput__EditingBox}>
+
+          <Container>
             <MainFooterInputEditing messageEditing={messageEditing} setInputText={this.setInputText}/>
           </Container>
+          {
+            chatAudioRecorder &&
+            <Container className={style.MainFooterInput__RecordingTimer}>
+              <Container className={style.MainFooterInput__RecordingTimerCountDown}>
+                <Text color="accent" dark bold inline>
+                  {new Date(recorderTimer * 1000).toISOString().substr(14, 5)}
+                </Text>
+                <Container className={style.MainFooterInput__RecordingCancel} onClick={this.onRecordingCancel}>
+                  <MdClose size={styleVar.iconSizeMd}
+                           color={styleVar.colorWhite}/>
+                </Container>
+              </Container>
+              <Container className={style.MainFooterInput__RecordingTimerText}>
+                <Text color="accent" dark bold>
+                  {strings.recordingVoice}...
+                </Text>
+              </Container>
+            </Container>
+          }
+
           <Input
             ref={this.inputClassNode}
             inputNode={this.inputNode}
             containerClassName={editBoxClassNames}
-            editBoxClassName={style.MainFooterInput__EditBoxInputContainer}
+            editBoxClassName={editBoxInputContainerClassNames}
             inputContainerClassName={style.MainFooterInput__InputContainer}
             inputClassName={style.MainFooterInput__Input}
             showParticipant={showParticipant}
             onShowParticipant={this.onShowParticipant}
             placeholder={strings.pleaseWriteHere}
             emojiShowing={emojiShowing}
+            chatAudioRecorder={chatAudioRecorder}
+            voiceRecorderEnable={voiceIsPresent}
             onStartTyping={this.onStartTyping}
+            sendByEnter
             onText={this.onText}
             onNonEmptyText={this.onNonEmptyText}
             onEmptyText={this.onEmptyText}

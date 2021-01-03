@@ -12,6 +12,6 @@ const rootReducer = (state, action) => {
   return appReducer(state, action);
 };
 
-const store = createStore(rootReducer, applyMiddleware(promise(), thunk));
+const store = createStore(rootReducer, applyMiddleware(promise, thunk));
 
 export default store;

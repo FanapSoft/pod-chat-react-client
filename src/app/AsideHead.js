@@ -1,8 +1,9 @@
-// src/list/Avatar.scss
+// app/AsideHead.js
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
-import {avatarUrlGenerator, OnWindowFocusInOut} from "../utils/helpers";
+import {avatarUrlGenerator, OnWindowFocusInOut, avatarNameGenerator, socketStatus, routeChange} from "../utils/helpers";
+import classnames from "classnames";
 
 //strings
 import strings from "../constants/localization";
@@ -14,46 +15,30 @@ import {ROUTE_ADD_CONTACT, ROUTE_CONTACTS, ROUTE_CREATE_CHANNEL, ROUTE_CREATE_GR
 
 //actions
 import {contactAdding, contactListShowing, contactModalCreateGroupShowing} from "../actions/contactActions";
+import {chatSearchShow} from "../actions/chatActions";
 
 //UI components
+import Dropdown, {DropdownItem} from "../../../pod-chat-ui-kit/src/menu/Dropdown";
+import {ButtonFloating} from "../../../pod-chat-ui-kit/src/button"
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 import {MdMenu, MdClose, MdSearch, MdEdit, MdArrowBack} from "react-icons/md";
 import Notification from "./Notification";
-import Dropdown, {DropdownItem} from "../../../uikit/src/menu/Dropdown";
-import {ButtonFloating} from "../../../uikit/src/button"
-import {Text} from "../../../uikit/src/typography";
-import Container from "../../../uikit/src/container";
 
 //styling
 import style from "../../styles/app/AsidHead.scss";
 import styleVar from "../../styles/variables.scss";
 import utilsStlye from "../../styles/utils/utils.scss";
-import classnames from "classnames";
-import {chatSearchShow} from "../actions/chatActions";
-import Loading, {LoadingBlinkDots} from "../../../uikit/src/loading";
-import Avatar, {AvatarImage, AvatarName} from "../../../uikit/src/avatar";
-import {avatarNameGenerator} from "../utils/helpers";
-import Gap from "../../../uikit/src/gap";
 
 const statics = {
   headMenuSize: 59
 };
 
-function routeChange(history, route, chatRouterLess) {
-  if (!chatRouterLess) {
-    history.push(route);
-  }
-}
-
-export function socketStatus(chatState) {
-  const isReconnecting = chatState.socketState == 1 && !chatState.deviceRegister;
-  const isConnected = chatState.socketState == 1 && chatState.deviceRegister;
-  const isDisconnected = chatState.socketState == 3;
-  return {isReconnecting, isConnected, isDisconnected, timeUntilReconnect: chatState.timeUntilReconnect};
-}
-
 @connect(store => {
   return {
-    threadId: store.thread.thread.id,
     chatState: store.chatState,
     chatInstance: store.chatInstance.chatSDK,
     chatRouterLess: store.chatRouterLess,
@@ -96,7 +81,7 @@ class AsideHead extends Component {
     this.state = {
       isOpen: false,
       reConnecting: false,
-      timeUntilReconnectTimer: null,
+      timeUntilReconnectTimer: null
     };
     this.container = React.createRef();
     this.onCloseMenu = this.onCloseMenu.bind(this);
@@ -205,7 +190,7 @@ class AsideHead extends Component {
       reConnecting: true
     });
     clearTimeout(this.timeOutForTryButton);
-    this.timeOutForTryButton = setTimeout(e => {
+    this.timeOutForTryButton = setTimeout(() => {
       const {isDisconnected} = socketStatus(this.props.chatState);
       if (isDisconnected) {
         this.setState({
@@ -246,8 +231,9 @@ class AsideHead extends Component {
                 onClick={this.onOpenMenu} style={{color: styleVar.colorWhite, margin: iconMargin}}/>
         <Container centerRight className={style.AsideHead__ConnectionHandlerContainer}>
           <Container inline>
-            <Text size="lg" color="gray" light
-                  bold>{firstInit || reConnecting ? `${strings.chatState.connectingToChat}${reConnecting ? "" : "..."}` : isConnected ? strings.podchat : isReconnecting ? `${strings.chatState.reconnecting}...` : `${strings.chatState.networkDisconnected}...`}</Text>
+            <Text size="lg" color="gray" light bold>
+              {firstInit || reConnecting ? `${strings.chatState.connectingToChat}${reConnecting ? "" : "..."}` : isConnected ? strings.podchat : isReconnecting ? `${strings.chatState.reconnecting}...` : `${strings.chatState.networkDisconnected}...`}
+            </Text>
           </Container>
           {isDisconnected && !reConnecting &&
           <Container inline onClick={this.onRetryClick}>
@@ -264,12 +250,11 @@ class AsideHead extends Component {
         </Container>
 
         <Dropdown isOpen={isOpen} container={this.container} onClose={this.onCloseMenu}>
-          <Container className={style.AsideHead__UserProfileContainer} relative>
+          <Container relative className={style.AsideHead__UserProfileContainer}>
             <Gap block x={20} y={20}>
               <Container topLeft>
                 <Gap x={10} y={15} block>
-                  <MdArrowBack size={style.iconSizeMd} color={styleVar.colorBackgroundLight} style={{margin: "7px 0"}}
-                               onClick={this.onCloseMenu}/>
+                  <MdArrowBack size={styleVar.iconSizeMd} color={styleVar.colorBackgroundLight} style={{margin: "7px 0"}} onClick={this.onCloseMenu}/>
                 </Gap>
               </Container>
               <Avatar>
@@ -293,9 +278,8 @@ class AsideHead extends Component {
                   backgroundColor: styleVar.colorAccentLight,
                   boxShadow: "none",
                   left: 5,
-                  bottom: 5
-                }}>
-                  <MdEdit size={style.iconSizeMd} style={{margin: "7px 5px"}}/>
+                  bottom: 5}}>
+                  <MdEdit size={styleVar.iconSizeMd} style={{margin: "7px 5px"}}/>
                 </ButtonFloating>
               </Text>
             </Gap>
@@ -305,7 +289,7 @@ class AsideHead extends Component {
           ))}
         </Dropdown>
         <Container centerLeft>
-          <Container className={style.AsideHead__SearchContainer} inline onClick={this.onChatSearchToggle}>
+          <Container inline cursor="pointer" className={style.AsideHead__SearchContainer} onClick={this.onChatSearchToggle}>
             {chatSearchShowing ?
               <MdClose size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
               :

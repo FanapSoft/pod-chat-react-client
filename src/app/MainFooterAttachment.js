@@ -11,17 +11,17 @@ import {
   messageFileReply,
   messageSendFile, messageSendFileOnTheFly
 } from "../actions/messageActions";
-import {threadFilesToUpload} from "../actions/threadActions";
 
 
 //components
-import Container from "../../../uikit/src/container";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import {MdAttachFile, MdChevronRight} from "react-icons/md";
 
 //styling
 import style from "../../styles/app/MainFooterAttachment.scss";
 import styleVar from "../../styles/variables.scss";
-import {stopTyping} from "../actions/chatActions";
+import {chatModalPrompt, stopTyping} from "../actions/chatActions";
+import MainFooterAttachmentAttach from "./MainFooterAttachmentAttach";
 
 @connect(store => {
   return {
@@ -36,10 +36,7 @@ export default class MainFooterAttachment extends Component {
 
   constructor(props) {
     super(props);
-    this.onAttachmentChange = this.onAttachmentChange.bind(this);
-    this.onAttachmentClick = this.onAttachmentClick.bind(this);
     this.onClick = this.onClick.bind(this);
-    this.fileInput = React.createRef();
   }
 
   componentDidUpdate(prevProps) {
@@ -51,16 +48,8 @@ export default class MainFooterAttachment extends Component {
     }
   }
 
-  onAttachmentChange(evt) {
-    this.props.dispatch(threadFilesToUpload(evt.target.files, false, this.fileInput.current));
-  }
-
-  onAttachmentClick(evt) {
-    evt.target.value = null
-  }
-
   sendFiles(filesObject) {
-    const {threadId, dispatch, messageEditing: msgEditing, thread} = this.props;
+    const {dispatch, messageEditing: msgEditing, thread} = this.props;
     const files = filesObject.files;
     const caption = filesObject.caption;
     let isReply = false;
@@ -72,22 +61,26 @@ export default class MainFooterAttachment extends Component {
     }
     for (const file of files) {
       if (isReply) {
-        dispatch(messageFileReply(file, threadId, isReply.id, caption, isReply));
+        dispatch(messageFileReply(file, thread, isReply.id, caption, isReply));
         continue;
       }
       if (thread.onTheFly) {
         dispatch(messageSendFileOnTheFly(file, caption));
       } else {
-        dispatch(messageSendFile(file, threadId, caption));
+        dispatch(messageSendFile(file, thread, caption));
       }
     }
   }
 
   onClick() {
-    const {isSendingText, sendMessage, dispatch} = this.props;
+    const {thread, isSendingText, sendMessage, dispatch} = this.props;
     if (isSendingText) {
       sendMessage();
       dispatch(stopTyping());
+    } else {
+      dispatch(chatModalPrompt(true,
+        null, null, null, null,
+        <MainFooterAttachmentAttach dispatch={dispatch} thread={thread}/>));
     }
   }
 
@@ -102,9 +95,6 @@ export default class MainFooterAttachment extends Component {
             </Container>
             :
             <Container>
-              <input className={style.MainFooterAttachment__Button} type="file" onChange={this.onAttachmentChange}
-                     onClick={this.onAttachmentClick}
-                     multiple ref={this.fileInput}/>
               <MdAttachFile size={styleVar.iconSizeMd} color={styleVar.colorAccentDark} style={{margin: "5px 6px"}}/>
             </Container>
         }

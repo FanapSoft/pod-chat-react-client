@@ -35,7 +35,6 @@ import {
   THREAD_CREATE_INIT,
   THREAD_PARTICIPANTS_REMOVED,
   THREAD_NEW_MESSAGE,
-  THREAD_CREATION_SCENARIO,
   THREAD_PARTICIPANT_GET_LIST_PARTIAL,
   THREAD_GET_LIST_PARTIAL,
   THREAD_CREATE_ON_THE_FLY,
@@ -502,13 +501,13 @@ export const threadFilesToUpload = (files, upload, inputNode, caption) => {
   }
 };
 
-export const threadMetaUpdate = (meta, threadId) => {
+export const threadMetaUpdate = (thread, meta) => {
   return (dispatch, getState) => {
     const state = getState();
     const chatSDK = state.chatInstance.chatSDK;
     return dispatch({
       type: THREAD_META_UPDATE,
-      payload: chatSDK.updateThreadInfo(meta, threadId)
+      payload: chatSDK.updateThreadInfo(thread, meta)
     });
   }
 };

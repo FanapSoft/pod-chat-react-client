@@ -2,34 +2,31 @@
 import React, {Component} from "react";
 import "moment/locale/fa";
 import {connect} from "react-redux";
-import {mobileCheck} from "../utils/helpers";
+import {mobileCheck, decodeEmoji, clearHtml, emailify, mentionify, urlify} from "../utils/helpers";
 import copyToClipBoard from "copy-to-clipboard";
-import {urlify, mentionify, emailify} from "./MainMessagesMessage";
 
 //strings
+import strings from "../constants/localization";
 
 //actions
 import {messageCancel, messageEditing, messageSend} from "../actions/messageActions";
 
 //components
-import Container from "../../../uikit/src/container";
-import {ContextItem} from "../../../uikit/src/menu/Context";
-import {Text} from "../../../uikit/src/typography";
-import {
-  PaperFragment,
-  PaperFooterFragment,
-  EditFragment,
-  ControlFragment,
-  HighLighterFragment,
-  SeenFragment
-} from "./MainMessagesMessage";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {ContextItem} from "../../../pod-chat-ui-kit/src/menu/Context";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import {MdEdit, MdContentCopy} from "react-icons/md";
+import MainMessagesMessageBox from "./MainMessagesMessageBox";
+import MainMessagesMessageBoxHighLighter from "./MainMessagesMessageBoxHighLighter";
+import MainMessagesMessageBoxControl from "./MainMessagesMessageBoxControl";
+import MainMessagesMessageBoxSeen from "./MainMessagesMessageBoxSeen";
+import MainMessagesMessageBoxEdit from "./MainMessagesMessageBoxEdit";
+import MainMessagesMessageBoxFooter from "./MainMessagesMessageBoxFooter";
 
 //styling
 import style from "../../styles/app/MainMessagesText.scss";
-import {decodeEmoji} from "./_component/EmojiIcons.js";
-import strings from "../constants/localization";
 import styleVar from "../../styles/variables.scss";
+
 
 @connect()
 export default class MainMessagesMessageText extends Component {
@@ -88,11 +85,11 @@ export default class MainMessagesMessageText extends Component {
     } = this.props;
     return (
       <Container className={style.MainMessagesText}>
-        <PaperFragment message={message} onRepliedMessageClicked={onRepliedMessageClicked}
+        <MainMessagesMessageBox message={message} onRepliedMessageClicked={onRepliedMessageClicked}
                        isChannel={isChannel} isGroup={isGroup}
                        isFirstMessage={isFirstMessage} isMessageByMe={isMessageByMe}>
-          <HighLighterFragment message={message} highLightMessage={highLightMessage}/>
-          <ControlFragment isMessageByMe={isMessageByMe}
+          <MainMessagesMessageBoxHighLighter message={message} highLightMessage={highLightMessage}/>
+          <MainMessagesMessageBoxControl isMessageByMe={isMessageByMe}
                            isOwner={isOwner}
                            contextRef={contextRef}
                            onPin={onPin}
@@ -119,23 +116,23 @@ export default class MainMessagesMessageText extends Component {
               </ContextItem>
             }
 
-          </ControlFragment>
+          </MainMessagesMessageBoxControl>
           <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e=>e.stopPropagation()}>
             <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
-              {mentionify(emailify(urlify(decodeEmoji(message.message)), this.onUserNameClick))}
+              {mentionify(emailify(decodeEmoji(urlify(clearHtml(message.message))), this.onUserNameClick))}
             </Text>
           </Container>
-          <PaperFooterFragment message={message}
+          <MainMessagesMessageBoxFooter message={message}
                                onMessageControlShow={onMessageControlShow}
                                onMessageControlHide={onMessageControlHide}
                                isMessageByMe={isMessageByMe}
                                messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
-            <SeenFragment isMessageByMe={isMessageByMe} message={message} thread={thread} forceSeen={forceSeen}
+            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread} forceSeen={forceSeen}
                           onMessageSeenListClick={onMessageSeenListClick} onRetry={this.onRetry.bind(this, message)}
                           onCancel={this.onCancel.bind(this, message)}/>
-            <EditFragment message={message}/>
-          </PaperFooterFragment>
-        </PaperFragment>
+            <MainMessagesMessageBoxEdit message={message}/>
+          </MainMessagesMessageBoxFooter>
+        </MainMessagesMessageBox>
       </Container>
     );
   }

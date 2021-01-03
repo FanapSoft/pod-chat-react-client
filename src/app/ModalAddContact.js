@@ -16,12 +16,12 @@ import {
 } from "../actions/contactActions";
 
 //UI components
-import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../uikit/src/modal";
-import {InputText} from "../../../uikit/src/input";
-import {Button} from "../../../uikit/src/button";
-import {Heading} from "../../../uikit/src/typography";
-import Message from "../../../uikit/src/message";
-import Container from "../../../uikit/src/container";
+import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../pod-chat-ui-kit/src/modal";
+import {InputText} from "../../../pod-chat-ui-kit/src/input";
+import {Button} from "../../../pod-chat-ui-kit/src/button";
+import {Heading} from "../../../pod-chat-ui-kit/src/typography";
+import Message from "../../../pod-chat-ui-kit/src/message";
+import Container from "../../../pod-chat-ui-kit/src/container";
 import {chatRouterLess} from "../actions/chatActions";
 
 
@@ -37,7 +37,7 @@ import {chatRouterLess} from "../actions/chatActions";
     chatRouterLess: store.chatRouterLess,
     user: store.user.user
   };
-}, null, null, {withRef: true})
+}, null, null, {forwardRef: true})
 class ModalAddContact extends Component {
 
   constructor(props) {

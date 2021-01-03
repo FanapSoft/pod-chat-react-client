@@ -12,14 +12,15 @@ import MainFooterInput from "./MainFooterInput";
 import MainFooterAttachment from "./MainFooterAttachment";
 import EmojiIcons from "./_component/EmojiIcons";
 import MainFooterSpam from "./MainFooterSpam";
-import Container from "../../../uikit/src/container";
+import Container from "../../../pod-chat-ui-kit/src/container";
 
 //styling
 import style from "../../styles/app/MainFooter.scss";
 
 @connect(store => {
   return {
-    emojiShowing: store.threadEmojiShowing
+    emojiShowing: store.threadEmojiShowing,
+    chatAudioRecorder: store.chatAudioRecorder
   };
 })
 export default class MainFooter extends Component {
@@ -32,22 +33,26 @@ export default class MainFooter extends Component {
   }
 
   sendMessage() {
-    this.mainFooterInputRef.current.getWrappedInstance().sendMessage();
+    this.mainFooterInputRef.current.sendMessage();
   }
 
   setInputText(value, append) {
-    this.mainFooterInputRef.current.getWrappedInstance().setInputText(value, append);
+    this.mainFooterInputRef.current.setInputText(value, append);
   }
 
   focusInputNode() {
-    this.mainFooterInputRef.current.getWrappedInstance().focus();
+    this.mainFooterInputRef.current.focus();
   }
 
   render() {
-    const {emojiShowing} = this.props;
+    const {emojiShowing, chatAudioRecorder} = this.props;
     const classNames = classnames({
       [style.MainFooter]: true,
       [style["MainFooter--isMobile"]]: mobileCheck()
+    });
+    const MainFooterInputClassNames = classnames({
+      [style.MainFooter__Input]: true,
+      [style["MainFooter__Input--recording"]]: chatAudioRecorder
     });
     return (
       <Container className={classNames}>
@@ -55,18 +60,22 @@ export default class MainFooter extends Component {
           <MainFooterSpam/>
         </Container>
         <Container className={style.MainFooter__InputContainer}>
-          <Container className={style.MainFooter__Attachment}>
-            <MainFooterAttachment sendMessage={this.sendMessage.bind(this)}/>
-          </Container>
-          <Container className={style.MainFooter__Input}>
-            <MainFooterInput ref={this.mainFooterInputRef} emojiShowing={emojiShowing}/>
+          {!chatAudioRecorder &&
+            <Container className={style.MainFooter__Attachment}>
+              <MainFooterAttachment sendMessage={this.sendMessage.bind(this)}/>
+            </Container>
+          }
+
+          <Container className={MainFooterInputClassNames}>
+            <MainFooterInput ref={this.mainFooterInputRef} emojiShowing={emojiShowing}
+                             chatAudioRecorder={chatAudioRecorder}/>
           </Container>
         </Container>
 
         {emojiShowing &&
-          <Container className={style.MainFooter__EmojiIconsContainer}>
-            <EmojiIcons setInputText={this.setInputText.bind(this)} focusInputNode={this.focusInputNode.bind(this)}/>
-          </Container>
+        <Container className={style.MainFooter__EmojiIconsContainer}>
+          <EmojiIcons setInputText={this.setInputText.bind(this)} focusInputNode={this.focusInputNode.bind(this)}/>
+        </Container>
         }
       </Container>
     );

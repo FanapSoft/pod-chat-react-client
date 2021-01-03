@@ -1,6 +1,21 @@
+import React from "react";
 import {ifvisible} from "ifvisible.js";
 import queryString from "query-string";
-import {serverConfig} from "../constants/connection";
+import {chatGetImage, chatFileHashCodeUpdate, chatGetFile, chatCancelFileDownload} from "../actions/chatActions";
+import {emoji, emojiCategories, emojiSpriteDimensions, emojiSpriteMeta} from "../constants/emoji";
+import sanitizeHTML from "sanitize-html";
+import {sanitizeRule} from "../app/_component/Input";
+import date from "./date";
+import strings from "../constants/localization";
+import classnames from "classnames";
+import emojiStyle from "../../styles/utils/emoji.scss";
+import oneoneImage from "../../styles/images/_common/oneone.png";
+import ReactDOMServer from "react-dom/server";
+import {typesCode} from "../constants/messageTypes";
+import checkForPrivilege from "./privilege";
+import {THREAD_ADMIN} from "../constants/privilege";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+
 
 export function humanFileSize(bytes, si) {
   const thresh = si ? 1000 : 1024;
@@ -26,7 +41,7 @@ export function mobileCheck() {
   return check;
 }
 
-export function isIosAndSafari(){
+export function isIosAndSafari() {
   var ua = window.navigator.userAgent;
   var iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
   var webkit = !!ua.match(/WebKit/i);
@@ -137,7 +152,137 @@ export function avatarNameGenerator(firstName, lastName) {
 
 }
 
-export function avatarUrlGenerator(url, size) {
+export function getFileDownloadingFromHashMap(id) {
+  const {chatFileHashCodeMap} = this.props;
+  let result = chatFileHashCodeMap.find(e => e.id === id);
+  if (result) {
+    const {result: status} = result;
+    if (status.indexOf("blob") > -1) {
+      return status;
+    } else {
+      if (status === "LOADING") {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+
+export function cancelFileDownloadingFromHashMap(id) {
+  const {dispatch, chatFileHashCodeMap} = this.props;
+  let result = chatFileHashCodeMap.find(e => e.id === id);
+  if (result) {
+    const {result: status, cancelId} = result;
+    if (status === "LOADING") {
+      dispatch(chatCancelFileDownload(cancelId));
+      dispatch(chatFileHashCodeUpdate(id, true));
+      return true;
+    }
+  }
+  return false;
+}
+
+
+export function getImageFromHashMap(hashCode, size, quality) {
+  const id = `${hashCode}-${size}-${quality}`;
+  const {dispatch} = this.props;
+  const downloadingResult = getFileDownloadingFromHashMap.call(this, id);
+  if (downloadingResult) {
+    return downloadingResult;
+  }
+  dispatch(chatFileHashCodeUpdate({id, result: "LOADING"}));
+  dispatch(chatGetImage(hashCode, size, quality)).then(result => {
+    dispatch(chatFileHashCodeUpdate({id, result: URL.createObjectURL(result)}));
+  });
+  return id;
+}
+
+export function getFileDownloadingFromHashMapWindow(id) {
+  if (!window.podspaceHashmap) {
+    window.podspaceHashmap = {};
+  }
+  const result = window.podspaceHashmap[id];
+  if (result) {
+    if (result.indexOf("blob") > -1) {
+      return result;
+    } else {
+      if (result === "LOADING") {
+        return true;
+      }
+    }
+  }
+  return null;
+}
+
+export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, componenet, init, directCall) {
+  const id = `${hashCode}-${size}-${quality}`;
+  const dispatch = directCall ? componenet : componenet.props.dispatch;
+  const downloadingResult = getFileDownloadingFromHashMapWindow(id);
+  if (downloadingResult) {
+    return downloadingResult;
+  }
+  const lastResult = window.podspaceHashmap[id] || "";
+  if (lastResult.indexOf("FAIL") < 0) {
+    if (!init) {
+      if (directCall) {
+        fieldKey(window.podspaceHashmap[id] = "LOADING")
+      } else {
+        componenet.setState({
+          [fieldKey]: window.podspaceHashmap[id] = "LOADING"
+        });
+      }
+    }
+  }
+  dispatch(chatGetImage(hashCode, size, quality)).then(result => {
+    if (directCall) {
+      fieldKey(window.podspaceHashmap[id] = URL.createObjectURL(result))
+    } else {
+      componenet.setState({
+        [fieldKey]: window.podspaceHashmap[id] = URL.createObjectURL(result)
+      });
+    }
+
+  }, err => {
+    const failCount = +lastResult.split("-")[1] ? +lastResult.split("-")[1] : 1;
+    if (failCount >= 3) {
+      return;
+    }
+    window.podspaceHashmap[id] = `FAIL-${failCount + 1}`;
+    getImageFromHashMapWindow.apply(null, arguments);
+  });
+  return init ? "LOADING" : downloadingResult;
+}
+
+export function getFileFromHashMap(hashCode, metadata) {
+  const id = hashCode;
+  const {dispatch} = this.props;
+  const downloadingResult = getFileDownloadingFromHashMap.call(this, id);
+  if (downloadingResult) {
+    return downloadingResult;
+  }
+  return dispatch(chatGetFile(hashCode, result => {
+    dispatch(chatFileHashCodeUpdate({id, result: URL.createObjectURL(result), metadata}));
+  })).then(downloadingUniqueId => {
+    dispatch(chatFileHashCodeUpdate({id, result: "LOADING", cancelId: downloadingUniqueId, metadata}));
+  });
+}
+
+export function avatarUrlGenerator(url, size, metadata) {
+  if (metadata) {
+    const sizes = {
+      SMALL: 1,
+      MEDIUM: 2,
+      LARGE: 3,
+      XLARGE: 3
+    };
+    if (metadata) {
+      const {fileHash} = metadata;
+      if (fileHash) {
+        return getImageFromHashMap.apply(this, [fileHash, sizes[size], 1]);
+      }
+    }
+  }
   if (!url) {
     return url;
   }
@@ -178,7 +323,9 @@ avatarUrlGenerator.SIZES = {
 };
 
 
-export function OnWindowFocusInOut(onFocusedOut, onFocusedIn) {
+export function OnWindowFocusInOut(onFocusedOut = () => {
+}, onFocusedIn = () => {
+}) {
   ifvisible.on("blur", onFocusedOut);
   ifvisible.on("focus", onFocusedIn);
   window.addEventListener("blur", onFocusedOut);
@@ -192,4 +339,528 @@ export function getNow() {
   } else {
     return Date.now();
   }
+}
+
+export function isImageFile(file) {
+  return file.type.match(/image\/jpeg|image\/png/gm);
+}
+
+export function isVideoFile(file) {
+  return file.type.match(/mp4|ogg|3gp|ogv/);
+}
+
+export function isAudioFile(file) {
+  return file.type.match(/audio.*/);
+}
+
+export function isFile(file) {
+  return !isVideoFile(file) && !isImageFile(file);
+}
+
+export function isMessageIsFile(message) {
+  if (message) {
+    if (message.metadata) {
+      if (typeof message.metadata === "object") {
+        return message.metadata.file;
+      }
+      return JSON.parse(message.metadata).file;
+    }
+  }
+}
+
+export function isMessageIsNewFile(message) {
+  const {fileHash} = getMessageMetaData(message);
+  if (fileHash) {
+    return fileHash
+  }
+  return false;
+}
+
+export function isMessageByMe(message, user, thread) {
+  if (thread && user) {
+    const isGroup = thread.group;
+    if (isGroup) {
+      if (thread.type === 8) {
+        if (thread.inviter.id === user.id) {
+          return true;
+        }
+      }
+    }
+  }
+  if (message) {
+    if (message) {
+      if (!message.id) {
+        return true;
+      }
+      if (user) {
+        return message.participant.id === user.id;
+      }
+    }
+  }
+}
+
+
+export function prettifyMessageDate(passedTime) {
+  const isToday = date.isToday(passedTime);
+  const isYesterday = date.isYesterday(passedTime);
+  const isWithinAWeek = date.isWithinAWeek(passedTime);
+  if (isToday) {
+    return date.format(passedTime, "HH:mm", "en")
+  } else if (isYesterday) {
+    return strings.yesterday;
+  } else if (isWithinAWeek) {
+    return date.format(passedTime, "dddd");
+  }
+  return date.format(passedTime, "YYYY-MM-DD");
+}
+
+export function checkForMediaAccess() {
+
+  if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+    // Firefox 38+ seems having support of enumerateDevicesx
+    navigator.enumerateDevices = function (callback) {
+      navigator.mediaDevices.enumerateDevices().then(callback);
+    };
+  }
+
+  var MediaDevices = [];
+  var isHTTPs = location.protocol === 'https:';
+  var canEnumerate = false;
+
+  if (typeof MediaStreamTrack !== 'undefined' && 'getSources' in MediaStreamTrack) {
+    canEnumerate = true;
+  } else if (navigator.mediaDevices && !!navigator.mediaDevices.enumerateDevices) {
+    canEnumerate = true;
+  }
+
+  var hasMicrophone = false;
+  var hasSpeakers = false;
+  var hasWebcam = false;
+
+  var isMicrophoneAlreadyCaptured = false;
+  var isWebcamAlreadyCaptured = false;
+
+  function checkDeviceSupport(callback) {
+    if (!canEnumerate) {
+      return;
+    }
+
+    if (!navigator.enumerateDevices && window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
+      navigator.enumerateDevices = window.MediaStreamTrack.getSources.bind(window.MediaStreamTrack);
+    }
+
+    if (!navigator.enumerateDevices && navigator.enumerateDevices) {
+      navigator.enumerateDevices = navigator.enumerateDevices.bind(navigator);
+    }
+
+    if (!navigator.enumerateDevices) {
+      if (callback) {
+        callback();
+      }
+      return;
+    }
+
+    MediaDevices = [];
+    navigator.enumerateDevices(function (devices) {
+      devices.forEach(function (_device) {
+        var device = {};
+        for (var d in _device) {
+          device[d] = _device[d];
+        }
+
+        if (device.kind === 'audio') {
+          device.kind = 'audioinput';
+        }
+
+        if (device.kind === 'video') {
+          device.kind = 'videoinput';
+        }
+
+        var skip;
+        MediaDevices.forEach(function (d) {
+          if (d.id === device.id && d.kind === device.kind) {
+            skip = true;
+          }
+        });
+
+        if (skip) {
+          return;
+        }
+
+        if (!device.deviceId) {
+          device.deviceId = device.id;
+        }
+
+        if (!device.id) {
+          device.id = device.deviceId;
+        }
+
+        if (!device.label) {
+          device.label = 'Please invoke getUserMedia once.';
+          if (!isHTTPs) {
+            device.label = 'HTTPs is required to get label of this ' + device.kind + ' device.';
+          }
+        } else {
+          if (device.kind === 'videoinput' && !isWebcamAlreadyCaptured) {
+            isWebcamAlreadyCaptured = true;
+          }
+
+          if (device.kind === 'audioinput' && !isMicrophoneAlreadyCaptured) {
+            isMicrophoneAlreadyCaptured = true;
+          }
+        }
+
+        if (device.kind === 'audioinput') {
+          hasMicrophone = true;
+        }
+
+        if (device.kind === 'audiooutput') {
+          hasSpeakers = true;
+        }
+
+        if (device.kind === 'videoinput') {
+          hasWebcam = true;
+        }
+
+        // there is no 'videoouput' in the spec.
+
+        MediaDevices.push(device);
+      });
+
+      if (callback) {
+        callback();
+      }
+    });
+  }
+
+  return new Promise(resolve => {
+    checkDeviceSupport(function () {
+      resolve({
+        hasWebcam,
+        hasMicrophone,
+        isMicrophoneAlreadyCaptured,
+        isWebcamAlreadyCaptured
+      });
+    });
+  })
+}
+
+export function isChannel(thread) {
+  if (thread.group) {
+    if (thread.type === 8) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isGroup(thread) {
+  if (thread.group) {
+    if (thread.type !== 8) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isP2PThread(thread) {
+  return !(isGroup(thread) && isChannel(thread));
+}
+
+export function isThreadOwner(thread, user) {
+  if (!thread || !user) {
+    return false
+  }
+  return thread.inviter.id === user.id;
+}
+
+export function socketStatus(chatState) {
+  const isReconnecting = chatState.socketState == 1 && !chatState.deviceRegister;
+  const isConnected = chatState.socketState == 1 && chatState.deviceRegister;
+  const isDisconnected = chatState.socketState == 3;
+  return {isReconnecting, isConnected, isDisconnected, timeUntilReconnect: chatState.timeUntilReconnect};
+}
+
+export function routeChange(history, route, chatRouterLess) {
+  if (!chatRouterLess) {
+    history.push(route);
+  }
+}
+
+
+function buildEmojiIcon(sizeX, sizeY, catName, emoji) {
+  const {scale} = emojiSpriteMeta;
+  const classNames = classnames({
+    [emojiStyle.emoji]: true,
+    [emojiStyle["emoji-inline"]]: true,
+    [emojiStyle[`emojisprite-${catName}`]]: true
+  });
+  const img = <img className={classNames}
+                   alt={emoji}
+                   src={oneoneImage}
+                   style={{backgroundPosition: `${+sizeX / scale}px ${+sizeY / scale}px`}}/>;
+  return ReactDOMServer.renderToStaticMarkup(img);
+}
+
+
+//EMOJI DECODER SECTION
+const {size, scale} = emojiSpriteMeta;
+
+function emojiUnicode(emojie) {
+  for (const em in emoji) {
+    if (emoji[em][0] === emojie) {
+      return em;
+    }
+  }
+}
+
+export function emojiRegex() {
+  return new RegExp('\\u0023\\u20E3|\\u00a9|\\u00ae|\\u203c|\\u2049|\\u2139|[\\u2194-\\u2199]|\\u21a9|\\u21aa|\\u231a|\\u231b|\\u23e9|[\\u23ea-\\u23ec]|\\u23f0|\\u24c2|\\u25aa|\\u25ab|\\u25b6|\\u2611|\\u2614|\\u26fd|\\u2705|\\u2709|[\\u2795-\\u2797]|\\u27a1|\\u27b0|\\u27bf|\\u2934|\\u2935|[\\u2b05-\\u2b07]|\\u2b1b|\\u2b1c|\\u2b50|\\u2b55|\\u3030|\\u303d|\\u3297|\\u3299|[\\uE000-\\uF8FF\\u270A-\\u2764\\u2122\\u25C0\\u25FB-\\u25FE\\u2615\\u263a\\u2648-\\u2653\\u2660-\\u2668\\u267B\\u267F\\u2693\\u261d\\u26A0-\\u26FA\\u2708\\u2702\\u2601\\u260E]|[\\u2600\\u26C4\\u26BE\\u23F3\\u2764]|\\uD83D[\\uDC00-\\uDFFF]|\\uD83C[\\uDDE8-\\uDDFA\uDDEC]\\uD83C[\\uDDEA-\\uDDFA\uDDE7]|[0-9]\\u20e3|\\uD83C[\\uDC00-\\uDFFF]', "ig")
+}
+
+function generatePosition(emojiCat, index) {
+  const {columns} = emojiSpriteDimensions[emojiCat];
+  const currentColumn = Math.floor(index / columns);
+  return {
+    x: index > 0 ? -(index * size) : 0,
+    y: -(currentColumn * size)
+  };
+}
+
+export function decodeEmoji(string) {
+  if (!string) {
+    return string;
+  }
+
+  let decodedEmoji = string.replace(emojiRegex(), match => {
+    let cat = 0;
+    for (const emojiCategory of emojiCategories) {
+      let emojiIndex = emojiCategory.findIndex(e => emoji[e][0] === match);
+      if (emojiIndex > -1) {
+        const {x, y} = generatePosition(cat, emojiIndex);
+        return buildEmojiIcon(x, y, cat, match)
+      }
+      cat++;
+    }
+    return match;
+  });
+
+  return decodedEmoji.replace(/:emoji#.+?:/g, match => {
+    const realMatch = match.substring(1, match.length - 1);
+    const split = realMatch.split("#");
+    if (!split[2]) {
+      return string;
+    }
+    const size = split[2].split("*");
+    return buildEmojiIcon(size[0], size[1], 0, match);
+  });
+}
+
+//**************//
+
+export function clearHtml(html, clearTags) {
+  if (!html) {
+    return html;
+  }
+  const document = window.document.createElement("div");
+  document.innerHTML = html;
+  const children = Array.from(document.childNodes);
+  const removingIndexes = [];
+  const clonedChildren = [...children].reverse();
+  for (let child of clonedChildren) {
+    if (child.data) {
+      break;
+    }
+    if (child.innerText === "\n") {
+      removingIndexes.push(children.indexOf(child));
+      continue;
+    }
+    break;
+  }
+  let filterChildren = [];
+  if (removingIndexes.length) {
+    let index = 0;
+    for (const child of children) {
+      if (removingIndexes.indexOf(index) === -1) {
+        filterChildren.push(child);
+      }
+      index++;
+    }
+  } else {
+    filterChildren = children;
+  }
+  const newText = window.document.createElement("div");
+
+  filterChildren.map(e => {
+    let node = e;
+    if (clearTags) {
+      if (e.tagName === "BR") {
+        node = window.document.createTextNode("\n");
+      } else if (e.tagName === "DIV") {
+        let countOfN = "";
+        if (e.children.length) {
+          for (const child of e.children) {
+            if (child.tagName === "BR") {
+              countOfN += "\n";
+            }
+          }
+        } else {
+          countOfN = `\n${e.innerText}`
+        }
+        node = window.document.createTextNode(countOfN);
+      }
+    }
+    newText.appendChild(node)
+  });
+  return sanitizeHTML(newText.innerHTML.trim(), sanitizeRule(clearTags)).trim();
+}
+
+export function getMessageMetaData(message) {
+  if (!message.metadata) {
+    return {};
+  }
+  try {
+    return typeof message.metadata === "string" ? JSON.parse(message.metadata) : message.metadata;
+  } catch (e) {
+    return {};
+  }
+
+}
+
+export function showMessageNameOrAvatar(message, messages) {
+  const msgOwnerId = message.participant.id;
+  const msgId = message.id || message.uniqueId;
+  const index = messages.findIndex(e => e.id === msgId || e.uniqueId === msgId);
+  if (~index) {
+    const lastMessage = messages[index - 1];
+    if (lastMessage) {
+      if (lastMessage.participant.id === msgOwnerId) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+export function messageSelectedCondition(message, threadCheckedMessageList) {
+  const fileIndex = threadCheckedMessageList.findIndex((msg => msg.uniqueId === message.uniqueId));
+  return fileIndex >= 0;
+}
+
+export function findLastSeenMessage(messages) {
+  const newMessages = [...messages].reverse();
+  for (const message of newMessages) {
+    if (message.seen) {
+      return message.time;
+    }
+  }
+}
+
+export function isMessageIsImage({messageType}) {
+  if (messageType) {
+    return messageType === typesCode.POD_SPACE_PICTURE;
+  }
+}
+
+export function isMessageIsVideo({messageType}) {
+  if (messageType) {
+    return messageType === typesCode.POD_SPACE_VIDEO;
+  }
+}
+
+export function isMessageIsSound({messageType}) {
+  if (messageType) {
+    return messageType === typesCode.POD_SPACE_SOUND;
+  }
+}
+
+export function isMessageIsVoice({messageType}) {
+  if (messageType) {
+    return messageType === typesCode.POD_SPACE_VOICE;
+  }
+}
+
+export function isMessageIsDownloadable(message) {
+  if (isMessageIsFile(message)) {
+    return message.id;
+  }
+  return false;
+}
+
+export function isMessageIsUploading(message) {
+  return !message.id;
+}
+
+export function isMessageHasError(message) {
+  if (message.state === "UPLOAD_ERROR") {
+    return true;
+  }
+}
+
+export function messageDeleteForAllCondition(message, user, thread) {
+  return checkForPrivilege(thread, THREAD_ADMIN) || (message.deletable && ((isMessageByMe(message, user))));
+}
+
+export function getImage({link, file}, isFromServer, smallVersion) {
+  let imageLink = file.link;
+  let width = file.actualWidth;
+  let height = file.actualHeight;
+
+  const ratio = height / width;
+  if (ratio < 0.15 || ratio > 7) {
+    return false;
+  }
+  const maxWidth = smallVersion || window.innerWidth <= 700 ? 190 : ratio >= 2 ? 200 : 300;
+  height = Math.ceil(maxWidth * ratio);
+  if (!isFromServer) {
+    return {imageLink, width: maxWidth, height};
+  }
+  return {
+    width: maxWidth,
+    height
+  };
+}
+
+export function messageDatePetrification(time) {
+  const correctTime = time / Math.pow(10, 6);
+  return date.isToday(correctTime) ? date.format(correctTime, "HH:mm") : date.isWithinAWeek(correctTime) ? date.format(correctTime, "dddd HH:mm") : date.format(correctTime, "YYYY-MM-DD  HH:mm");
+}
+
+export function urlify(text) {
+  if (!text) {
+    return "";
+  }
+  text = text.replace(/<br\s*[\/]?>/gi, "\n");
+  var urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, function (url) {
+    const urlReal = url.replace(/&amp;/g, "&");
+    return ReactDOMServer.renderToStaticMarkup(<Text link={urlReal} target="_blank" wordWrap="breakWord"
+                                                     title={urlReal}>{urlReal}</Text>)
+  })
+}
+
+export function mentionify(text, onClick) {
+  if (!text) {
+    return "";
+  }
+  text = text.replace(/<br\s*[\/]?>/gi, "\n");
+  var mentionRegex = /(?:^|[^a-zA-Z0-9_＠!@#$%&*])(?:(?:@|＠)(?!\/))([a-zA-Z0-9/._-]{1,15})(?:\b(?!@|＠)|$)/g;
+  return text.replace(mentionRegex, function (username) {
+    const realUserName = username.replace(/&amp;/g, "&");
+    return `<span onClick='window.onUserNameClick(this)'>${ReactDOMServer.renderToStaticMarkup(
+      <Text color="accent" dark bold wordWrap="breakWord" inline title={realUserName}>{realUserName}</Text>)}</span>`;
+  })
+}
+
+export function emailify(text) {
+  if (!text) {
+    return "";
+  }
+  text = text.replace(/<br\s*[\/]?>/gi, "\n");
+  var mailRegex = /(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/g;
+  return text.replace(mailRegex, function (mail) {
+    const urlReal = mail.replace(/&amp;/g, "&");
+    return ReactDOMServer.renderToStaticMarkup(<Text link={`mailto:${urlReal}`} target="_blank" wordWrap="breakWord"
+                                                     title={urlReal}>{urlReal}</Text>)
+  });
 }

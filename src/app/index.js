@@ -1,4 +1,4 @@
-// src/list/BoxScene.jss
+// app/index.js
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {Route, withRouter} from "react-router-dom";
@@ -9,18 +9,23 @@ import classnames from "classnames";
 import strings from "../constants/localization";
 import {
   ROUTE_ADD_CONTACT,
-  ROUTE_CONTACTS, ROUTE_CREATE_CHANNEL,
-  ROUTE_CREATE_GROUP, ROUTE_SHARE, ROUTE_THREAD,
-  ROUTE_THREAD_INFO, ROUTE_USERNAME
+  ROUTE_CONTACTS,
+  ROUTE_CREATE_CHANNEL,
+  ROUTE_CREATE_GROUP,
+  ROUTE_SHARE,
+  ROUTE_THREAD_INFO,
 } from "../constants/routes";
 
 //actions
+import {contactGetList} from "../actions/contactActions";
 import {
   chatClearCache, chatDestroy,
   chatNotification,
-  chatNotificationClickHook, chatRetryHook,
+  chatNotificationClickHook,
+  chatRetryHook,
   chatRouterLess,
-  chatSetInstance, chatSignOutHook,
+  chatSetInstance,
+  chatSignOutHook,
   chatSmallVersion
 } from "../actions/chatActions";
 import {
@@ -36,9 +41,9 @@ import {userGet} from "../actions/userActions";
 import Aside from "./Aside";
 import Main from "./Main";
 import LeftAside from "./LeftAside";
-import Container from "../../../uikit/src/container";
-import {Text} from "../../../uikit/src/typography";
-import {ModalMedia} from "../../../uikit/src/modal";
+import Container from "../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import {ModalMedia} from "../../../pod-chat-ui-kit/src/modal";
 import ModalContactListMenu from "./ModalContactListMenu";
 import ModalAddContact from "./ModalAddContact";
 import ModalThreadList from "./ModalThreadList";
@@ -46,54 +51,42 @@ import ModalCreateGroup from "./ModalCreateGroup";
 import ModalThreadInfo from "./ModalThreadInfo";
 import ModalImageCaption from "./ModalImageCaption";
 import ModalPrompt from "./ModalPrompt";
+import ModalShare from "./ModalShare";
 
 //styling
 import style from "../../styles/app/index.scss";
-import {contactGetList} from "../actions/contactActions";
-import ModalShare from "./ModalShare";
+import {isChannel, isThreadOwner} from "../utils/helpers";
 
-export function BoxModalMediaFragment({link, caption, linkClassName, children, options}) {
-  const fixedOptions = options || {};
-
-  return <Container className={style.Box__MediaTrigger} inline>
-    <Text link={link}
-          className={linkClassName}
-          linkClearStyle
-          data-options={JSON.stringify(fixedOptions)}>
-      {children && children}
-    </Text>
-
-  </Container>
-}
 
 @connect(store => {
   return {
     chatInstance: store.chatInstance.chatSDK,
     chatRouterLess: store.chatRouterLess,
-    user: store.user.user,
-    userFetching: store.user.fetching,
+    user: store.user,
+    thread: store.thread.thread,
     threadShowing: store.threadShowing,
     leftAsideShowing: store.threadLeftAsideShowing.isShowing,
-    thread: store.thread.thread,
     messageNew: store.messageNew
   };
-}, null, null, {withRef: true})
-class Box extends Component {
+}, null, null, {forwardRef: true})
+class Index extends Component {
   constructor(props) {
     super(props);
     this.openThread = this.openThread.bind(this);
-    this.modalDeleteMessagePromptRef = React.createRef(this.modalDeleteMessagePromptRef);
-    this.modalThreadListRef = React.createRef(this.modalThreadListRef);
-    this.modalMediaRef = React.createRef(this.modalMediaRef);
-    this.modalImageCaptionRef = React.createRef(this.modalImageCaptionRef);
+    this.modalDeleteMessagePromptRef = React.createRef();
+    this.modalThreadListRef = React.createRef();
+    this.modalMediaRef = React.createRef();
+    this.modalImageCaptionRef = React.createRef();
     this.firstContactFetching = true;
     this.deletingDatabases = false;
   }
 
   componentDidUpdate(oldProps) {
-    const {token, location, user, userFetching, chatInstance, dispatch, clearCache, thread, messageNew, onNewMessage, onReady} = this.props;
-    const {token: oldToken, thread: oldThread, messageNew: oldMessageNew, user: oldUser} = oldProps;
+    const {token, location, user: propsUser, chatInstance, dispatch, clearCache, thread, messageNew, onNewMessage, onReady} = this.props;
+    const {token: oldToken, thread: oldThread, messageNew: oldMessageNew, user: oldUser, location: oldLocation} = oldProps;
+    const {user, fetching: userFetching} = propsUser;
 
+    //outside events handler
     if (onNewMessage) {
       if (!oldMessageNew && messageNew) {
         onNewMessage(messageNew);
@@ -103,17 +96,17 @@ class Box extends Component {
         }
       }
     }
-
     if (onReady) {
       if (user.id !== oldUser.id) {
         onReady(user, chatInstance, this);
       }
     }
+    //
 
     if (!thread.onTheFly) {
-      if ((oldThread.id !== thread.id) || (!oldThread.id && thread.id)) {
-        if (thread.type === 8) {
-          if (thread.inviter.id === user.id) {
+      if ((!oldThread.id && thread.id) || (oldThread.id !== thread.id)) {
+        if (isChannel(thread)) {
+          if (isThreadOwner(thread, user)) {
             dispatch(threadParticipantList(thread.id));
           }
         } else {
@@ -122,16 +115,18 @@ class Box extends Component {
       }
     }
 
-    if (oldProps.location.pathname !== location.pathname) {
+    if (oldLocation.pathname !== location.pathname) {
       if (location.pathname === "/") {
         this.resetChat();
       }
     }
+
     if (oldToken) {
       if (oldToken !== token) {
         this.setToken(token);
       }
     }
+
     if (chatInstance) {
       if (this.firstContactFetching) {
         dispatch(contactGetList(contactListStatics.offset, contactListStatics.count));
@@ -152,7 +147,7 @@ class Box extends Component {
   resetChat() {
     const {dispatch} = this.props;
     dispatch(threadShowing(false));
-    const closeModal = modal => modal.current.getWrappedInstance().onClose();
+    const closeModal = modal => modal.current.onClose();
     closeModal(this.modalDeleteMessagePromptRef);
     closeModal(this.modalThreadListRef);
     closeModal(this.modalImageCaptionRef);
@@ -190,8 +185,9 @@ class Box extends Component {
   }
 
   setToken(token) {
-    if (this.props.chatInstance) {
-      this.props.chatInstance.setToken(token);
+    const {chatInstance} = this.props;
+    if (chatInstance) {
+      chatInstance.setToken(token);
     }
   }
 
@@ -204,26 +200,21 @@ class Box extends Component {
     }
     dispatch(threadCreateWithUser(thread, "TO_BE_USER_ID"));
   }
-
   refreshThreads() {
     const {dispatch} = this.props;
     dispatch(threadGetList(0, 50));
   }
-
   /*----outside api---*/
 
   render() {
     const {threadShowing, customClassName, leftAsideShowing, small, chatRouterLess} = this.props;
-    let classNames = classnames({
+    const classNames = classnames({
       [customClassName]: customClassName,
-      [style.Box]: true,
-      [style["Box--small"]]: small,
-      [style["Box--isThreadShow"]]: threadShowing,
-      [style["Box--isAsideLeftShow"]]: leftAsideShowing
+      [style.Index]: true,
+      [style["Index--small"]]: small,
+      [style["Index--isThreadShow"]]: threadShowing,
+      [style["Index--isAsideLeftShow"]]: leftAsideShowing
     });
-    const modalMediaI18n = {
-      fa: strings.modalMedia
-    };
     const popups = (
       <Container>
         <Route exact={!chatRouterLess} path={chatRouterLess ? "" : [ROUTE_CREATE_GROUP, ROUTE_CREATE_CHANNEL]}
@@ -238,10 +229,10 @@ class Box extends Component {
                render={() => <ModalThreadInfo smallVersion={small}/>}/>
         <ModalThreadList smallVersion={small} ref={this.modalThreadListRef}/>
         <ModalImageCaption smallVersion={small} ref={this.modalImageCaptionRef}/>
-        <ModalMedia selector={`.${style.Box__MediaTrigger} a:visible`}
+        <ModalMedia selector={`.${style.Index__MediaTrigger} a`}
                     ref={this.modalMediaRef}
                     lang="fa"
-                    i18n={modalMediaI18n}
+                    i18n={{fa: strings.modalMedia}}
                     backFocus={false}/>
         <ModalPrompt smallVersion={small} ref={this.modalDeleteMessagePromptRef}/>
       </Container>
@@ -250,13 +241,13 @@ class Box extends Component {
     return (
       <Container className={classNames}>
         {popups}
-        <Container className={style.Box__Aside}>
+        <Container className={style.Index__Aside}>
           <Aside/>
         </Container>
-        <Container className={style.Box__Main}>
+        <Container className={style.Index__Main}>
           <Main/>
         </Container>
-        <Container className={style.Box__AsideLeft}>
+        <Container className={style.Index__AsideLeft}>
           <LeftAside/>
         </Container>
       </Container>
@@ -264,4 +255,21 @@ class Box extends Component {
   }
 }
 
-export default withRouter(Box);
+export default withRouter(Index);
+
+
+export function IndexModalMediaFragment({link, linkClassName, children, options, linkRef}) {
+  const fixedOptions = options || {};
+
+  return <Container className={style.Index__MediaTrigger} inline>
+    <Text link={link}
+          ref={linkRef}
+          target={"_blank"}
+          className={linkClassName}
+          linkClearStyle
+          data-options={JSON.stringify(fixedOptions)}>
+      {children && children}
+    </Text>
+
+  </Container>
+}
