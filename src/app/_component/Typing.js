@@ -1,6 +1,8 @@
 import strings from "../../constants/localization";
 import React from "react";
 
+import Container from "../../../../pod-chat-ui-kit/src/container";
+import {Text} from "../../../../pod-chat-ui-kit/src/typography";
 import Loading from "../../../../pod-chat-ui-kit/src/loading";
 import LoadingBlinkDots from "../../../../pod-chat-ui-kit/src/loading/LoadingBlinkDots";
 

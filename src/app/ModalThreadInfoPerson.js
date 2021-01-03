@@ -249,30 +249,34 @@ export default class ModalThreadInfo extends Component {
                 {isMyContact ?
 
                   <Fragment>
+                    {(contact.cellphoneNumber || (participant.username || (contact.linkedUser && contact.linkedUser.username))) &&
+                      <Container userSelect="text">
 
-                    {contact.cellphoneNumber &&
-                    <ListItem invert>
+                        {contact.cellphoneNumber &&
+                        <ListItem invert>
 
-                      <Container>
-                        <MdPhone size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text inline>{contact.cellphoneNumber}</Text>
-                        </Gap>
+                          <Container>
+                            <MdPhone size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                            <Gap x={20}>
+                              <Text inline>{contact.cellphoneNumber}</Text>
+                            </Gap>
+                          </Container>
+
+                        </ListItem>
+                        }
+                        {(participant.username || (contact.linkedUser && contact.linkedUser.username)) &&
+                        <ListItem invert>
+
+                          <Container>
+                            <MdPerson size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                            <Gap x={20}>
+                              <Text inline>{participant.username || contact.linkedUser.username}</Text>
+                            </Gap>
+                          </Container>
+
+                        </ListItem>
+                        }
                       </Container>
-
-                    </ListItem>
-                    }
-                    {(participant.username || (contact.linkedUser && contact.linkedUser.username)) &&
-                    <ListItem invert>
-
-                      <Container>
-                        <MdPerson size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text inline>{participant.username || contact.linkedUser.username}</Text>
-                        </Gap>
-                      </Container>
-
-                    </ListItem>
                     }
 
                     {

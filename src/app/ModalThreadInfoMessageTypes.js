@@ -31,7 +31,7 @@ import {IndexModalMediaFragment} from "./index";
 import {
   getFileDownloadingFromHashMap,
   getFileFromHashMap,
-  getImageFromHashMapWindow,
+  getImageFromHashMapWindow, getMessageMetaData,
   humanFileSize
 } from "../utils/helpers";
 
@@ -139,7 +139,10 @@ export default class ModalThreadInfoMessageTypes extends Component {
     const {dispatch} = this.props;
     const idMessage = `${message.id}-message-types-${type}`;
     const idMessageTrigger = `${idMessage}-trigger`;
-    const metaData = typeof message.metadata === "string" ? JSON.parse(message.metadata).file : message.metadata.file;
+    const metaData = getMessageMetaData(message).file;
+    if (!metaData) {
+      return null;
+    }
     const {originalName, size} = metaData;
     const gotoMessage = () => {
       dispatch(threadModalThreadInfoShowing());
@@ -231,7 +234,7 @@ export default class ModalThreadInfoMessageTypes extends Component {
               <video controls id={idMessage} style={{display: "none"}}
                      src={result}/> :
               type === "sound" || type === "voice" ? <audio controls id={idMessage} style={{display: "none"}}
-                                        src={result}/> : ""
+                                                            src={result}/> : ""
             }
             {
               isDownloading ?

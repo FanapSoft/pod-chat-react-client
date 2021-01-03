@@ -21,6 +21,7 @@ import style from "../../styles/app/MainFooterInputEditing.scss";
 import styleVar from "../../styles/variables.scss";
 import utilsStlye from "../../styles/utils/utils.scss";
 import {decodeEmoji} from "./_component/EmojiIcons.js";
+import {getMessageMetaData} from "../utils/helpers";
 
 const constants = {
   replying: "REPLYING",
@@ -57,10 +58,7 @@ export function getMessageEditingText(message) {
       editObject.text = strings.messagesCount(message.length);
     } else {
       if (message.metadata) {
-        let file = {};
-        try {
-          file = JSON.parse(message.metadata).file
-        } catch (e) {}
+        const file = getMessageMetaData(message).file;
         if (file) {
           const isVideo = file.mimeType.match(/mp4|ogg|3gp|ogv/);
           let width = file.width;

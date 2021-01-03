@@ -277,7 +277,6 @@ export function avatarUrlGenerator(url, size, metadata) {
       XLARGE: 3
     };
     if (metadata) {
-      metadata = JSON.parse(metadata);
       const {fileHash} = metadata;
       if (fileHash) {
         return getImageFromHashMap.apply(this, [fileHash, sizes[size], 1]);
@@ -369,15 +368,12 @@ export function isMessageIsFile(message) {
   }
 }
 
-export function isMessageIsNewFile({metadata}) {
-  let metaData = metadata;
-  try {
-    metaData = typeof metaData === "string" ? JSON.parse(metaData) : metaData;
-  } catch (e) {
-    return false
+export function isMessageIsNewFile(message) {
+  const {fileHash} = getMessageMetaData(message);
+  if (fileHash) {
+    return fileHash
   }
-
-  return metaData.fileHash;
+  return false;
 }
 
 export function isMessageByMe(message, user, thread) {
@@ -720,7 +716,15 @@ export function clearHtml(html, clearTags) {
 }
 
 export function getMessageMetaData(message) {
-  return typeof message.metadata === "string" ? JSON.parse(message.metadata) : message.metadata;
+  if (!message.metadata) {
+    return {};
+  }
+  try {
+    return typeof message.metadata === "string" ? JSON.parse(message.metadata) : message.metadata;
+  } catch (e) {
+    return {};
+  }
+
 }
 
 export function showMessageNameOrAvatar(message, messages) {

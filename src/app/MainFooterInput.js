@@ -370,9 +370,16 @@ export default class MainFooterInput extends Component {
     if (this.props.thread.group) {
       const {showParticipant} = this.state;
       const {keyCode} = evt;
+      if (evt.keyCode === 13 && evt.shiftKey) {
+        return;
+      } else if (keyCode === 27) {
+        if (!showParticipant) {
+          return this.resetParticipantSuggestion();
+        }
+      }
       if (showParticipant) {
         if (keyCode === 27) {
-          this.resetParticipantSuggestion();
+          return this.resetParticipantSuggestion();
         }
         this.participantSuggestionsRef.current.keyDownSignal(evt);
       }
@@ -471,7 +478,7 @@ export default class MainFooterInput extends Component {
     return (
       <Container className={style.MainFooterInput}>
         <OutsideClickHandler onOutsideClick={this.resetParticipantSuggestion}>
-          {showParticipant && !chatAudioRecorder &&
+          {(showParticipant && !chatAudioRecorder ) &&
 
           <Container className={style.MainFooterInput__ParticipantContainer}>
             <Container className={participantsPositionContainerClassNames}>
@@ -519,6 +526,7 @@ export default class MainFooterInput extends Component {
             chatAudioRecorder={chatAudioRecorder}
             voiceRecorderEnable={voiceIsPresent}
             onStartTyping={this.onStartTyping}
+            sendByEnter
             onText={this.onText}
             onNonEmptyText={this.onNonEmptyText}
             onEmptyText={this.onEmptyText}

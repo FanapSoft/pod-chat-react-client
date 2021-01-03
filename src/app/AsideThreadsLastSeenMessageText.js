@@ -5,7 +5,7 @@ import {
   isMessageIsFile
 } from "../utils/helpers";
 import strings from "../constants/localization";
-import {TypingFragment} from "./MainHeadThreadInfo";
+import Typing from "./_component/Typing";
 import {sanitizeRule} from "./AsideThreads";
 
 //UI components
@@ -22,7 +22,7 @@ export default function (props) {
   return (
     <Container> {
       isTypingReal ?
-        <TypingFragment isGroup={isGroup || isChannel} typing={isTyping}
+        <Typing isGroup={isGroup || isChannel} typing={isTyping}
                         textProps={{size: "sm", color: "yellow", dark: true}}/>
         :
         draftMessage ?

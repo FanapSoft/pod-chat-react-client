@@ -3,7 +3,7 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import "moment/locale/fa";
-import {humanFileSize, mobileCheck,emailify, mentionify, urlify} from "../utils/helpers";
+import {humanFileSize, mobileCheck, emailify, mentionify, urlify, getMessageMetaData} from "../utils/helpers";
 import classnames from "classnames";
 
 //strings
@@ -155,13 +155,7 @@ class MainMessagesMessageFile extends Component {
       isGroup,
       onPin
     } = this.props;
-    let metaData = message.metadata;
-    try {
-      metaData = typeof metaData === "string" ? JSON.parse(metaData).file : metaData.file;
-    } catch (e) {
-      metaData = {};
-    }
-
+    let metaData = getMessageMetaData(message).file || {};
     const mimeType = metaData.mimeType;
     let isImage = mimeType.indexOf("image") > -1;
     const isVideo = mimeType.match(/mp4|ogg|3gp|ogv/);

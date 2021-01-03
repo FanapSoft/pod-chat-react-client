@@ -26,7 +26,6 @@ export function sanitizeRule(isSendingMessage) {
     allowedAttributes: {
       img: ["src", "style", "class", "alt"]
     },
-    allowedSchemes: ["data"],
     exclusiveFilter: function (frame) {
       if (frame.tag === "img") {
         if (!frame.attribs.class) {
@@ -182,7 +181,7 @@ export default class MainFooterInput extends Component {
     if (newText) {
       if (newText.trim()) {
         if (clearHtml(newText) && !isEmptyTag(newText)) {
-          return onNonEmptyText && onNonEmptyText(text);
+          return onNonEmptyText && onNonEmptyText(newText);
         }
       }
     }
@@ -239,11 +238,19 @@ export default class MainFooterInput extends Component {
   }
 
   onKeyDown(evt) {
-    const {onKeyDown} = this.props;
+    const {onKeyDown, sendByEnter} = this.props;
     onKeyDown && onKeyDown(evt);
+    if(!sendByEnter) {
+      if (event.key === "Enter") {
+        document.execCommand("insertLineBreak");
+        event.preventDefault()
+      }
+    }
+    onKeyDown(evt);
   }
 
   onKeyUp(evt) {
+
     this.onTextChange(evt.target.innerHTML);
   }
 

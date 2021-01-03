@@ -73,10 +73,12 @@ object-assign
  */
 
 /*!
- * wavesurfer.js 4.2.0 (2020-10-20)
+ * wavesurfer.js 4.3.0 (2020-12-13)
  * https://wavesurfer-js.org
  * @license BSD-3-Clause
  */
+
+/*! ./absMax */
 
 /*! ./clamp */
 
@@ -167,6 +169,10 @@ object-assign
 /*!***************************!*\
   !*** ./src/wavesurfer.js ***!
   \***************************/
+
+/*!****************************!*\
+  !*** ./src/util/absMax.js ***!
+  \****************************/
 
 /*!****************************!*\
   !*** ./src/util/get-id.js ***!

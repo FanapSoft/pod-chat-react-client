@@ -1,4 +1,4 @@
-import {decodeEmoji, clearHtml} from "../utils/helpers";
+import {decodeEmoji, clearHtml, getMessageMetaData} from "../utils/helpers";
 
 import Paper from "../../../pod-chat-ui-kit/src/paper";
 import Container from "../../../pod-chat-ui-kit/src/container";
@@ -16,16 +16,12 @@ import style from "../../styles/app/MainMessagesMessageBoxReply.scss";
 
 import React from "react";
 
-export default function ({isMessageByMe, message, onRepliedMessageClicked, maxWidth}) {
+export default function ({isMessageByMe, message, onRepliedMessageClicked, maxReplyFragmentWidth: maxWidth}) {
   if (!message.replyInfo) {
     return null;
   }
   const replyInfo = message.replyInfo;
-  let meta = "";
-  try {
-    meta = JSON.parse(replyInfo.metadata);
-  } catch (e) {
-  }
+  const meta = getMessageMetaData(replyInfo);
   const text = decodeEmoji(clearHtml(replyInfo.message));
   const file = meta && meta.file;
   let isImage, isVideo, imageLink;

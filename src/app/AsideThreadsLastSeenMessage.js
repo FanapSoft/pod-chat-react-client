@@ -8,7 +8,7 @@ import Container from "../../../pod-chat-ui-kit/src/container";
 
 export default function(props) {
   const {thread, user} = props;
-  const {group, type, lastMessageVO, lastMessage, inviter, time, isTyping, draftMessage} = thread;
+  const {lastMessageVO, lastMessage, inviter, time, isTyping, draftMessage} = thread;
   const args = {
     isGroup: isGroup(thread),
     isChannel: isChannel(thread),

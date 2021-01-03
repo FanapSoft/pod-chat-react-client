@@ -6,9 +6,9 @@ import strings from "../constants/localization";
 import style from "../../styles/app/MainMessagesNoMessages.scss";
 import styleVar from "../../styles/variables.scss";
 
-export default function ({className}) {
+export default function ({className, ...other}) {
   return (
-    <Container className={className}>
+    <Container className={className} {...other}>
       <Container center centerTextAlign relative style={{width: "100%"}}>
         <div className={style.MainMessagesNoMessages__Empty}/>
         <Text size="lg">{strings.thereIsNoMessageToShow}</Text>

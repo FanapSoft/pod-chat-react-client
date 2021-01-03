@@ -3,7 +3,14 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import classnames from "classnames";
-import {avatarNameGenerator, avatarUrlGenerator, isChannel, isGroup, socketStatus} from "../utils/helpers";
+import {
+  avatarNameGenerator,
+  avatarUrlGenerator,
+  getMessageMetaData,
+  isChannel,
+  isGroup,
+  socketStatus
+} from "../utils/helpers";
 import {getParticipant} from "./ModalThreadInfoPerson";
 import date from "../utils/date";
 
@@ -65,7 +72,7 @@ class MainHeadThreadInfo extends Component {
       <Container className={classNames} onClick={this.onShowInfoClick} relative>
         <Avatar>
           <AvatarImage
-            src={avatarUrlGenerator.apply(this, [thread.image, avatarUrlGenerator.SIZES.SMALL, thread.metadata])}
+            src={avatarUrlGenerator.apply(this, [thread.image, avatarUrlGenerator.SIZES.SMALL, getMessageMetaData(thread)])}
             text={avatarNameGenerator(thread.title).letter}
             textBg={avatarNameGenerator(thread.title).color}/>
           <AvatarName>

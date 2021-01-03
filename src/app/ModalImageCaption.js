@@ -129,6 +129,13 @@ export default class ModalImageCaption extends Component {
     if (this.props.thread.group) {
       const {showParticipant} = this.state;
       const {keyCode} = evt;
+      if (evt.keyCode === 13 && evt.shiftKey) {
+        return;
+      } else if (keyCode === 27) {
+        if (!showParticipant) {
+          return;
+        }
+      }
       if (showParticipant) {
         if (keyCode === 27) {
           this.resetParticipantSuggestion();

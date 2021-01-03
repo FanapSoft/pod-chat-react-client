@@ -3,6 +3,7 @@ import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
 import "moment/locale/fa";
 import {
+  getMessageMetaData,
   isMessageIsFile
 } from "../utils/helpers";
 
@@ -89,7 +90,12 @@ export default class MainMessagesMessageShare extends Component {
     const isMessageFile = isMessageIsFile(message);
     if (isMessageFile) {
       const metaData = message.metadata;
-      messageText = `${(typeof metaData === "string" ? JSON.parse(metaData).file : metaData.file).link}`;
+      try {
+        messageText = `${getMessageMetaData(message).file.link}`;
+      } catch (e) {
+
+      }
+
     }
     window.open(selectedSocialNetwork.socialNetworksObject.link(messageText, isMessageFile && message.message), '_blank');
     dispatch(chatModalPrompt());

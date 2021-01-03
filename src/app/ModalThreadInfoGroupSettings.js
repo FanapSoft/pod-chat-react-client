@@ -1,6 +1,6 @@
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
-import {avatarNameGenerator, avatarUrlGenerator, isChannel} from "../utils/helpers";
+import {avatarNameGenerator, avatarUrlGenerator, getMessageMetaData, isChannel} from "../utils/helpers";
 
 //strings
 import strings from "../constants/localization";
@@ -51,19 +51,14 @@ export default class ModalThreadInfoGroupSettings extends Component {
     this.onSaveSettings = this.onSaveSettings.bind(this);
     this.onPrevious = this.onPrevious.bind(this);
     const {thread} = props;
-    const {metadata}  = thread;
+    const metadata = getMessageMetaData(thread);
     this.previewImage = null;
-    try {
-      this.state = {
-        state: statics.MAIN,
-        groupName: thread.title,
-        groupDesc: thread.description,
-        image: metadata && JSON.parse(metadata).fileHash ? JSON.parse(metadata).fileHash : thread.image
-      };
-    } catch (e) {
-
-    }
-
+    this.state = {
+      state: statics.MAIN,
+      groupName: thread.title,
+      groupDesc: thread.description,
+      image: metadata && metadata.fileHash ? metadata.fileHash : thread.image
+    };
   }
 
   componentDidMount() {
@@ -152,9 +147,11 @@ export default class ModalThreadInfoGroupSettings extends Component {
                                  className={style.ModalThreadInfoGroupSettings__ImageIcon}/>
                   </Container>
                 </Container>
-                <AvatarImage src={typeof image === "string" ? avatarUrlGenerator.apply(this, [image, avatarUrlGenerator.SIZES.MEDIUM, thread.metadata]) : this.previewImage} size="xlg"
-                             text={avatarNameGenerator(thread.title).letter}
-                             textBg={avatarNameGenerator(thread.title).color}/>
+                <AvatarImage
+                  src={typeof image === "string" ? avatarUrlGenerator.apply(this, [image, avatarUrlGenerator.SIZES.MEDIUM, getMessageMetaData(thread.metadata)]) : this.previewImage}
+                  size="xlg"
+                  text={avatarNameGenerator(thread.title).letter}
+                  textBg={avatarNameGenerator(thread.title).color}/>
               </Container>
               <AvatarName>
                 <InputText onChange={this.groupNameChange.bind(this)}

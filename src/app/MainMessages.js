@@ -119,7 +119,7 @@ export default class MainMessages extends Component {
   }
 
   componentDidMount() {
-    const {thread} = this.props;
+    const {threadUnreadMentionedMessages, thread} = this.props;
     if (thread) {
       if (thread.onTheFly) {
         return;
@@ -127,6 +127,8 @@ export default class MainMessages extends Component {
       if (thread.id) {
         if (thread.mentioned) {
           this.fetchUnreadMentionedMessages();
+        } else if (threadUnreadMentionedMessages.length) {
+          this.fetchUnreadMentionedMessages(true);
         }
         this._fetchInitHistory();
       }
@@ -352,24 +354,30 @@ export default class MainMessages extends Component {
       for (const msg of threadUnreadMentionedMessages) {
         const id = `message-${msg.time}`;
         const elem = document.getElementById(id);
-        if (elem && isElementVisible(elem)) {
+        elem && isElementVisible(elem, () => {
+          const {threadUnreadMentionedMessages, dispatch} = this.props;
+          if (!threadUnreadMentionedMessages.length) {
+            return;
+          }
+          if (!threadUnreadMentionedMessages.find(e => e.id === msg.id)) {
+            return;
+          }
           dispatch(threadUnreadMentionedMessageRemove(msg.id));
           if (this.highLightMentionStack.indexOf(msg.time) < 0) {
             this.highLightMentionStack.push(msg.time);
           }
-        }
+          if (this.highLightMentionStack.length) {
+            clearInterval(this.highLightInterval);
+            this.highlightMessage(this.highLightMentionStack.shift());
+            if (!this.highLightMentionStack.length) {
+              return;
+            }
+            this.highLightInterval = setInterval(() => {
+              this.highlightMessage(this.highLightMentionStack.shift());
+            }, 2000);
+          }
+        });
       }
-    }
-
-    if (this.highLightMentionStack.length) {
-      clearInterval(this.highLightInterval);
-      this.highlightMessage(this.highLightMentionStack.shift());
-      if (!this.highLightMentionStack.length) {
-        return;
-      }
-      this.highLightInterval = setInterval(() => {
-        this.highlightMessage(this.highLightMentionStack.shift());
-      }, 2000)
     }
   }
 
@@ -516,7 +524,10 @@ export default class MainMessages extends Component {
     }
 
     if (!messages.length) {
-      return <MainMessagesNoMessages className={style.MainMessages}/>;
+      return <MainMessagesNoMessages className={style.MainMessages}
+                                     onDragEnter={this.onDragEnter}
+                                     onDragOver={this.onDragOver}
+                                     onDrop={this.onFileDrop}/>
     }
 
     return (

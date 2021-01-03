@@ -195,7 +195,7 @@ export default class ChatSDK {
           threadId: params.threadId,
           nextOffset,
           contentCount,
-          messages: rslt.history.concat(rslt.failed.concat(rslt.sending.concat(rslt.uploading))),
+          messages: rslt.history.concat(rslt.failed.concat(rslt.sending)),
           hasNext: realHasNext,
           hasPrevious: realHasPrevious
         });
@@ -272,7 +272,7 @@ export default class ChatSDK {
           'read_thread',
           'edit_thread'
         ]
-      }, ...{params: params || {}}],
+      }],
       threadId
     };
     this.chatAgent.setAdmin(setAdminParams, (result) => {
@@ -298,7 +298,7 @@ export default class ChatSDK {
           'remove_role_from_user',
           'edit_thread'
         ]
-      }, ...{params: params || {}}],
+      }],
 
     };
     this.chatAgent.removeAdmin(setAdminParams, (result) => {

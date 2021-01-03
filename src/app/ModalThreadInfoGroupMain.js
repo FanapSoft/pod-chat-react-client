@@ -8,7 +8,7 @@ import {THREAD_ADMIN} from "../constants/privilege";
 
 //strings
 import strings from "../constants/localization";
-import {avatarNameGenerator, avatarUrlGenerator} from "../utils/helpers";
+import {avatarNameGenerator, avatarUrlGenerator, getMessageMetaData} from "../utils/helpers";
 
 //actions
 import {
@@ -348,7 +348,7 @@ class ModalThreadInfoGroupMain extends Component {
 
           <Container>
             <Avatar>
-              <AvatarImage src={avatarUrlGenerator.apply(this, [thread.image, avatarUrlGenerator.SIZES.LARGE, thread.metadata])} size="xlg"
+              <AvatarImage src={avatarUrlGenerator.apply(this, [thread.image, avatarUrlGenerator.SIZES.LARGE, getMessageMetaData(thread)])} size="xlg"
                            text={avatarNameGenerator(thread.title).letter}
                            textBg={avatarNameGenerator(thread.title).color}>
                 <AvatarModalMediaFragment thread={thread}/>

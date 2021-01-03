@@ -7,7 +7,7 @@ import AsideThreadsLastSeenMessage from "./AsideThreadsLastSeenMessage";
 import AsideThreadsContextMenu from "./AsideThreadsContextMenu";
 import {
   avatarNameGenerator,
-  avatarUrlGenerator,
+  avatarUrlGenerator, getMessageMetaData,
   isIosAndSafari,
   mobileCheck
 } from "../utils/helpers";
@@ -270,7 +270,7 @@ class AsideThreads extends Component {
                                          onTouchMove={this.onThreadTouchMove.bind(this, el)}
                                          onTouchEnd={this.onThreadTouchEnd.bind(this, el)}>
                                 <Avatar cssClassNames={style.AsideThreads__AvatarContainer}>
-                                  <AvatarImage src={avatarUrlGenerator.apply(this, [el.image, MEDIUM, el.metadata])}
+                                  <AvatarImage src={avatarUrlGenerator.apply(this, [el.image, MEDIUM, getMessageMetaData(el)])}
                                                customSize="50px"
                                                text={avatarNameGenerator(el.title).letter}
                                                textBg={avatarNameGenerator(el.title).color}/>

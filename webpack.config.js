@@ -91,7 +91,7 @@ module.exports = (e, argv) => {
         },
         {
           test: /\.(png|jpg|gif|ttf|eot|woff2|woff|mp3|svg)$/,
-          exclude: /(oneone|layers|layers-2x|marker-icon|marker-icon-2x)\.png/,
+          exclude: /((oneone|layers|layers-2x|marker-icon|marker-icon-2x)\.png)|(cover\.jpg)/,
           use: [
             {
               loader: "url-loader",
@@ -114,7 +114,7 @@ module.exports = (e, argv) => {
           ]
         },
         {
-          test: /(layers|layers-2x|marker-icon|marker-shadow|marker-icon-2x)\.png/,
+          test: /((layers|layers-2x|marker-icon|marker-icon-2x)\.png)|(cover\.jpg)/,
           use: {
             loader: "file-loader",
             options: {

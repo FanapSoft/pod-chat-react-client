@@ -19,10 +19,12 @@ import MainMessages from "./MainMessages";
 import MainFooter from "./MainFooter";
 import MainPinMessage from "./MainPinMessage";
 import MainIntro from "./MainIntro";
+import MainAudioPlayer from "./MainAudioPlayer";
 
 //styling
 import style from "../../styles/app/Main.scss";
-import MainAudioPlayer from "./MainAudioPlayer";
+import coverImage from "../../styles/images/Main/cover.jpg";
+
 
 
 @connect(store => {
@@ -58,7 +60,9 @@ class Main extends Component {
     if (!id && !threadFetching) {
       return (
         <Container className={style.Main}>
-          <Container className={style.Main__Cover}/>
+          <Container className={style.Main__Cover} style={{
+            backgroundImage: `url("${coverImage}")`
+          }}/>
           <MainIntro chatRouterLess={chatRouterLess} history={history}/>
         </Container>
       )
@@ -69,7 +73,9 @@ class Main extends Component {
              render={() => {
                return (
                  <Container className={style.Main}>
-                   <Container className={style.Main__Cover}/>
+                   <Container className={style.Main__Cover} style={{
+                     backgroundImage: `url("${coverImage}")`
+                   }}/>
                    <MainHead thread={thread} chatRouterLess={chatRouterLess} history={history}/>
 
                    {
