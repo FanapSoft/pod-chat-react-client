@@ -2,7 +2,7 @@ import React, {Fragment, useState, useEffect, useRef} from "react";
 import ReactDOM from "react-dom";
 import classnames from "classnames";
 import {IndexModalMediaFragment} from "./index";
-import {getImageFromHashMapWindow, isMessageHasError} from "../utils/helpers";
+import {getImage, getImageFromHashMapWindow, isMessageHasError} from "../utils/helpers";
 
 
 import Image from "../../../pod-chat-ui-kit/src/image";
@@ -80,7 +80,8 @@ function MainMessagesMessageFileImageFragment({smallVersion, message, isBlurry, 
                 }} {...other}/>;
 }
 
-export default function ({isUploading, showCancelIcon, message, metaData, smallVersion, imageSizeLink, setShowProgress, onCancel, dispatch}) {
+export default function ({isUploading, showCancelIcon, message, metaData, smallVersion, leftAsideShowing, setShowProgress, onCancel, dispatch}) {
+  const imageSizeLink = getImage(metaData, message.id, smallVersion || leftAsideShowing);
   const linkRef = useRef(null);
 
   const fileHash = metaData.fileHash;

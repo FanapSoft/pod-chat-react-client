@@ -144,13 +144,13 @@ let strings = new LocalizedStrings({
       return `${messagesCount} پیام`
     },
     thereIsNoContactWithThisKeyword(keyword) {
-      if (!keyword && !keyword.trim()) {
+      if (!keyword || !keyword.trim()) {
         return 'مخاطبی با مشخصات وارد شده یافت نشد...'
       }
       return `مخاطبی با مشخصات "${keyword}" وجود ندارد `;
     },
     thereIsNoThreadsWithThisKeyword(keyword) {
-      if (!keyword && !keyword.trim()) {
+      if (!keyword || !keyword.trim()) {
         return 'گفتگویی تحت این عنوان یافت نشد...'
       }
       return `گفتگوی تحت عنوان "${keyword}" وجود ندارد `;

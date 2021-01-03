@@ -215,7 +215,7 @@ export default class ModalThreadList extends Component {
                 {remainingThreadsPartialFetching && <PartialLoadingFragment/>}
               </Container>
               :
-              <NoResultFragment>{queryThreadsSearching ? `${strings.searchingForThreads}...` : strings.thereIsNoContactWithThis}</NoResultFragment>
+              <NoResultFragment>{queryThreadsSearching ? `${strings.searchingForThreads}...` : strings.thereIsNoThreadsWithThisKeyword()}</NoResultFragment>
           }
           {isQueriedResult &&
           <Fragment>
@@ -232,7 +232,7 @@ export default class ModalThreadList extends Component {
                              contacts={queryContacts}/>
               </Container>
               :
-              <NoResultFragment>{queryContactsSearching ? `${strings.searchingForContacts}...` : strings.thereIsNoContact}</NoResultFragment>
+              <NoResultFragment>{queryContactsSearching ? `${strings.searchingForContacts}...` : strings.thereIsNoContactWithThisKeyword()}</NoResultFragment>
           }
 
         </ModalBody>

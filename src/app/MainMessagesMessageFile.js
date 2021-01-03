@@ -92,10 +92,18 @@ class MainMessagesMessageFile extends Component {
     this.downloadTriggerRef = React.createRef();
     this.isDownloading = false;
     this.isPlayable = null;
+
   }
 
   componentDidMount() {
-    const {metaData} = this.state;
+    const {isImage,imageIsSuitableSize, metaData} = this.state;
+    if(isImage && imageIsSuitableSize) {
+      window.addEventListener("resize", e=>{
+        this.setState({
+          imageIsSuitableSize
+        });
+      });
+    }
     const fileResult = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]);
     const result = typeof fileResult === "string" && fileResult.indexOf("blob") > -1 ? fileResult : null;
     if (result) {
@@ -250,6 +258,7 @@ class MainMessagesMessageFile extends Component {
       onPin,
       chatAudioPlayer,
       smallVersion,
+      leftAsideShowing,
       dispatch
     } = this.props;
     let {
@@ -308,12 +317,12 @@ class MainMessagesMessageFile extends Component {
             <Container relative
                        className={style.MainMessagesMessageFile__FileContainer}>
               {isImage ?
-                <MainMessagesMessageFileImage imageSizeLink={imageIsSuitableSize}
-                                              onCancel={uploading || isMessageHasError(message) ? this.onCancel : this.onCancelDownload}
+                <MainMessagesMessageFileImage onCancel={uploading || isMessageHasError(message) ? this.onCancel : this.onCancelDownload}
                                               isUploading={uploading}
                                               message={message}
                                               setShowProgress={this.setShowProgress}
                                               smallVersion={smallVersion}
+                                              leftAsideShowing={leftAsideShowing}
                                               showCancelIcon={downloading || uploading}
                                               dispatch={dispatch}
                                               metaData={metaData}/>
