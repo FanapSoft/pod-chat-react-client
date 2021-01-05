@@ -9,10 +9,11 @@ import {mobileCheck} from "../../utils/helpers";
 //actions
 
 //components
-import InputEmojiTrigger from "./InputEmojiTrigger";
 import Container from "../../../../pod-chat-ui-kit/src/container";
 import {InputTextArea} from "../../../../pod-chat-ui-kit/src/input";
-import InputVoiceRecorder from "./InputVoiceRecorder";
+import InputEmojiTrigger from "./InputEmojiTrigger";
+import InputVoice from "./InputVoice";
+
 //styling
 
 export const constants = {
@@ -299,7 +300,7 @@ export default class MainFooterInput extends Component {
         <Container centerLeft>
           <InputEmojiTrigger inputNode={this.inputNode} emojiShowing={emojiShowing} onEmojiShowing={onEmojiShowing}/>
           {voiceRecorderEnable &&
-          <InputVoiceRecorder inputNode={this.inputNode} chatAudioRecorder={chatAudioRecorder}/>
+          <InputVoice inputNode={this.inputNode} chatAudioRecorder={chatAudioRecorder}/>
           }
 
         </Container>
