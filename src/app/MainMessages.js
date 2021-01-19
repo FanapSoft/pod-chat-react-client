@@ -8,7 +8,7 @@ import {
   mobileCheck,
   isIosAndSafari,
   isGroup,
-  isMessageByMe, messageSelectedCondition, findLastSeenMessage
+  isMessageByMe, messageSelectedCondition
 } from "../utils/helpers";
 import isElementVisible from "../utils/dom";
 
@@ -267,13 +267,18 @@ export default class MainMessages extends Component {
     }
   }
 
-  _fetchInitHistory() {
+  _fetchInitHistory(fetchLastHistoryWithoutAnyCondition) {
     this.lastSeenMessage = null;
     this.gotoBottom = false;
     this.hasPendingMessageToGo = null;
     const {thread, dispatch} = this.props;
     dispatch(threadMessageGetListPartial(null, null, null, null, true));
     dispatch(threadMessageGetListByMessageId(null, null, null, true));
+    if (fetchLastHistoryWithoutAnyCondition) {
+      this.gotoBottom = true;
+      this.setState({unreadBar: null});
+      return dispatch(threadMessageGetList(thread.id, statics.historyFetchCount));
+    }
     if (thread.unreadCount > statics.historyFetchCount) {
       this.hasPendingMessageToGo = thread.lastSeenMessageTime;
       this._fetchHistoryFromMiddle(thread.id, thread.lastSeenMessageTime);
@@ -443,7 +448,7 @@ export default class MainMessages extends Component {
     if (!result) {
       //If last request was the same message and if this message is not exists in history fetch from init
       if (messageTime === this.hasPendingMessageToGo) {
-        return this._fetchInitHistory();
+        return this._fetchInitHistory(true);
       }
 
       this.hasPendingMessageToGo = messageTime;

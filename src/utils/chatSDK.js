@@ -666,7 +666,7 @@ export default class ChatSDK {
   @promiseDecorator
   seenMessage(resolve, reject, messageId, ownerId, threadId) {
     resolve({messageId, threadId});
-    this.chatAgent.seen({messageId, ownerId}, (result) => {
+    this.chatAgent.seen({messageId, threadId}, (result) => {
       this._onError(result, reject)
     });
   }
