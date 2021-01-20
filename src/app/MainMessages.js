@@ -105,6 +105,7 @@ export default class MainMessages extends Component {
     this.lastSeenMessage = null;
     this.lastSeenMessageTime = null;
     this.windowFocused = true;
+    this.checkForSnapping = false;
     this.highLightMentionStack = [];
 
     if (!mobileCheck()) {
@@ -209,7 +210,7 @@ export default class MainMessages extends Component {
   }
 
   componentDidUpdate(oldProps) {
-    const {thread, threadMessages, threadGetMessageListByMessageIdFetching, threadUnreadMentionedMessages, dispatch} = this.props;
+    const {thread, threadMessages, threadGetMessageListByMessageIdFetching, threadMessagesPartialFetching, threadUnreadMentionedMessages, dispatch} = this.props;
     const {thread: oldThread} = oldProps;
     const {fetching} = threadMessages;
     const threadId = thread.id;
@@ -264,6 +265,13 @@ export default class MainMessages extends Component {
     if (this.gotoBottom && this.scroller.current) {
       this.scroller.current.gotoBottom();
       return this.gotoBottom = false;
+    }
+
+    if (this.checkForSnapping) {
+      if (!threadMessagesPartialFetching && !threadGetMessageListByMessageIdFetching) {
+        this.scroller.current.checkForSnapping();
+        this.checkForSnapping = false;
+      }
     }
   }
 
@@ -345,6 +353,7 @@ export default class MainMessages extends Component {
     const {thread, threadMessages, dispatch} = this.props;
     const {messages} = threadMessages;
     dispatch(threadMessageGetListPartial(thread.id, messages[0].time - 200, false, statics.historyFetchCount));
+    this.checkForSnapping = true;
   }
 
   onScrollBottomThreshold() {

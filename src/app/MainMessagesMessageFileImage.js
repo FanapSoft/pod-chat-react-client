@@ -14,6 +14,7 @@ import MainMessagesMessageFileControlIcon from "./MainMessagesMessageFileControl
 
 import style from "../../styles/app/MainMessagesMessageFileImage.scss";
 import imageFragmentStyle from "../../styles/app/MainMessagesMessageFileImageFragment.scss";
+import mapFake from "../../styles/images/MainMessagesMessageFileImage/map-fake.png";
 
 
 const imageQualities = {
@@ -101,7 +102,11 @@ export default function ({isUploading, showCancelIcon, message, metaData, smallV
   imageThumbLowQuality = imageThumbLowQuality === true ? null : imageThumbLowQuality;
 
   const gettingImageThumb = !isUploading && (!imageThumbLowQuality && !imageThumb);
-  const isBlurry = imageThumbLowQuality && !imageThumb && !isUploading;
+  const isBlurry = (imageThumbLowQuality && !imageThumb && !isUploading) || (isLocationMap && isUploading);
+
+  if (isLocationMap && isUploading) {
+    imageSizeLink.imageLink = mapFake;
+  }
 
   useEffect(function () {
     setShowProgress(gettingImageThumb ? "downloading" : false);

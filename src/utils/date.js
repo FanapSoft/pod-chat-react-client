@@ -1,5 +1,4 @@
 import moment from "moment";
-import PersianDate from "persian-date";
 import strings from "../constants/localization";
 import {getNow} from "./helpers";
 
@@ -28,8 +27,13 @@ const date =
       if (locale === "en") {
         return getMomentDate(date).format(format);
       } else {
-        PersianDate.toLocale("fa");
-        return new PersianDate(date).format(format);
+        if (format === "YYYY-MM-DD") {
+          return new Date(date).toLocaleDateString('fa-IR').replaceAll("/", "-");
+        } else if (format === "YYYY-MM-DD  HH:mm") {
+          return `${new Date(date).toLocaleDateString('fa-IR')}  ${new Date(date).getHours()}:${new Date(date).getMinutes()}`.replaceAll("/", "-");
+        } else {
+          return getMomentDate(date).locale("fa-IR").format(format);
+        }
       }
     },
     prettifySince(date) {

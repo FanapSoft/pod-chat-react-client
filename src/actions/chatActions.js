@@ -189,14 +189,22 @@ export const chatSetInstance = config => {
         });
       },
       onChatError(e) {
-        if (e && e.code && e.code === 21) {
-          const {chatRetryHook, chatInstance} = state();
-          if (chatRetryHook) {
-            chatRetryHook().then(token => {
-              chatInstance.setToken(token);
-              chatInstance.reconnect();
-            });
+
+        if (e && e.code) {
+          if (e.code === 208) {
+            const event = new CustomEvent('podchat-error', {detail: e});
+            document.body.dispatchEvent(event);
           }
+          if (e.code === 21) {
+            const {chatRetryHook, chatInstance} = state();
+            if (chatRetryHook) {
+              chatRetryHook().then(token => {
+                chatInstance.setToken(token);
+                chatInstance.reconnect();
+              });
+            }
+          }
+
         }
       },
       onChatReady(e) {

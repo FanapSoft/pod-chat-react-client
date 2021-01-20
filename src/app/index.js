@@ -4,6 +4,7 @@ import {connect} from "react-redux";
 import {Route, withRouter} from "react-router-dom";
 import {statics as contactListStatics} from "./ModalContactList";
 import classnames from "classnames";
+import checkForPrivilege from "./../utils/privilege";
 
 //strings
 import strings from "../constants/localization";
@@ -56,6 +57,8 @@ import ModalShare from "./ModalShare";
 //styling
 import style from "../../styles/app/index.scss";
 import {isChannel, isThreadOwner} from "../utils/helpers";
+import {THREAD_ADMIN} from "../constants/privilege";
+import IndexErrorHandler from "./IndexErrorHandler";
 
 
 @connect(store => {
@@ -106,7 +109,7 @@ class Index extends Component {
     if (!thread.onTheFly) {
       if ((!oldThread.id && thread.id) || (oldThread.id !== thread.id)) {
         if (isChannel(thread)) {
-          if (isThreadOwner(thread, user)) {
+          if (checkForPrivilege(thread, THREAD_ADMIN)) {
             dispatch(threadParticipantList(thread.id));
           }
         } else {
@@ -200,10 +203,12 @@ class Index extends Component {
     }
     dispatch(threadCreateWithUser(thread, "TO_BE_USER_ID"));
   }
+
   refreshThreads() {
     const {dispatch} = this.props;
     dispatch(threadGetList(0, 50));
   }
+
   /*----outside api---*/
 
   render() {
@@ -227,6 +232,7 @@ class Index extends Component {
                render={() => <ModalShare smallVersion={small}/>}/>
         <Route exact={!chatRouterLess} path={chatRouterLess ? "" : ROUTE_THREAD_INFO}
                render={() => <ModalThreadInfo smallVersion={small}/>}/>
+        <IndexErrorHandler/>
         <ModalThreadList smallVersion={small} ref={this.modalThreadListRef}/>
         <ModalImageCaption smallVersion={small} ref={this.modalImageCaptionRef}/>
         <ModalMedia selector={`.${style.Index__MediaTrigger} a`}

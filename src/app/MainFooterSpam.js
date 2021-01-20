@@ -2,9 +2,11 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import classnames from "classnames";
+import checkForPrivilege from "../utils/privilege";
 
 //strings
 import strings from "../constants/localization";
+import {THREAD_ADMIN} from "../constants/privilege";
 
 //actions
 import {contactBlock} from "../actions/contactActions";
@@ -14,10 +16,10 @@ import {chatModalPrompt} from "../actions/chatActions";
 //components
 import Container from "../../../pod-chat-ui-kit/src/container";
 import Text from "../../../pod-chat-ui-kit/src/typography/Text";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 //styling
 import style from "../../styles/app/MainFooterSpam.scss";
-import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 
 function showMuteForChannel(props) {
@@ -36,8 +38,7 @@ function showMuteForChannel(props) {
   if (thread.type !== 8) {
     return false;
   }
-
-  return thread.inviter.id !== user.id;
+  return !checkForPrivilege(thread, THREAD_ADMIN);
 }
 
 function showSpam(props) {

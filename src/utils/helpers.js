@@ -662,6 +662,7 @@ export function clearHtml(html, clearTags) {
   if (!html) {
     return html;
   }
+  return sanitizeHTML(html, sanitizeRule(clearTags)).trim();
   const document = window.document.createElement("div");
   document.innerHTML = html;
   const children = Array.from(document.childNodes);
@@ -712,7 +713,7 @@ export function clearHtml(html, clearTags) {
     }
     newText.appendChild(node)
   });
-  return sanitizeHTML(newText.innerHTML.trim(), sanitizeRule(clearTags)).trim();
+
 }
 
 export function getMessageMetaData(message) {

@@ -673,12 +673,7 @@ export default class ChatSDK {
 
   @promiseDecorator
   getUserInfo(resolve, reject) {
-    this.chatAgent.getUserInfo((result) => {
-      if (!this._onError(result, reject)) {
-        this.user = result.result.user;
-        return resolve(result.result.user);
-      }
-    });
+    resolve(this.user = this.chatAgent.getCurrentUser());
   }
 
   @promiseDecorator
