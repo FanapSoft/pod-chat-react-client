@@ -18,7 +18,7 @@ import "../../styles/app/indexErrorHandler.scss";
 
 export default function () {
   document.body.addEventListener("podchat-error", e => {
-    toast.error('دست قوی داری ماشاالله با سرعت زیادی تایپ کردی یه 5 دقیقه شرمنده بلاک شدی.!!!', {
+/*    toast.error('دست قوی داری ماشاالله با سرعت زیادی تایپ کردی یه 5 دقیقه شرمنده بلاک شدی.!!!', {
       position: "bottom-left",
       autoClose: 5000,
       hideProgressBar: false,
@@ -26,7 +26,7 @@ export default function () {
       pauseOnHover: true,
       draggable: true,
       progress: undefined
-    });
+    });*/
   });
   return <ToastContainer position="bottom-left"
                          autoClose={5000}

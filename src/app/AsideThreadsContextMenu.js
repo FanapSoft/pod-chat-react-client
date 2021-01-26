@@ -40,6 +40,7 @@ export default class AsideThreadsContextMenu extends Component {
 
   constructor(props) {
     super(props);
+    this.state={thread: {}};
     this.onLeaveClick = this.onLeaveClick.bind(this);
     this.onPinClick = this.onPinClick.bind(this);
     this.onMuteClick = this.onMuteClick.bind(this);
@@ -47,8 +48,9 @@ export default class AsideThreadsContextMenu extends Component {
     this.onMenuHide = this.onMenuHide.bind(this);
   }
 
-  onLeaveClick(thread) {
+  onLeaveClick() {
     const {dispatch} = this.props;
+    const {thread} = this.state;
     const isP2P = !isChannel(thread) && !isGroup(thread);
     dispatch(chatModalPrompt(true, `${isP2P ? strings.areYouSureRemovingThread : strings.areYouSureAboutLeavingGroup(thread.title, isChannel(thread))}؟`, () => {
       dispatch(threadLeave(thread.id));
@@ -57,24 +59,30 @@ export default class AsideThreadsContextMenu extends Component {
     }, null, isP2P ? strings.remove : strings.leave));
   }
 
-  onMuteClick(thread) {
+  onMuteClick() {
     const {dispatch} = this.props;
+    const {thread} = this.state;
     dispatch(threadNotification(thread.id, !thread.mute));
   }
 
-  onPinClick(thread) {
+  onPinClick() {
     const {dispatch} = this.props;
+    const {thread} = this.state;
     dispatch(thread.pin ? threadUnpinFromTop(thread.id) : threadPinToTop(thread.id));
   }
 
-  onLastMessageSeen(thread) {
+  onLastMessageSeen() {
     const {dispatch} = this.props;
+    const {thread} = this.state;
     dispatch(messageSeen(thread.lastMessageVO));
   }
 
   onMenuShow(e) {
     const {onMenuShow} = this.props;
-    onMenuShow(e.detail.id);
+    this.setState({
+      thread: e.detail.data
+    });
+    onMenuShow(e.detail.data.id);
   }
 
   onMenuHide() {
@@ -85,19 +93,20 @@ export default class AsideThreadsContextMenu extends Component {
   }
 
   render() {
-    const {onThreadClick, thread, pinedThread} = this.props;
+    const {onThreadClick, pinedThread} = this.props;
+    const {thread} = this.state;
     const isMobile = mobileCheck();
-    return <Context id={thread.id} stickyHeader={isMobile} style={isMobile ? {height: "59px"} : null}
+    return <Context id={"test"} stickyHeader={isMobile} style={isMobile ? {height: "59px"} : null}
                     onShow={this.onMenuShow} onHide={this.onMenuHide}>
       {
         isMobile ?
           <Fragment>
             <Container className={style.AsideThreadsContextMenu__MenuActionContainer}>
-              <ContextItem onClick={this.onLeaveClick.bind(null, thread)}>
+              <ContextItem onClick={this.onLeaveClick}>
                 <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorAccent}/>
               </ContextItem>
 
-              <ContextItem onClick={this.onMuteClick.bind(null, thread)}>
+              <ContextItem onClick={this.onMuteClick}>
                 {
                   thread.mute ?
                     <MdNotificationsActive size={styleVar.iconSizeMd} color={styleVar.colorAccent}/> :
@@ -106,7 +115,7 @@ export default class AsideThreadsContextMenu extends Component {
               </ContextItem>
               {
                 ((thread.pin && pinedThread.length >= 5) || pinedThread.length < 5) &&
-                <ContextItem onClick={this.onPinClick.bind(null, thread)}>
+                <ContextItem onClick={this.onPinClick}>
                   {
                     thread.pin || pinedThread.length >= 5 ?
                       <Container relative><Container className={style.AsideThreadsContextMenu__UnpinLine}/><AiFillPushpin
@@ -126,23 +135,23 @@ export default class AsideThreadsContextMenu extends Component {
 
           <Fragment>
 
-            <ContextItem onClick={onThreadClick.bind(null, thread)}>
+            <ContextItem onClick={e=>onThreadClick(thread, e)}>
               {strings.openThread}
             </ContextItem>
 
-            <ContextItem onClick={this.onLeaveClick.bind(null, thread)}>
+            <ContextItem onClick={this.onLeaveClick}>
               {
                 (isGroup(thread) || isChannel(thread)) ? strings.leave : strings.remove
               }
             </ContextItem>
 
-            <ContextItem onClick={this.onMuteClick.bind(null, thread)}>
+            <ContextItem onClick={this.onMuteClick}>
               {thread.mute ? strings.unmute : strings.mute}
             </ContextItem>
 
             {
               ((thread.pin && pinedThread.length >= 5) || pinedThread.length < 5) &&
-              <ContextItem onClick={this.onPinClick.bind(null, thread)}>
+              <ContextItem onClick={this.onPinClick}>
                 {
                   (thread.pin || pinedThread.length >= 5 ? strings.unpinFromTop : strings.pinToTop)
                 }
@@ -152,7 +161,7 @@ export default class AsideThreadsContextMenu extends Component {
 
             {
               thread.unreadCount > 0 &&
-              <ContextItem onClick={this.onLastMessageSeen.bind(this, thread)}>
+              <ContextItem onClick={this.onLastMessageSeen}>
                 {strings.seenLastMessage}
               </ContextItem>
 

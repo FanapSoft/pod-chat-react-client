@@ -232,7 +232,6 @@ class Index extends Component {
                render={() => <ModalShare smallVersion={small}/>}/>
         <Route exact={!chatRouterLess} path={chatRouterLess ? "" : ROUTE_THREAD_INFO}
                render={() => <ModalThreadInfo smallVersion={small}/>}/>
-        <IndexErrorHandler/>
         <ModalThreadList smallVersion={small} ref={this.modalThreadListRef}/>
         <ModalImageCaption smallVersion={small} ref={this.modalImageCaptionRef}/>
         <ModalMedia selector={`.${style.Index__MediaTrigger} a`}

@@ -140,13 +140,13 @@ export const messageGetImage = (hashCode, size, quality, crop) => {
   }
 };
 
-export const messageFileReply = (file, threadId, repliedTo, message, repliedMessage) => {
+export const messageFileReply = (file, threadId, repliedTo, message, repliedMessage, other) => {
   return (dispatch, getState) => {
     const state = getState();
     const chatSDK = state.chatInstance.chatSDK;
     dispatch({
       type: MESSAGE_SEND(),
-      payload: chatSDK.replyFileMessage(file, threadId, repliedTo, message, repliedMessage)
+      payload: chatSDK.replyFileMessage(file, threadId, repliedTo, message, repliedMessage, other)
     });
   }
 };

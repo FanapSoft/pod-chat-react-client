@@ -16,10 +16,6 @@
   overflow: hidden;
 }
 
-.AsideThreads__Threads {
-  overflow-y: auto;
-}
-
 .AsideThreads__Overlay {
   position: absolute;
   top: 0;
@@ -29,26 +25,13 @@
   z-index: 2;
 }
 
-.AsideThreads__Threads--fullHeight {
-  height: 100%;
+.AsideThreads__GroupsHead {
+  justify-content: center;
+  display: flex;
 }
 
-.AsideThreads__AvatarContainer {
-  width: calc(100% - 53px);
-  overflow: hidden;
-}
-
-
-.AsideThreads__PinOverlay {
-  background-color: rgba($color-accent, 0.1);
-  border-bottom: 1px solid rgba($color-primary-light, 0.18);
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-}
-
-.AsideThreads__ThreadCheck {
-  transition: opacity 0.1s ease 0s;
+.AsideThreads__GroupsHeadTextContainer {
+  border-radius: 5px;
+  padding: 0 10px;
+  background-color: rgba($color-accent-dark, .2);
 }

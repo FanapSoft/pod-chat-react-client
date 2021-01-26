@@ -1,13 +1,13 @@
 // src/list/Avatar.scss.js
-import React, {Component, Fragment} from "react";
+import React, {Component, memo, Fragment} from "react";
+import * as ReactDOM from 'react-dom'
+import {Virtuoso, GroupedVirtuoso} from 'react-virtuoso'
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import classnames from "classnames";
 import AsideThreadsLastSeenMessage from "./AsideThreadsLastSeenMessage";
 import AsideThreadsContextMenu from "./AsideThreadsContextMenu";
 import {
-  avatarNameGenerator,
-  avatarUrlGenerator, getMessageMetaData,
   isIosAndSafari,
   mobileCheck
 } from "../utils/helpers";
@@ -26,30 +26,19 @@ import {chatSearchResult} from "../actions/chatActions";
 import {contactChatting} from "../actions/contactActions";
 
 //UI components
-import Avatar, {AvatarImage, AvatarName, AvatarText} from "../../../pod-chat-ui-kit/src/avatar";
-import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
-import Scroller from "../../../pod-chat-ui-kit/src/scroller";
-import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
+import List from "../../../pod-chat-ui-kit/src/list";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import LoadingBlinkDots from "../../../pod-chat-ui-kit/src/loading/LoadingBlinkDots";
 import Loading from "../../../pod-chat-ui-kit/src/loading";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import Gap from "../../../pod-chat-ui-kit/src/gap";
 import Message from "../../../pod-chat-ui-kit/src/message";
-import {ContextTrigger} from "../../../pod-chat-ui-kit/src/menu/Context";
-import {
-  MdGroup,
-  MdRecordVoiceOver,
-  MdNotificationsOff,
-  MdCheck
-} from "react-icons/md";
-import {
-  AiFillPushpin
-} from "react-icons/ai";
+import AsideThreadsThread from "./AsideThreadsThread";
+import AsideThreadsContact from "./AsideThreadsContact";
 
 //styling
 import style from "../../styles/app/AsideThreads.scss";
-import styleVar from "../../styles/variables.scss";
+
 
 
 function PartialLoadingFragment() {
@@ -58,6 +47,14 @@ function PartialLoadingFragment() {
       <Loading><LoadingBlinkDots size="sm" invert/></Loading>
     </Container>
   )
+}
+
+function NoResult() {
+  return <Container relative centerTextAlign>
+    <Gap y="8" x="5">
+      <Text size="sm" color="gray">{strings.noResult}</Text>
+    </Gap>
+  </Container>
 }
 
 const sanitizeRule = {
@@ -93,11 +90,8 @@ class AsideThreads extends Component {
     this.onThreadClick = this.onThreadClick.bind(this);
     this.onStartChat = this.onStartChat.bind(this);
     this.onScrollBottomThreshold = this.onScrollBottomThreshold.bind(this);
-    this.onScroll = this.onScroll.bind(this);
     this.onMenuShow = this.onMenuShow.bind(this);
     this.onMenuHide = this.onMenuHide.bind(this);
-    this.contextMenuRefs = {};
-    this.contextTriggerRef = React.createRef();
     this.state = {activeThread: null};
   }
 
@@ -116,39 +110,6 @@ class AsideThreads extends Component {
   onScrollBottomThreshold() {
     const {threadsNextOffset, dispatch} = this.props;
     dispatch(threadGetList(threadsNextOffset, statics.count));
-  }
-
-  onScroll(e) {
-    this.currentScroll = e.currentTarget.scrollTop;
-  }
-
-  onThreadTouchStart(thread, e) {
-    e.stopPropagation();
-    const touchPosition = this.touchPosition;
-    clearTimeout(this.showMenuTimeOutId);
-    this.showMenuTimeOutId = setTimeout(() => {
-      clearTimeout(this.showMenuTimeOutId);
-      this.showMenuTimeOutId = null;
-      if (this.touchPosition === touchPosition) {
-        this.setState({
-          isMenuShow: thread.id
-        });
-        const trigger = this.contextMenuRefs[thread.id];
-        trigger.handleContextClick(e);
-      }
-    }, 700);
-  }
-
-  onThreadTouchEnd(thread, e) {
-    if (this.showMenuTimeOutId) {
-      clearTimeout(this.showMenuTimeOutId);
-    } else {
-      e.preventDefault();
-    }
-  }
-
-  onThreadTouchMove(thread, e) {
-    this.touchPosition = `${e.touches[0].pageX}${e.touches[0].pageY}`;
   }
 
   onMenuShow(id) {
@@ -192,7 +153,6 @@ class AsideThreads extends Component {
     const {threads, threadsFetching, threadsHasNext, threadShowing, chatInstance, chatSearchResult, user, threadsPartialFetching} = this.props;
     const {activeThread, isMenuShow} = this.state;
     const isMobile = mobileCheck();
-    const {MEDIUM} = avatarUrlGenerator.SIZES;
     const classNames = classnames({
       [style.AsideThreads]: true,
       [style["AsideThreads--autoZIndex"]]: isIosAndSafari(),
@@ -228,167 +188,67 @@ class AsideThreads extends Component {
         )
       }
 
-      const threadsContainerClassNames = classnames({
-        [style.AsideThreads__Threads]: true,
-        [style["AsideThreads__ThreadsFullHeight"]]: !isSearchResult
-      });
+      return <Container className={classNames}>
+        <AsideThreadsContextMenu onThreadClick={this.onThreadClick}
+                                 onMenuShow={this.onMenuShow}
+                                 onMenuHide={this.onMenuHide}
+                                 pinedThread={pinedThread}/>
+        {isMenuShow && <Container className={style.AsideThreads__Overlay} onContextMenu={e => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}/>}
+        <List style={{height: "100%"}}>
+          {isSearchResult &&
+          <GroupedVirtuoso groupCounts={[filteredThreads.length || 1, filteredContacts.length || 1]}
+                           topItemCount={0}
+                           fixedItemHeight={79}
+                           groupContent={index => {
+                             return <Container className={style.AsideThreads__GroupsHead}><Gap y={8} x={5}>
+                               <Container className={style.AsideThreads__GroupsHeadTextContainer}>
+                                 <Text color="accent">{index === 0 ? strings.conversations : strings.contacts}</Text>
+                               </Container>
+                             </Gap>
+                             </Container>
+                           }
+                           }
+                           itemContent={(index, groupIndex) => {
+                             if (groupIndex === 0) {
+                               const thread = filteredThreads[index];
+                               if (!thread) {
+                                 return <NoResult/>
+                               }
+                               return <AsideThreadsThread $this={this}
+                                                          onThreadClick={this.onThreadClick}
+                                                          isMenuShow={isMenuShow}
+                                                          activeThread={activeThread}
+                                                          user={user}
+                                                          thread={thread}/>
+                             } else {
+                               const contact = filteredContacts[index - filteredThreads.length];
+                               if (!contact) {
+                                 return <NoResult/>
+                               }
+                               return <AsideThreadsContact onStartChat={this.onStartChat} contact={contact}/>
+                             }
+                           }}/>
+          }
+          {!isSearchResult &&
+          <Virtuoso data={filteredThreads}
+                    endReached={()=> threadsHasNext && !threadsPartialFetching && !isSearchResult && this.onScrollBottomThreshold()}
+                    style={{height: "100%"}}
+                    fixedItemHeight={82.5}
+                    itemContent={(index, el) =>
+                      <AsideThreadsThread $this={this}
+                                          onThreadClick={this.onThreadClick}
+                                          isMenuShow={isMenuShow}
+                                          activeThread={activeThread}
+                                          user={user}
+                                          thread={el}/>}/>
+          }
 
-      return (
-        <Scroller className={classNames}
-                  threshold={5}
-                  onScroll={this.onScroll}
-                  onScrollBottomThresholdCondition={threadsHasNext && !threadsPartialFetching && !isSearchResult}
-                  onScrollBottomThreshold={this.onScrollBottomThreshold}>
-          {isMenuShow && <Container className={style.AsideThreads__Overlay} onContextMenu={e => {
-            e.stopPropagation();
-            e.preventDefault();
-          }}/>}
-          <Fragment>
-            <Fragment>
-              {isSearchResult &&
-              <Gap y={8} x={5}>
-                <Text bold color="accent">{strings.conversations}</Text>
-              </Gap>
-              }
-              <Scroller className={threadsContainerClassNames}>
-                <List>
-                  {filteredThreads && filteredThreads.length ?
-                    filteredThreads.map(el => (
-                      <Fragment>
-                        <AsideThreadsContextMenu onThreadClick={this.onThreadClick} thread={el}
-                                                 onMenuShow={this.onMenuShow} onMenuHide={this.onMenuHide}
-                                                 pinedThread={pinedThread}/>
-                        <ContextTrigger id={el.id} holdToDisplay={-1}
-                                        contextTriggerRef={e => this.contextMenuRefs[el.id] = e}>
-                          <Container relative userSelect="none">
-                            {el.pin && <Container className={style.AsideThreads__PinOverlay}/>}
-                            <ListItem key={el.id} onSelect={this.onThreadClick.bind(this, el)} selection
-                                      active={activeThread === el.id}>
-
-                              <Container relative
-                                         onTouchStart={this.onThreadTouchStart.bind(this, el)}
-                                         onTouchMove={this.onThreadTouchMove.bind(this, el)}
-                                         onTouchEnd={this.onThreadTouchEnd.bind(this, el)}>
-                                <Avatar cssClassNames={style.AsideThreads__AvatarContainer}>
-                                  <AvatarImage src={avatarUrlGenerator.apply(this, [el.image, MEDIUM, getMessageMetaData(el)])}
-                                               customSize="50px"
-                                               text={avatarNameGenerator(el.title).letter}
-                                               textBg={avatarNameGenerator(el.title).color}/>
-                                  <Container className={style.AsideThreads__ThreadCheck} bottomRight
-                                             style={{zIndex: 1, opacity: +isMenuShow === el.id ? 1 : 0}}>
-                                    <Shape color="accent">
-                                      <ShapeCircle>
-                                        <MdCheck size={styleVar.iconSizeSm} color={styleVar.colorWhite}
-                                                 style={{marginTop: "3px"}}/>
-                                      </ShapeCircle>
-                                    </Shape>
-                                  </Container>
-                                  <AvatarName invert>
-                                    {el.group &&
-                                    <Container inline>
-                                      {el.type === 8 ?
-                                        <MdRecordVoiceOver size={styleVar.iconSizeSm} color={styleVar.colorGray}/>
-                                        :
-                                        <MdGroup size={styleVar.iconSizeSm} color={styleVar.colorGray}/>
-                                      }
-                                      <Gap x={2}/>
-                                    </Container>
-                                    }
-                                    {el.title}
-                                    <AvatarText>
-                                      <AsideThreadsLastSeenMessage thread={el} user={user}/>
-                                    </AvatarText>
-                                  </AvatarName>
-                                </Avatar>
-                                {el.unreadCount || el.pin || el.mute ?
-                                  <Container absolute centerLeft>
-                                    <Gap y={10} block/>
-                                    {el.mentioned ?
-                                      <Fragment>
-                                        <Shape color="accent">
-                                          <ShapeCircle>@</ShapeCircle>
-                                        </Shape>
-                                        <Gap x={1}/>
-                                      </Fragment> :
-                                      el.mute ?
-                                        <MdNotificationsOff size={styleVar.iconSizeSm} color={styleVar.colorAccent}
-                                                            style={{verticalAlign: "middle"}}/> : ""
-                                    }
-                                    {el.unreadCount ?
-                                      <Shape color="accent">
-                                        <ShapeCircle>{el.unreadCount}</ShapeCircle>
-                                      </Shape> :
-                                      el.pin ?
-                                        <AiFillPushpin size={styleVar.iconSizeSm} color={styleVar.colorAccent}
-                                                       style={{marginRight: "3px", verticalAlign: "middle"}}/> : ""
-                                    }
-                                  </Container> : ""}
-                              </Container>
-                            </ListItem>
-                          </Container>
-                        </ContextTrigger>
-                      </Fragment>
-                    )) :
-                    <Container relative centerTextAlign>
-                      <Gap y={8} x={5}>
-                        <Text size="sm" color="gray">{strings.noResult}</Text>
-                      </Gap>
-                    </Container>}
-                </List>
-                {threadsPartialFetching && <PartialLoadingFragment/>}
-              </Scroller>
-            </Fragment>
-            {isSearchResult &&
-            <Fragment>
-              <Gap y="8" x="5">
-                <Text bold color="accent">{strings.contacts}</Text>
-              </Gap>
-              <Scroller>
-
-                {filteredContacts && filteredContacts.length ?
-                  <Container>
-
-                    <List>
-                      {filteredContacts.map(el => (
-                        <ListItem key={el.id} selection>
-                          <Container relative onClick={this.onStartChat.bind(this, el)}>
-
-                            <Container maxWidth="calc(100% - 75px)">
-                              <Avatar>
-                                <AvatarImage src={avatarUrlGenerator(el.linkedUser.image, MEDIUM)}
-                                             text={avatarNameGenerator(`${el.firstName} ${el.lastName}`).letter}
-                                             textBg={avatarNameGenerator(`${el.firstName} ${el.lastName}`).color}/>
-                                <AvatarName invert>
-                                  {el.firstName} {el.lastName}
-                                  {
-                                    el.blocked
-                                    &&
-                                    <AvatarText>
-                                      <Text size="xs" inline
-                                            color="red">{strings.blocked}</Text>
-                                    </AvatarText>
-                                  }
-
-                                </AvatarName>
-                              </Avatar>
-                            </Container>
-                          </Container>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Container> :
-                  <Container relative centerTextAlign>
-                    <Gap y="8" x="5">
-                      <Text size="sm" color="gray">{strings.noResult}</Text>
-                    </Gap>
-                  </Container>
-                }
-              </Scroller>
-            </Fragment>
-            }
-          </Fragment>
-        </Scroller>
-      );
+        </List>
+        {threadsPartialFetching && <PartialLoadingFragment/>}
+      </Container>;
     }
   }
 }
