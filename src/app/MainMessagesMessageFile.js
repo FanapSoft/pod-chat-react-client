@@ -46,14 +46,12 @@ import MainMessagesMessageFileControlIcon from "./MainMessagesMessageFileControl
 import MainMessagesMessageFileCaption from "./MainMessagesMessageFileCaption";
 import MainMessagesMessageBox from "./MainMessagesMessageBox";
 import MainMessagesMessageBoxHighLighter from "./MainMessagesMessageBoxHighLighter";
-import MainMessagesMessageBoxControl from "./MainMessagesMessageBoxControl";
 import MainMessagesMessageBoxFooter from "./MainMessagesMessageBoxFooter";
 import MainMessagesMessageBoxSeen from "./MainMessagesMessageBoxSeen";
 
 //styling
 import style from "../../styles/app/MainMessagesMessageFile.scss";
 import styleVar from "../../styles/variables.scss";
-
 
 
 @connect(store => {
@@ -67,7 +65,7 @@ class MainMessagesMessageFile extends Component {
 
   constructor(props) {
     super(props);
-    const {leftAsideShowing, smallVersion, message} = props;
+    const {leftAsideShowing, smallVersion, message, setInstance} = props;
     const metaData = getMessageMetaData(message);
     const isImageReal = isMessageIsImage(message) || (isMessageIsImage(message) && !message.id);
     this.state = {
@@ -92,13 +90,13 @@ class MainMessagesMessageFile extends Component {
     this.downloadTriggerRef = React.createRef();
     this.isDownloading = false;
     this.isPlayable = null;
-
+    this.mainMessagesMessageRef = setInstance(this);
   }
 
   componentDidMount() {
-    const {isImage,imageIsSuitableSize, metaData} = this.state;
-    if(isImage && imageIsSuitableSize) {
-      window.addEventListener("resize", e=>{
+    const {isImage, imageIsSuitableSize, metaData} = this.state;
+    if (isImage && imageIsSuitableSize) {
+      window.addEventListener("resize", e => {
         this.setState({
           imageIsSuitableSize
         });
@@ -233,11 +231,15 @@ class MainMessagesMessageFile extends Component {
     }
   }
 
+  createContextMenuChildren() {
+    return <ContextItem onClick={this.onDownload.bind(this, false)}>
+      {mobileCheck() ?
+        <MdArrowDownward color={styleVar.colorAccent} size={styleVar.iconSizeMd}/> : strings.download}
+    </ContextItem>
+  }
+
   render() {
     const {
-      onDelete,
-      onForward,
-      onReply,
       isMessageByMe,
       isFirstMessage,
       thread,
@@ -249,13 +251,9 @@ class MainMessagesMessageFile extends Component {
       onRepliedMessageClicked,
       onMessageSeenListClick,
       onMessageControlHide,
-      onShare,
-      isParticipantBlocked,
       forceSeen,
       isChannel,
-      isOwner,
       isGroup,
-      onPin,
       chatAudioPlayer,
       smallVersion,
       leftAsideShowing,
@@ -295,37 +293,20 @@ class MainMessagesMessageFile extends Component {
                                 isFirstMessage={isFirstMessage}
                                 isMessageByMe={isMessageByMe}>
           <MainMessagesMessageBoxHighLighter message={message} highLightMessage={highLightMessage}/>
-          <MainMessagesMessageBoxControl
-            isParticipantBlocked={isParticipantBlocked}
-            isOwner={isOwner}
-            isMessageByMe={isMessageByMe}
-            onPin={onPin}
-            isChannel={isChannel}
-            isGroup={isGroup}
-            onShare={onShare}
-            messageControlShow={messageControlShow}
-            message={message}
-            onMessageSeenListClick={onMessageSeenListClick}
-            onMessageControlHide={onMessageControlHide}
-            onDelete={onDelete} onForward={onForward} onReply={onReply}>
-            <ContextItem onClick={this.onDownload.bind(this, false)}>
-              {mobileCheck() ?
-                <MdArrowDownward color={styleVar.colorAccent} size={styleVar.iconSizeMd}/> : strings.download}
-            </ContextItem>
-          </MainMessagesMessageBoxControl>
           <Container>
             <Container relative
                        className={style.MainMessagesMessageFile__FileContainer}>
               {isImage ?
-                <MainMessagesMessageFileImage onCancel={uploading || isMessageHasError(message) ? this.onCancel : this.onCancelDownload}
-                                              isUploading={uploading}
-                                              message={message}
-                                              setShowProgress={this.setShowProgress}
-                                              smallVersion={smallVersion}
-                                              leftAsideShowing={leftAsideShowing}
-                                              showCancelIcon={downloading || uploading}
-                                              dispatch={dispatch}
-                                              metaData={metaData}/>
+                <MainMessagesMessageFileImage
+                  onCancel={uploading || isMessageHasError(message) ? this.onCancel : this.onCancelDownload}
+                  isUploading={uploading}
+                  message={message}
+                  setShowProgress={this.setShowProgress}
+                  smallVersion={smallVersion}
+                  leftAsideShowing={leftAsideShowing}
+                  showCancelIcon={downloading || uploading}
+                  dispatch={dispatch}
+                  metaData={metaData}/>
                 :
                 <Container className={style.MainMessagesMessageFile__FileName}>
                   {isVideo &&
@@ -376,12 +357,14 @@ class MainMessagesMessageFile extends Component {
 
           </Container>
           <MainMessagesMessageBoxFooter message={message} onMessageControlShow={onMessageControlShow}
-                               isMessageByMe={isMessageByMe}
-                               onMessageControlHide={onMessageControlHide}
-                               messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
-            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread} forceSeen={forceSeen}
-                          onMessageSeenListClick={onMessageSeenListClick} onRetry={this.onRetry}
-                          onCancel={this.onCancel}/>
+                                        mainMessagesMessageRef={this.mainMessagesMessageRef}
+                                        isMessageByMe={isMessageByMe}
+                                        onMessageControlHide={onMessageControlHide}
+                                        messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
+            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread}
+                                        forceSeen={forceSeen}
+                                        onMessageSeenListClick={onMessageSeenListClick} onRetry={this.onRetry}
+                                        onCancel={this.onCancel}/>
           </MainMessagesMessageBoxFooter>
         </MainMessagesMessageBox>
       </Container>

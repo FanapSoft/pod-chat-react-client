@@ -57,13 +57,12 @@ function AsideThreadsThread({
     touchPosition = `${e.touches[0].pageX}${e.touches[0].pageY}`;
   };
   return <Fragment>
-      <ContextTrigger id={"test"} holdToDisplay={-1}
+      <ContextTrigger id="aside-threads-context-menu" holdToDisplay={-1}
                       collect={() => thread}
                       contextTriggerRef={e => trigger = e}>
         <Container relative userSelect="none">
           {thread.pin && <Container className={style.AsideThreadsThread__PinOverlay}/>}
           <ListItem key={thread.id} onSelect={onThreadClick.bind(null, thread)} selection
-                    style={{height: "79px"}}
                     active={activeThread === thread.id}>
 
             <Container relative

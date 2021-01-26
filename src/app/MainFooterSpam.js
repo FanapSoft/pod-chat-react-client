@@ -182,7 +182,7 @@ export default class MainFooterSpam extends Component {
   render() {
     const {thread} = this.props;
     const showSpamming = false;//showSpam(this.props);
-    const showBlockIs = false;//showBlock(this.props);
+    const showBlockIs = showBlock(this.props);
     const showMuteForChannelIs = showMuteForChannel(this.props);
     let classNamesObject = {
       [style.MainFooterSpam]: true,

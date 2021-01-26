@@ -96,7 +96,7 @@ export default class AsideThreadsContextMenu extends Component {
     const {onThreadClick, pinedThread} = this.props;
     const {thread} = this.state;
     const isMobile = mobileCheck();
-    return <Context id={"test"} stickyHeader={isMobile} style={isMobile ? {height: "59px"} : null}
+    return <Context id="aside-threads-context-menu" stickyHeader={isMobile} style={isMobile ? {height: "59px"} : null}
                     onShow={this.onMenuShow} onHide={this.onMenuHide}>
       {
         isMobile ?

@@ -200,6 +200,7 @@ class AsideThreads extends Component {
         <List style={{height: "100%"}}>
           {isSearchResult &&
           <GroupedVirtuoso groupCounts={[filteredThreads.length || 1, filteredContacts.length || 1]}
+                           className={style.AsideThreads__Scroller}
                            topItemCount={0}
                            fixedItemHeight={79}
                            groupContent={index => {
@@ -235,7 +236,7 @@ class AsideThreads extends Component {
           {!isSearchResult &&
           <Virtuoso data={filteredThreads}
                     endReached={()=> threadsHasNext && !threadsPartialFetching && !isSearchResult && this.onScrollBottomThreshold()}
-                    style={{height: "100%"}}
+                    className={style.AsideThreads__Scroller}
                     fixedItemHeight={82.5}
                     itemContent={(index, el) =>
                       <AsideThreadsThread $this={this}

@@ -15,7 +15,7 @@ import isElementVisible from "../utils/dom";
 //strings
 
 //actions
-import {messageSeen} from "../actions/messageActions";
+import {messageEditing, messageSeen} from "../actions/messageActions";
 import {
   threadMessageGetListByMessageId,
   threadMessageGetListPartial,
@@ -24,7 +24,11 @@ import {
   threadCheckedMessageList,
   threadNewMessage,
   threadFilesToUpload,
-  threadCreateOnTheFly, threadUnreadMentionedMessageRemove, threadGoToMessageId
+  threadCreateOnTheFly,
+  threadUnreadMentionedMessageRemove,
+  threadGoToMessageId,
+  threadModalListShowing,
+  threadLeftAsideShowing
 } from "../actions/threadActions";
 
 //components
@@ -46,6 +50,11 @@ import {
   MdExpandMore,
 } from "react-icons/md";
 import style from "../../styles/app/MainMessages.scss";
+import MainMessagesContextMenu from "./MainMessagesContextMenu";
+import {chatModalPrompt} from "../actions/chatActions";
+import {MessageDeletePrompt, PinMessagePrompt} from "./_component/prompts";
+import MainMessagesMessageShare from "./MainMessagesMessageShare";
+import {THREAD_LEFT_ASIDE_SEEN_LIST} from "../constants/actionTypes";
 
 export const statics = {
   historyFetchCount: 20,
@@ -551,6 +560,7 @@ export default class MainMessages extends Component {
                  onDragOver={this.onDragOver}
                  onDrop={this.onFileDrop}>
         {threadMessagesPartialFetching && <PartialLoadingFragment/>}
+        <MainMessagesContextMenu thread={thread}/>
         <Scroller ref={this.scroller}
                   checkForSnapping
                   className={style.MainMessages__Messages}

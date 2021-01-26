@@ -53,14 +53,11 @@ export default class MainMessagesMessage extends Component {
     super(props);
     this.onMouseOver = this.onMouseOver.bind(this);
     this.onMouseLeave = this.onMouseLeave.bind(this);
-    this.onDelete = this.onDelete.bind(this);
-    this.onForward = this.onForward.bind(this);
-    this.onReply = this.onReply.bind(this);
-    this.onShare = this.onShare.bind(this);
-    this.onPin = this.onPin.bind(this);
     this.onMessageControlHide = this.onMessageControlHide.bind(this);
     this.onMessageControlShow = this.onMessageControlShow.bind(this);
     this.onMessageSeenListClick = this.onMessageSeenListClick.bind(this);
+    this.onReply = this.onReply.bind(this);
+    this.setInstance = this.setInstance.bind(this);
     this.containerRef = React.createRef();
     this.contextTriggerRef = React.createRef();
     this.state = {
@@ -73,6 +70,11 @@ export default class MainMessagesMessage extends Component {
     const {message, dispatch} = this.props;
     e.stopPropagation();
     dispatch(threadLeftAsideShowing(true, THREAD_LEFT_ASIDE_SEEN_LIST, message.id));
+  }
+
+  onReply() {
+    const {dispatch, message} = this.props;
+    dispatch(messageEditing(message, "REPLYING"));
   }
 
   onMouseOver() {
@@ -110,10 +112,6 @@ export default class MainMessagesMessage extends Component {
     });
   }
 
-  onMessageInfo() {
-
-  }
-
   onMessageControlShow(e) {
     if (!this.state.messageControlShow) {
       this.setState({
@@ -121,40 +119,6 @@ export default class MainMessagesMessage extends Component {
       });
       return true;
     }
-  }
-
-  onPin() {
-    const {dispatch, message} = this.props;
-    dispatch(chatModalPrompt(true,
-      null, null, null, null,
-      <PinMessagePrompt message={message} dispatch={dispatch}/>));
-  }
-
-  onShare() {
-    const {dispatch, message} = this.props;
-    dispatch(chatModalPrompt(true,
-      null, null, null, null,
-      <MainMessagesMessageShare message={message}/>));
-  }
-
-  onDelete(e) {
-    const {dispatch, message, user, thread} = this.props;
-    dispatch(chatModalPrompt(true,
-      null, null, null, null,
-      <MessageDeletePrompt thread={thread} message={message} dispatch={dispatch} user={user}/>));
-    this.onMessageControlHide();
-  }
-
-  onForward() {
-    const {dispatch, message} = this.props;
-    dispatch(threadModalListShowing(true, message));
-    this.onMessageControlHide && this.onMessageControlHide();
-  }
-
-  onReply() {
-    const {dispatch, message} = this.props;
-    dispatch(messageEditing(message, "REPLYING"));
-    this.onMessageControlHide && this.onMessageControlHide();
   }
 
   onThreadTouchStart(message, e) {
@@ -165,9 +129,6 @@ export default class MainMessagesMessage extends Component {
       clearTimeout(this.showMenuTimeOutId);
       this.showMenuTimeOutId = null;
       if (this.touchPosition === touchPosition) {
-        this.setState({
-          isMenuShow: message.id
-        });
         this.contextTriggerRef.current.handleContextClick(e);
       }
     }, 700);
@@ -183,6 +144,11 @@ export default class MainMessagesMessage extends Component {
     } else {
       e.preventDefault();
     }
+  }
+
+  setInstance(instance) {
+    this.instance = instance
+    return this;
   }
 
   render() {
@@ -207,11 +173,7 @@ export default class MainMessagesMessage extends Component {
       onMessageSeenListClick: this.onMessageSeenListClick,
       onMessageControlHide: this.onMessageControlHide,
       onRepliedMessageClicked: onRepliedMessageClicked,
-      onDelete: this.onDelete,
-      onForward: this.onForward,
-      onReply: this.onReply,
-      onPin: this.onPin,
-      onShare: this.onShare,
+      setInstance: this.setInstance,
       isFirstMessage: showMessageNameOrAvatar(message, messages),
       datePetrification: messageDatePetrification.bind(null, message.time),
       messageControlShow,
@@ -250,7 +212,8 @@ export default class MainMessagesMessage extends Component {
                  onMouseOver={this.onMouseOver}
                  onMouseLeave={this.onMouseLeave}>
 
-        <ContextTrigger id={message.id || Math.random()} holdToDisplay={-1} contextTriggerRef={this.contextTriggerRef}>
+        <ContextTrigger id={message.id ? "messages-context-menu" : Math.random()} holdToDisplay={-1}
+                        contextTriggerRef={this.contextTriggerRef} collect={() => this}>
           {isMessageIsFile(message) ?
             isMessageIsNewFile(message) || !message.id ?
               <MainMessagesMessageFile {...args}/>

@@ -1,5 +1,5 @@
 // src/list/BoxSceneMessagesText
-import React, {Component} from "react";
+import React, {Component, Fragment} from "react";
 import "moment/locale/fa";
 import {connect} from "react-redux";
 import {mobileCheck, decodeEmoji, clearHtml, emailify, mentionify, urlify} from "../utils/helpers";
@@ -18,7 +18,6 @@ import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import {MdEdit, MdContentCopy} from "react-icons/md";
 import MainMessagesMessageBox from "./MainMessagesMessageBox";
 import MainMessagesMessageBoxHighLighter from "./MainMessagesMessageBoxHighLighter";
-import MainMessagesMessageBoxControl from "./MainMessagesMessageBoxControl";
 import MainMessagesMessageBoxSeen from "./MainMessagesMessageBoxSeen";
 import MainMessagesMessageBoxEdit from "./MainMessagesMessageBoxEdit";
 import MainMessagesMessageBoxFooter from "./MainMessagesMessageBoxFooter";
@@ -34,6 +33,7 @@ export default class MainMessagesMessageText extends Component {
   constructor(props) {
     super(props);
     window.onUserNameClick = this.onUserNameClick = this.onUserNameClick.bind(this);
+    this.mainMessagesMessageRef = props.setInstance(this);
   }
 
   onRetry(message) {
@@ -59,11 +59,29 @@ export default class MainMessagesMessageText extends Component {
   onUserNameClick(e) {
   }
 
+  createContextMenuChildren() {
+    const {message} = this.props;
+    return (
+      <Fragment>
+        {
+          message.editable &&
+          <ContextItem onClick={this.onEdit.bind(this, message)}>
+            {mobileCheck() ? <MdEdit size={styleVar.iconSizeMd} color={styleVar.colorAccent}/> : strings.edit}
+          </ContextItem>
+        }
+        {
+          <ContextItem onClick={this.onCopy.bind(this, message)}>
+            {mobileCheck() ?
+              <MdContentCopy size={styleVar.iconSizeMd} color={styleVar.colorAccent}/> : strings.copyText}
+          </ContextItem>
+        }
+      </Fragment>
+    )
+  }
+
   render() {
     const {
-      onDelete,
-      onForward,
-      onReply, isMessageByMe,
+      isMessageByMe,
       isFirstMessage,
       thread,
       messageControlShow,
@@ -74,62 +92,33 @@ export default class MainMessagesMessageText extends Component {
       onRepliedMessageClicked,
       onMessageSeenListClick,
       onMessageControlHide,
-      onPin,
-      onShare,
-      isParticipantBlocked,
-      contextRef,
       forceSeen,
       isChannel,
-      isOwner,
-      isGroup
+      isGroup,
+      ref
     } = this.props;
     return (
-      <Container className={style.MainMessagesText}>
+      <Container className={style.MainMessagesText} ref={ref}>
         <MainMessagesMessageBox message={message} onRepliedMessageClicked={onRepliedMessageClicked}
-                       isChannel={isChannel} isGroup={isGroup}
-                       isFirstMessage={isFirstMessage} isMessageByMe={isMessageByMe}>
+                                isChannel={isChannel} isGroup={isGroup}
+                                isFirstMessage={isFirstMessage} isMessageByMe={isMessageByMe}>
           <MainMessagesMessageBoxHighLighter message={message} highLightMessage={highLightMessage}/>
-          <MainMessagesMessageBoxControl isMessageByMe={isMessageByMe}
-                           isOwner={isOwner}
-                           contextRef={contextRef}
-                           onPin={onPin}
-                           isParticipantBlocked={isParticipantBlocked}
-                           messageControlShow={messageControlShow}
-                           isChannel={isChannel}
-                           isGroup={isGroup}
-                           message={message}
-                           onMessageSeenListClick={onMessageSeenListClick}
-                           onMessageControlHide={onMessageControlHide}
-                           onShare={onShare}
-                           onDelete={onDelete} onForward={onForward} onReply={onReply}
-                           isText={true}>
-            {
-              message.editable &&
-              <ContextItem onClick={this.onEdit.bind(this, message)}>
-                {mobileCheck() ? <MdEdit size={styleVar.iconSizeMd} color={styleVar.colorAccent}/> : strings.edit}
-              </ContextItem>
-            }
-            {
-              <ContextItem onClick={this.onCopy.bind(this, message)}>
-                {mobileCheck() ?
-                  <MdContentCopy size={styleVar.iconSizeMd} color={styleVar.colorAccent}/> : strings.copyText}
-              </ContextItem>
-            }
-
-          </MainMessagesMessageBoxControl>
-          <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e=>e.stopPropagation()}>
+          <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e => e.stopPropagation()}>
             <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
               {mentionify(emailify(decodeEmoji(urlify(clearHtml(message.message))), this.onUserNameClick))}
             </Text>
           </Container>
           <MainMessagesMessageBoxFooter message={message}
-                               onMessageControlShow={onMessageControlShow}
-                               onMessageControlHide={onMessageControlHide}
-                               isMessageByMe={isMessageByMe}
-                               messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
-            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread} forceSeen={forceSeen}
-                          onMessageSeenListClick={onMessageSeenListClick} onRetry={this.onRetry.bind(this, message)}
-                          onCancel={this.onCancel.bind(this, message)}/>
+                                        mainMessagesMessageRef={this.mainMessagesMessageRef}
+                                        onMessageControlShow={onMessageControlShow}
+                                        onMessageControlHide={onMessageControlHide}
+                                        isMessageByMe={isMessageByMe}
+                                        messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
+            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread}
+                                        forceSeen={forceSeen}
+                                        onMessageSeenListClick={onMessageSeenListClick}
+                                        onRetry={this.onRetry.bind(this, message)}
+                                        onCancel={this.onCancel.bind(this, message)}/>
             <MainMessagesMessageBoxEdit message={message}/>
           </MainMessagesMessageBoxFooter>
         </MainMessagesMessageBox>
