@@ -58,7 +58,7 @@ export default class AsideThreadsContextMenu extends Component {
     const {thread, user} = this.props;
     const instance = this.instance = e.detail.data.instance;
     const {message} = instance.props;
-    this.isMessageByMe = isMessageByMe(message, user, thread);
+    this.isMessageByMe = !this.isChannel || isMessageByMe(message, user, thread);
     this.deleteCondition = this.isMessageByMe;
     this.setState({
       message

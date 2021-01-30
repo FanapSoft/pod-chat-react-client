@@ -560,7 +560,7 @@ export default class MainMessages extends Component {
                  onDragOver={this.onDragOver}
                  onDrop={this.onFileDrop}>
         {threadMessagesPartialFetching && <PartialLoadingFragment/>}
-        <MainMessagesContextMenu thread={thread}/>
+        <MainMessagesContextMenu thread={thread} user={user}/>
         <Scroller ref={this.scroller}
                   checkForSnapping
                   className={style.MainMessages__Messages}

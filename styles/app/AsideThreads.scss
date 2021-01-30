@@ -40,7 +40,7 @@
   height: 100%;
 }
 
-.AsideThreads__Scroller:not(.Scroller--mobileVersion) {
+.AsideThreads__Scroller:not(.AsideThreads__Scroller--mobileVersion) {
 
   &::-webkit-scrollbar {
     width: 7px;

@@ -3,7 +3,15 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import "moment/locale/fa";
-import {humanFileSize, mobileCheck, emailify, mentionify, urlify, getMessageMetaData} from "../utils/helpers";
+import {
+  humanFileSize,
+  mobileCheck,
+  emailify,
+  mentionify,
+  urlify,
+  getMessageMetaData,
+  clearHtml
+} from "../utils/helpers";
 import classnames from "classnames";
 
 //strings
@@ -204,7 +212,7 @@ class MainMessagesMessageFile extends Component {
                   </IndexModalMediaFragment>
                   <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e => e.stopPropagation()}>
                     <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
-                      {mentionify(emailify(urlify(decodeEmoji(message.message))))}
+                      {mentionify(emailify(decodeEmoji(urlify(clearHtml(message.message)))))}
                     </Text>
                   </Container>
 
@@ -256,7 +264,7 @@ class MainMessagesMessageFile extends Component {
 
             <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e => e.stopPropagation()}>
               <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
-                {mentionify(emailify(urlify(decodeEmoji(message.message))))}
+                {mentionify(emailify(decodeEmoji(urlify(clearHtml(message.message)))))}
               </Text>
             </Container>
             }

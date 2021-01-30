@@ -159,6 +159,10 @@ class AsideThreads extends Component {
       [style["AsideThreads--hiddenOverflow"]]: isMobile ? false : isMenuShow && true,
       [style["AsideThreads--isThreadShow"]]: threadShowing
     });
+    let scrollerClassNames = classnames({
+      [style.AsideThreads__Scroller]: true,
+      [style["AsideThreads__Scroller--mobileVersion"]]: isMobile,
+    });
     let filteredThreads = threads;
     let filteredContacts;
     let isSearchResult;
@@ -200,7 +204,7 @@ class AsideThreads extends Component {
         <List style={{height: "100%"}}>
           {isSearchResult &&
           <GroupedVirtuoso groupCounts={[filteredThreads.length || 1, filteredContacts.length || 1]}
-                           className={style.AsideThreads__Scroller}
+                           className={scrollerClassNames}
                            topItemCount={0}
                            fixedItemHeight={79}
                            groupContent={index => {
@@ -236,7 +240,7 @@ class AsideThreads extends Component {
           {!isSearchResult &&
           <Virtuoso data={filteredThreads}
                     endReached={()=> threadsHasNext && !threadsPartialFetching && !isSearchResult && this.onScrollBottomThreshold()}
-                    className={style.AsideThreads__Scroller}
+                    className={scrollerClassNames}
                     fixedItemHeight={82.5}
                     itemContent={(index, el) =>
                       <AsideThreadsThread $this={this}
