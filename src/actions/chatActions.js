@@ -44,7 +44,7 @@ import {
   CHAT_AUDIO_PLAYER, CHAT_FILE_HASH_CODE_REMOVE, CHAT_AUDIO_RECORDER
 } from "../constants/actionTypes";
 import {messageInfo} from "./messageActions";
-import {statics} from "../app/MainMessages";
+import {THREAD_HISTORY_LIMIT_PER_REQUEST} from "../constants/historyFetchLimits";
 
 
 let firstReadyPassed = false;
@@ -300,7 +300,7 @@ export const restoreChatState = () => {
         const lastMassage = messages[messages.length - 1];
         const firstInitial = !thread.lastMessageVO || (lastMassage && thread.lastMessageVO.time < lastMassage.time);
         const offsetOrTimeNanos = firstInitial ? undefined : lastMassage.time + 200;
-        getThreadHistory(chatSDK, threadId, statics.historyFetchCount, offsetOrTimeNanos, !firstInitial).then(payload => {
+        getThreadHistory(chatSDK, threadId, THREAD_HISTORY_LIMIT_PER_REQUEST, offsetOrTimeNanos, !firstInitial).then(payload => {
           const {messages} = payload;
           if (firstInitial) {
             dispatch({

@@ -13,22 +13,20 @@ import {
 import isElementVisible from "../utils/dom";
 
 //strings
+import {THREAD_HISTORY_LIMIT_PER_REQUEST, THREAD_HISTORY_UNSEEN_MENTIONED} from "../constants/historyFetchLimits";
 
 //actions
-import {messageEditing, messageSeen} from "../actions/messageActions";
+import {messageSeen} from "../actions/messageActions";
 import {
   threadMessageGetListByMessageId,
   threadMessageGetListPartial,
   threadMessageGetList,
   threadUnreadMentionedMessageGetList,
-  threadCheckedMessageList,
   threadNewMessage,
   threadFilesToUpload,
-  threadCreateOnTheFly,
   threadUnreadMentionedMessageRemove,
   threadGoToMessageId,
-  threadModalListShowing,
-  threadLeftAsideShowing
+  threadTrimDownHistory
 } from "../actions/threadActions";
 
 //components
@@ -44,20 +42,15 @@ import MainMessagesLoading from "./MainMessagesLoading";
 import MainMessagesNoMessages from "./MainMessagesNoMessages";
 import MainMessagesAvatar from "./MainMessagesAvatar";
 import MainMessagesTick from "./MainMessagesTick";
+import MainMessagesContextMenu from "./MainMessagesContextMenu";
 
 //styling
 import {
   MdExpandMore,
 } from "react-icons/md";
 import style from "../../styles/app/MainMessages.scss";
-import MainMessagesContextMenu from "./MainMessagesContextMenu";
-import {chatModalPrompt} from "../actions/chatActions";
-import {MessageDeletePrompt, PinMessagePrompt} from "./_component/prompts";
-import MainMessagesMessageShare from "./MainMessagesMessageShare";
-import {THREAD_LEFT_ASIDE_SEEN_LIST} from "../constants/actionTypes";
 
 export const statics = {
-  historyFetchCount: 20,
   historyUnseenMentionedFetchCount: 100,
 };
 
@@ -176,9 +169,10 @@ export default class MainMessages extends Component {
     //functionality after allowing newMessage to come for calculation
 
     if (isMessageByMe(messageNew, user)) {
-      this.setState({unreadBar: null});
+      messageNew.isByMe = true;
+      this.setState({unreadBar: null, newMessageUnreadCount: 0});
       if (hasNext) {
-        dispatch(threadMessageGetList(thread.id, statics.historyFetchCount));
+        dispatch(threadMessageGetList(thread.id, THREAD_HISTORY_LIMIT_PER_REQUEST));
         this.gotoBottom = true;
         return false;
       } else {
@@ -195,16 +189,30 @@ export default class MainMessages extends Component {
       }
       if (this.scroller.current) {
         const scrollPositionInfo = this.scroller.current.getInfo();
+        const {newMessageUnreadCount} = this.state;
         if (!hasNext) {
+          const isInBottom = scrollPositionInfo.isInBottomEnd;
+          if(isInBottom) {
+            messageNew.followUp = true;
+          }
           dispatch(threadNewMessage(messageNew));
-          if (scrollPositionInfo.isInBottomEnd) {
+          if (isInBottom) {
             this.gotoBottom = true;
             this.lastSeenMessage = messageNew;
+            if (newMessageUnreadCount !== 0) {
+              this.setState({
+                newMessageUnreadCount: 0
+              });
+            }
+          } else {
+            this.setState({
+              newMessageUnreadCount: newMessageUnreadCount + 1
+            });
           }
           return false;
         } else if (hasNext) {
           this.setState({
-            newMessageUnreadCount: this.state.newMessageUnreadCount + 1
+            newMessageUnreadCount: newMessageUnreadCount + 1
           });
           return false;
         }
@@ -280,6 +288,7 @@ export default class MainMessages extends Component {
       if (!threadMessagesPartialFetching && !threadGetMessageListByMessageIdFetching) {
         this.scroller.current.checkForSnapping();
         this.checkForSnapping = false;
+        dispatch(threadTrimDownHistory());
       }
     }
   }
@@ -294,9 +303,9 @@ export default class MainMessages extends Component {
     if (fetchLastHistoryWithoutAnyCondition) {
       this.gotoBottom = true;
       this.setState({unreadBar: null});
-      return dispatch(threadMessageGetList(thread.id, statics.historyFetchCount));
+      return dispatch(threadMessageGetList(thread.id, THREAD_HISTORY_LIMIT_PER_REQUEST));
     }
-    if (thread.unreadCount > statics.historyFetchCount) {
+    if (thread.unreadCount > THREAD_HISTORY_LIMIT_PER_REQUEST) {
       this.hasPendingMessageToGo = thread.lastSeenMessageTime;
       this._fetchHistoryFromMiddle(thread.id, thread.lastSeenMessageTime);
       this.setState({unreadBar: thread.lastSeenMessageTime});
@@ -320,7 +329,7 @@ export default class MainMessages extends Component {
         }
       }
       this.setState({unreadBar});
-      dispatch(threadMessageGetList(thread.id, statics.historyFetchCount));
+      dispatch(threadMessageGetList(thread.id, THREAD_HISTORY_LIMIT_PER_REQUEST));
     }
   }
 
@@ -329,11 +338,11 @@ export default class MainMessages extends Component {
     if (canceled) {
       return dispatch(threadUnreadMentionedMessageGetList());
     }
-    dispatch(threadUnreadMentionedMessageGetList(thread.id, statics.historyUnseenMentionedFetchCount));
+    dispatch(threadUnreadMentionedMessageGetList(thread.id, THREAD_HISTORY_UNSEEN_MENTIONED));
   }
 
   _fetchHistoryFromMiddle(threadId, messageTime) {
-    this.props.dispatch(threadMessageGetListByMessageId(threadId, messageTime, statics.historyFetchCount));
+    this.props.dispatch(threadMessageGetListByMessageId(threadId, messageTime, THREAD_HISTORY_LIMIT_PER_REQUEST));
   }
 
   onGotoBottomClicked() {
@@ -348,6 +357,7 @@ export default class MainMessages extends Component {
       this.scroller.current.gotoBottom();
     }
     this.setState({
+      newMessageUnreadCount: 0,
       bottomButtonShowing: false
     });
   }
@@ -361,14 +371,14 @@ export default class MainMessages extends Component {
   onScrollTopThreshold() {
     const {thread, threadMessages, dispatch} = this.props;
     const {messages} = threadMessages;
-    dispatch(threadMessageGetListPartial(thread.id, messages[0].time - 200, false, statics.historyFetchCount));
+    dispatch(threadMessageGetListPartial(thread.id, messages[0].time - 200, false, THREAD_HISTORY_LIMIT_PER_REQUEST));
     this.checkForSnapping = true;
   }
 
   onScrollBottomThreshold() {
     const {thread, threadMessages, dispatch} = this.props;
     const {messages} = threadMessages;
-    dispatch(threadMessageGetListPartial(thread.id, messages[messages.length - 1].time + 200, true, statics.historyFetchCount));
+    dispatch(threadMessageGetListPartial(thread.id, messages[messages.length - 1].time + 200, true, THREAD_HISTORY_LIMIT_PER_REQUEST, false));
   }
 
   onScroll() {
@@ -406,6 +416,7 @@ export default class MainMessages extends Component {
 
   onScrollBottomEnd() {
     const {thread, messageNew} = this.props;
+    const {bottomButtonShowing} = this.state;
     if (thread.unreadCount > 0) {
       this.lastSeenMessage = thread.lastMessageVO;
     }
@@ -419,9 +430,13 @@ export default class MainMessages extends Component {
         }
         }*/
 
-    this.setState({
-      bottomButtonShowing: false
-    });
+    if (bottomButtonShowing) {
+      this.setState({
+        newMessageUnreadCount: 0,
+        bottomButtonShowing: false
+      });
+    }
+
   }
 
   onScrollTop() {
@@ -535,7 +550,7 @@ export default class MainMessages extends Component {
       threadUnreadMentionedMessages,
       threadSelectMessageShowing
     } = this.props;
-    const {highLightMessage, bottomButtonShowing, unreadBar} = this.state;
+    const {highLightMessage, bottomButtonShowing, unreadBar, newMessageUnreadCount} = this.state;
     const {messages, fetching, hasPrevious, hasNext} = threadMessages;
     const MainMessagesMessageContainerClassNames = message => classnames({
       [style.MainMessages__MessageContainer]: true,
@@ -611,9 +626,18 @@ export default class MainMessages extends Component {
           </List>
 
         </Scroller>
-        {bottomButtonShowing && !this.gotoBottom &&
+        {(bottomButtonShowing || newMessageUnreadCount!==0) && !this.gotoBottom &&
         <ButtonFloating onClick={this.onGotoBottomClicked} size="sm" position={{right: 0, bottom: 0}}>
           <MdExpandMore size={style.iconSizeMd}/>
+
+          {newMessageUnreadCount !==0 &&
+          <Container className={style.MainMessages__MentionedButtonContainer}>
+            <Shape color="accent">
+              <ShapeCircle>{newMessageUnreadCount}</ShapeCircle>
+            </Shape>
+          </Container>
+          }
+
         </ButtonFloating>}
         {threadUnreadMentionedMessages.length > 0 &&
         <ButtonFloating onClick={this.onMentionedClicked} size="sm"

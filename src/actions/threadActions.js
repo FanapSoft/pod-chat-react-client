@@ -44,7 +44,7 @@ import {
   THREAD_UNREAD_MENTIONED_MESSAGE_LIST,
   THREAD_UNREAD_MENTIONED_MESSAGE_REMOVE,
   THREAD_DRAFT,
-  THREAD_GET_PARTICIPANT_ROLES
+  THREAD_GET_PARTICIPANT_ROLES, THREAD_TRIM_HISTORY, THREAD_TRIM_DOWN_HISTORY
 } from "../constants/actionTypes";
 import {stateGeneratorState} from "../utils/storeHelper";
 
@@ -326,6 +326,14 @@ export const threadNewMessage = message => {
     dispatch({
       type: THREAD_NEW_MESSAGE,
       payload: message
+    });
+  }
+};
+
+export const threadTrimDownHistory = fromUp => {
+  return dispatch => {
+    dispatch({
+      type: THREAD_TRIM_DOWN_HISTORY
     });
   }
 };
