@@ -46,6 +46,7 @@ export default class AsideThreadsContextMenu extends Component {
     this.onMuteClick = this.onMuteClick.bind(this);
     this.onMenuShow = this.onMenuShow.bind(this);
     this.onMenuHide = this.onMenuHide.bind(this);
+    this.onLastMessageSeen = this.onLastMessageSeen.bind(this);
   }
 
   onLeaveClick() {

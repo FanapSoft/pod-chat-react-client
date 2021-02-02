@@ -47,6 +47,7 @@ export default class ChatSDK {
     this.onChatReady = props.onChatReady;
     this.onChatState = props.onChatState;
     this.onChatError = props.onChatError;
+    window.sdk = this;
     this._onMessageEvents();
     this._onThreadEvents();
     this._onContactsEvents();
@@ -195,7 +196,7 @@ export default class ChatSDK {
           threadId: params.threadId,
           nextOffset,
           contentCount,
-          messages: rslt.history.concat(rslt.failed.concat(rslt.sending)),
+          messages: rslt.history.concat(rslt.failed.concat(rslt.sending.concat(rslt.uploading))),
           hasNext: realHasNext,
           hasPrevious: realHasPrevious
         });

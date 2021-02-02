@@ -1,18 +1,13 @@
 // src/MainMessagesMessage
-import React, {Component} from "react";
+import React, {Component, memo} from "react";
 import {connect} from "react-redux";
 import "moment/locale/fa";
-import {showBlock} from "./MainFooterSpam";
-import {MessageDeletePrompt, PinMessagePrompt} from "./_component/prompts";
 import checkForPrivilege from "../utils/privilege";
 import {
   findLastSeenMessage,
-  isGroup,
-  isMessageByMe,
   isMessageIsFile,
   isMessageIsNewFile,
   mobileCheck,
-  showMessageNameOrAvatar,
   messageDatePetrification
 } from "../utils/helpers";
 
@@ -41,13 +36,13 @@ import style from "../../styles/app/MainMessagesMessage.scss";
 
 @connect(store => {
   return {
-    participants: store.threadParticipantList.participants,
-    participantsFetching: store.threadParticipantList.fetching,
+    /*    participants: store.threadParticipantList.participants,
+        participantsFetching: store.threadParticipantList.fetching,*/
     threadLeftAsideShowing: store.threadLeftAsideShowing,
     chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
   };
 })
-export default class MainMessagesMessage extends Component {
+export class MainMessagesMessage extends Component {
 
   constructor(props) {
     super(props);
@@ -64,6 +59,27 @@ export default class MainMessagesMessage extends Component {
       messageControlShow: false,
       messageTriggerShow: false
     };
+  }
+
+  shouldComponentUpdate(nextProps, nextState, nextContext) {
+    const {messageControlShow, messageTriggerShow} = nextState;
+    const {message, highLightMessage, showName} = nextProps;
+    const {messageControlShow: currentMessageControlShow, messageTriggerShow: currentMessageTriggerShow} = this.state;
+    const {message: currentMessage, highLightMessage: currentHighLightMessage, showName: currentShowName} = this.props;
+    if (currentMessageControlShow === messageControlShow) {
+      if (currentMessageTriggerShow === messageTriggerShow) {
+        if (currentMessage.message === message.message) {
+          if (currentMessage.progress === message.progress) {
+            if (currentHighLightMessage === highLightMessage) {
+              if (currentShowName === showName) {
+                return false;
+              }
+            }
+          }
+        }
+      }
+    }
+    return true;
   }
 
   onMessageSeenListClick(e) {
@@ -147,7 +163,7 @@ export default class MainMessagesMessage extends Component {
   }
 
   setInstance(instance) {
-    this.instance = instance
+    this.instance = instance;
     return this;
   }
 
@@ -155,40 +171,38 @@ export default class MainMessagesMessage extends Component {
     const {
       message,
       messages,
+      showName,
       user,
       thread,
       highLightMessage,
       onRepliedMessageClicked,
-      participantsFetching,
-      participants,
       threadLeftAsideShowing,
-      chatFileHashCodeMap
+      chatFileHashCodeMap,
+      isMessageByMe,
+      isGroup,
+      isChannel
     } = this.props;
     const lastSeenMessageTime = findLastSeenMessage(messages);
     const {messageControlShow, messageTriggerShow} = this.state;
-    const isGroupReal = isGroup(thread);
-    const isMessageByMeReal = isMessageByMe(message, user, thread);
     const args = {
       onMessageControlShow: this.onMessageControlShow,
       onMessageSeenListClick: this.onMessageSeenListClick,
       onMessageControlHide: this.onMessageControlHide,
       onRepliedMessageClicked: onRepliedMessageClicked,
       setInstance: this.setInstance,
-      isFirstMessage: showMessageNameOrAvatar(message, messages),
+      isFirstMessage: showName,
       datePetrification: messageDatePetrification.bind(null, message.time),
       messageControlShow,
       messageTriggerShow,
       forceSeen: message.time <= lastSeenMessageTime,
-      isChannel: thread.group && thread.type === 8,
-      isMessageByMe: isMessageByMeReal,
-      isParticipantBlocked: showBlock({user, thread, participantsFetching, participants}),
+      isMessageByMe,
+      //isParticipantBlocked: showBlock({user, thread, participantsFetching, participants}),
       isOwner: checkForPrivilege(thread, THREAD_ADMIN),
-      chatFileHashCodeMap: chatFileHashCodeMap,
-      isGroup: isGroupReal,
-      user,
+      chatFileHashCodeMap,
+      isGroup,
+      isChannel,
       thread,
       message,
-      messages,
       highLightMessage
     };
 
@@ -200,8 +214,8 @@ export default class MainMessagesMessage extends Component {
                  className={style.MainMessagesMessage__Container}
                  style={{
                    maxWidth: mobileCheck() ? "70%" : threadLeftAsideShowing && window.innerWidth < 1100 ? "60%" : "50%",
-                   marginRight: isGroup ? null : isMessageByMeReal ? "5px" : null,
-                   marginLeft: isGroup ? null : isMessageByMeReal ? null : "5px"
+                   marginRight: isGroup ? null : isMessageByMe ? "5px" : null,
+                   marginLeft: isGroup ? null : isMessageByMe ? null : "5px"
                  }}
                  ref={this.containerRef}
                  onDoubleClick={message.id && this.onReply}
@@ -227,3 +241,5 @@ export default class MainMessagesMessage extends Component {
     )
   }
 }
+
+export default memo(MainMessagesMessage);

@@ -320,7 +320,7 @@ class MainMessagesMessageFile extends Component {
                     <MdMic size={styleVar.iconSizeSm} color={styleVar.colorAccent}/>
                     :
                     <Text wordWrap="breakWord" bold>
-                      {metaData.name}
+                      {metaData.name || metaData.file.originalName}
                     </Text>
                   }
 

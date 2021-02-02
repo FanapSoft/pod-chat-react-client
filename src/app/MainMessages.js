@@ -8,7 +8,7 @@ import {
   mobileCheck,
   isIosAndSafari,
   isGroup,
-  isMessageByMe, messageSelectedCondition
+  isMessageByMe, messageSelectedCondition, showMessageNameOrAvatar, isChannel
 } from "../utils/helpers";
 import isElementVisible from "../utils/dom";
 
@@ -192,7 +192,7 @@ export default class MainMessages extends Component {
         const {newMessageUnreadCount} = this.state;
         if (!hasNext) {
           const isInBottom = scrollPositionInfo.isInBottomEnd;
-          if(isInBottom) {
+          if (isInBottom) {
             messageNew.followUp = true;
           }
           dispatch(threadNewMessage(messageNew));
@@ -298,11 +298,14 @@ export default class MainMessages extends Component {
     this.gotoBottom = false;
     this.hasPendingMessageToGo = null;
     const {thread, dispatch} = this.props;
+    const {unreadBar, newMessageUnreadCount} = this.state;
     dispatch(threadMessageGetListPartial(null, null, null, null, true));
     dispatch(threadMessageGetListByMessageId(null, null, null, true));
     if (fetchLastHistoryWithoutAnyCondition) {
       this.gotoBottom = true;
-      this.setState({unreadBar: null});
+      if (unreadBar !== null || newMessageUnreadCount !== 0) {
+        this.setState({unreadBar: null, newMessageUnreadCount: 0});
+      }
       return dispatch(threadMessageGetList(thread.id, THREAD_HISTORY_LIMIT_PER_REQUEST));
     }
     if (thread.unreadCount > THREAD_HISTORY_LIMIT_PER_REQUEST) {
@@ -328,7 +331,9 @@ export default class MainMessages extends Component {
           this.lastSeenMessage = thread.lastMessageVO;
         }
       }
-      this.setState({unreadBar});
+      if (unreadBar !== this.state.unreadBar || newMessageUnreadCount !== 0) {
+        this.setState({unreadBar, newMessageUnreadCount: 0});
+      }
       dispatch(threadMessageGetList(thread.id, THREAD_HISTORY_LIMIT_PER_REQUEST));
     }
   }
@@ -415,7 +420,7 @@ export default class MainMessages extends Component {
   }
 
   onScrollBottomEnd() {
-    const {thread, messageNew} = this.props;
+    const {thread, threadMessages} = this.props;
     const {bottomButtonShowing} = this.state;
     if (thread.unreadCount > 0) {
       this.lastSeenMessage = thread.lastMessageVO;
@@ -430,7 +435,7 @@ export default class MainMessages extends Component {
         }
         }*/
 
-    if (bottomButtonShowing) {
+    if (bottomButtonShowing && !threadMessages.hasNext) {
       this.setState({
         newMessageUnreadCount: 0,
         bottomButtonShowing: false
@@ -552,9 +557,9 @@ export default class MainMessages extends Component {
     } = this.props;
     const {highLightMessage, bottomButtonShowing, unreadBar, newMessageUnreadCount} = this.state;
     const {messages, fetching, hasPrevious, hasNext} = threadMessages;
-    const MainMessagesMessageContainerClassNames = message => classnames({
+    const MainMessagesMessageContainerClassNames = isMessageByMe => classnames({
       [style.MainMessages__MessageContainer]: true,
-      [style["MainMessages__MessageContainer--left"]]: !isMessageByMe(message, user, thread)
+      [style["MainMessages__MessageContainer--left"]]: !isMessageByMe
     });
 
     if (!thread.id || fetching || threadGetMessageListByMessageIdFetching) {
@@ -567,7 +572,8 @@ export default class MainMessages extends Component {
                                      onDragOver={this.onDragOver}
                                      onDrop={this.onFileDrop}/>
     }
-
+    const isGroupResult = isGroup(thread);
+    const isChannelResult = isChannel(thread);
     return (
       <Container className={style.MainMessages}
                  style={isIosAndSafari() ? {zIndex: "auto"} : null}
@@ -589,48 +595,56 @@ export default class MainMessages extends Component {
                   onScrollTopThresholdCondition={hasPrevious && !threadMessagesPartialFetching && !threadGetMessageListByMessageIdFetching}>
           <List>
             {
-              messages.map(message =>
-                <ListItem key={message.time}
-                          active={threadSelectMessageShowing && messageSelectedCondition(message, threadCheckedMessageList)}
-                          activeColor="gray"
-                          noPadding>
-                  <Container className={MainMessagesMessageContainerClassNames(message)}
-                             id={`message-${message.time}`}
-                             relative>
+              messages.map(message => {
+                  const isMessageByMeResult = isMessageByMe(message, user, thread);
+                  const showMessageNameOrAvatarResult = showMessageNameOrAvatar(message, messages);
+
+                  return <ListItem key={message.time}
+                                   active={threadSelectMessageShowing && messageSelectedCondition(message, threadCheckedMessageList)}
+                                   activeColor="gray"
+                                   noPadding>
+                    <Container className={MainMessagesMessageContainerClassNames(isMessageByMeResult)}
+                               id={`message-${message.time}`}
+                               relative>
+                      {
+                        (isGroupResult && !isMessageByMeResult) &&
+                        <MainMessagesAvatar message={message}
+                                            isChannel={isChannelResult}
+                                            isGroup={isGroupResult}
+                                            showAvatar={showMessageNameOrAvatarResult}/>
+                      }
+
+                      <MainMessagesMessage thread={thread}
+                                           messages={messages}
+                                           showName={showMessageNameOrAvatarResult}
+                                           user={user}
+                                           isChannel={isChannelResult}
+                                           isGroup={isGroupResult}
+                                           isMessageByMe={isMessageByMeResult}
+                                           highLightMessage={highLightMessage}
+                                           onRepliedMessageClicked={this.onRepliedMessageClicked} message={message}/>
+
+                      {
+                        threadSelectMessageShowing &&
+                        <MainMessagesTick message={message} threadCheckedMessageList={threadCheckedMessageList}/>
+                      }
+
+                    </Container>
                     {
-                      (isGroup(thread) && !isMessageByMe(message, user, thread)) &&
-                      <MainMessagesAvatar message={message}
-                                          messages={messages}
-                                          thread={thread}
-                                          user={user}/>
+                      unreadBar === message.time && <MainMessagesUnreadBar thread={thread}/>
                     }
-
-                    <MainMessagesMessage thread={thread}
-                                         messages={messages}
-                                         user={user}
-                                         highLightMessage={highLightMessage}
-                                         onRepliedMessageClicked={this.onRepliedMessageClicked} message={message}/>
-
-                    {
-                      threadSelectMessageShowing &&
-                      <MainMessagesTick message={message} threadCheckedMessageList={threadCheckedMessageList}/>
-                    }
-
-                  </Container>
-                  {
-                    unreadBar === message.time && <MainMessagesUnreadBar thread={thread}/>
-                  }
-                </ListItem>
+                  </ListItem>
+                }
               )}
 
           </List>
 
         </Scroller>
-        {(bottomButtonShowing || newMessageUnreadCount!==0) && !this.gotoBottom &&
+        {(bottomButtonShowing || newMessageUnreadCount !== 0) && !this.gotoBottom &&
         <ButtonFloating onClick={this.onGotoBottomClicked} size="sm" position={{right: 0, bottom: 0}}>
           <MdExpandMore size={style.iconSizeMd}/>
 
-          {newMessageUnreadCount !==0 &&
+          {newMessageUnreadCount !== 0 &&
           <Container className={style.MainMessages__MentionedButtonContainer}>
             <Shape color="accent">
               <ShapeCircle>{newMessageUnreadCount}</ShapeCircle>

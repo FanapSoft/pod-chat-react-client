@@ -27,15 +27,19 @@ export default class extends Component {
     super(props);
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    const {showAvatar} = nextProps;
+    const {showAvatar: currentShowAvatar} = this.props;
+    return showAvatar !== currentShowAvatar;
+  }
+
   onAvatarClick(participant) {
     this.props.dispatch(threadCreateOnTheFly(participant.coreUserId, participant));
   }
 
-
   render() {
-    const {message, messages, thread, user} = this.props;
-    const showAvatar = showMessageNameOrAvatar(message, messages);
-    const enableClickCondition = !isMessageByMe(message, user, thread) && (isGroup(thread) || isChannel(thread));
+    const {message, isGroup, isChannel, showAvatar} = this.props;
+    const enableClickCondition = (isGroup || isChannel);
     const fragment =
       showAvatar ?
         <Avatar onClick={enableClickCondition ? this.onAvatarClick.bind(this, message.participant) : null}

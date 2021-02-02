@@ -69,7 +69,7 @@ function findInTyping(threadId, userId, remove) {
 }
 
 export const chatSetInstance = config => {
-  return (dispatch, state) => {
+  return (dispatch, getState) => {
     dispatch({
       type: CHAT_GET_INSTANCE(),
       payload: null
@@ -133,6 +133,15 @@ export const chatSetInstance = config => {
         }
       },
       onMessageEvents: (message, type) => {
+        const {thread} = getState().thread;
+        if(type === "MESSAGE_NEW") {
+          if(thread) {
+            if(thread.id !== message.threadId ) {
+              return;
+            }
+          }
+
+        }
         dispatch({
           type: type,
           payload: message
@@ -169,7 +178,7 @@ export const chatSetInstance = config => {
               payload: {threadId, user}
             });
           }, 1500);
-          const lastThread = state().threads.threads.find(e => e.id === threadId);
+          const lastThread = getState().threads.threads.find(e => e.id === threadId);
           if (lastThread.isTyping && lastThread.isTyping.isTyping) {
             return;
           }
@@ -196,7 +205,7 @@ export const chatSetInstance = config => {
             document.body.dispatchEvent(event);
           }
           if (e.code === 21) {
-            const {chatRetryHook, chatInstance} = state();
+            const {chatRetryHook, chatInstance} = getState();
             if (chatRetryHook) {
               chatRetryHook().then(token => {
                 chatInstance.setToken(token);

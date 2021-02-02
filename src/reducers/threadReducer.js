@@ -57,7 +57,7 @@ import {stateGenerator, updateStore, listUpdateStrategyMethods, stateGeneratorSt
 import {getNow, isMessageByMe} from "../utils/helpers";
 import {
   THREAD_HISTORY_LIMIT_PER_REQUEST,
-  THREAD_HISTORY_RENDERED,
+  THREAD_HISTORY_MAX_RENDERED,
   THREAD_HISTORY_UNSEEN_MENTIONED
 } from "../constants/historyFetchLimits";
 
@@ -546,9 +546,6 @@ export const threadUnreadMentionedMessageListReducer = (state = {
       if (!action.payload.mentioned) {
         return state;
       }
-      if (action.payload.threadId !== state.threadId) {
-        return state;
-      }
       return {
         ...state, ...stateGenerator(SUCCESS, updateStore(state.messages, action.payload, {
           method: listUpdateStrategyMethods.UPDATE,
@@ -677,6 +674,9 @@ export const threadMessageListReducer = (state = {
     case THREAD_GET_MESSAGE_LIST(ERROR):
       return {...state, ...stateGenerator(ERROR, action.payload)};
     case THREAD_FILE_UPLOADING: {
+      if (state.fetching) {
+        return state;
+      }
       const messages = updateStore(state.messages, action.payload, {
         method: listUpdateStrategyMethods.UPDATE,
         mix: true,
@@ -685,19 +685,24 @@ export const threadMessageListReducer = (state = {
       return removeDuplicateMessages({...state, ...stateGenerator(SUCCESS, messages, "messages")});
     }
     case THREAD_TRIM_DOWN_HISTORY: {
-      return {
-        ...state,
-        messages: state.messages.slice(0, THREAD_HISTORY_RENDERED),
-        hasNext: true
-      };
+      const stateMessages = state.messages;
+      if (stateMessages.length > THREAD_HISTORY_MAX_RENDERED) {
+        return {
+          ...state,
+          messages: state.messages.slice(0, THREAD_HISTORY_MAX_RENDERED),
+          hasNext: true
+        };
+      } else {
+        return state;
+      }
     }
     case THREAD_GET_MESSAGE_LIST_PARTIAL(SUCCESS): {
-      const {messages}= action.payload;
-      let {messages: stateMessages}= state;
-      let trimUpHistoryCondition = messages[messages.length - 1].time > stateMessages[stateMessages.length - 1].time;
-      if(trimUpHistoryCondition) {
-        if(stateMessages.length + messages.length >= THREAD_HISTORY_RENDERED) {
-          stateMessages = stateMessages.slice((stateMessages.length + messages.length) - THREAD_HISTORY_RENDERED, THREAD_HISTORY_RENDERED);
+      const {messages} = action.payload;
+      let {messages: stateMessages} = state;
+      let trimUpHistoryCondition = messages.length && (messages[messages.length - 1].time > stateMessages[stateMessages.length - 1].time);
+      if (trimUpHistoryCondition) {
+        if (stateMessages.length + messages.length >= THREAD_HISTORY_MAX_RENDERED) {
+          stateMessages = stateMessages.slice((stateMessages.length + messages.length) - THREAD_HISTORY_MAX_RENDERED, THREAD_HISTORY_MAX_RENDERED);
         } else {
           trimUpHistoryCondition = false;
         }
@@ -731,7 +736,7 @@ export const threadMessageListReducer = (state = {
       const stateMessages = state.messages;
       const {followUp, isByMe} = action.payload;
       if (!followUp && !isByMe) {
-        if (stateMessages.length >= THREAD_HISTORY_RENDERED) {
+        if (stateMessages.length >= THREAD_HISTORY_MAX_RENDERED) {
           return {
             ...state,
             hasNext: true
@@ -745,7 +750,7 @@ export const threadMessageListReducer = (state = {
         or: true
       });
       if (isByMe || followUp) {
-        const limitCount = (isByMe ? THREAD_HISTORY_LIMIT_PER_REQUEST : THREAD_HISTORY_RENDERED);
+        const limitCount = (isByMe ? THREAD_HISTORY_LIMIT_PER_REQUEST : THREAD_HISTORY_MAX_RENDERED);
         if (messages.length > limitCount) {
           messages = messages.slice(messages.length - limitCount);
         }
