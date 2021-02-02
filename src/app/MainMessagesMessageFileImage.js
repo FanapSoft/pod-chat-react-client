@@ -2,7 +2,7 @@ import React, {Fragment, useState, useEffect, useRef} from "react";
 import ReactDOM from "react-dom";
 import classnames from "classnames";
 import {IndexModalMediaFragment} from "./index";
-import {getImage, getImageFromHashMapWindow, isMessageHasError} from "../utils/helpers";
+import {getImage, getImageFromHashMapWindow} from "../utils/helpers";
 
 
 import Image from "../../../pod-chat-ui-kit/src/image";
@@ -106,6 +106,8 @@ export default function ({isUploading, showCancelIcon, message, metaData, smallV
 
   if (isLocationMap && isUploading) {
     imageSizeLink.imageLink = mapFake;
+    imageSizeLink.width = 300;
+    imageSizeLink.height = 225;
   }
 
   useEffect(function () {

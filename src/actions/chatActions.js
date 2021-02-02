@@ -117,6 +117,9 @@ export const chatSetInstance = config => {
           case THREAD_REMOVED_FROM:
             return dispatch(threadLeave(thread.result.thread, true));
           default:
+            if (type === "THREAD_LAST_ACTIVITY_TIME") {
+              return;
+            }
             thread.changeType = type;
             if (thread.result) {
               if (!thread.result.thread) {
@@ -134,13 +137,12 @@ export const chatSetInstance = config => {
       },
       onMessageEvents: (message, type) => {
         const {thread} = getState().thread;
-        if(type === "MESSAGE_NEW") {
-          if(thread) {
-            if(thread.id !== message.threadId ) {
+        if (type === "MESSAGE_NEW") {
+          if (thread) {
+            if (thread.id !== message.threadId) {
               return;
             }
           }
-
         }
         dispatch({
           type: type,

@@ -88,7 +88,7 @@ class AsideHead extends Component {
     this.onOpenMenu = this.onOpenMenu.bind(this);
     this.onRetryClick = this.onRetryClick.bind(this);
     this.onChatSearchToggle = this.onChatSearchToggle.bind(this);
-    OnWindowFocusInOut(null, e => {
+    OnWindowFocusInOut(e=>{}, e => {
       const {isDisconnected} = socketStatus(this.props.chatState);
       if (isDisconnected) {
         if (!this.state.reConnecting) {

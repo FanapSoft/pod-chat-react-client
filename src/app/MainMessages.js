@@ -315,21 +315,25 @@ export default class MainMessages extends Component {
       this.lastSeenMessage = thread.lastMessageVO;
     } else {
       let unreadBar = null;
-      if (thread.lastSeenMessageTime && thread.lastMessageVO) {
-        if (thread.lastSeenMessageTime >= thread.lastMessageVO.time) {
-          this.gotoBottom = true;
-        } else if (thread.lastMessageVO.previousId === thread.lastSeenMessageId) {
-          this.gotoBottom = true;
-          unreadBar = this.hasPendingMessageToGo = thread.lastSeenMessageTime;
-          this.lastSeenMessage = thread.lastMessageVO;
+      if (thread.unreadCount) {
+        if (thread.lastSeenMessageTime && thread.lastMessageVO) {
+          if (thread.lastSeenMessageTime >= thread.lastMessageVO.time) {
+            this.gotoBottom = true;
+          } else if (thread.lastMessageVO.previousId === thread.lastSeenMessageId) {
+            this.gotoBottom = true;
+            unreadBar = this.hasPendingMessageToGo = thread.lastSeenMessageTime;
+            this.lastSeenMessage = thread.lastMessageVO;
+          } else {
+            unreadBar = this.hasPendingMessageToGo = thread.lastSeenMessageTime;
+            this.lastSeenMessage = thread.lastMessageVO;
+          }
         } else {
-          unreadBar = this.hasPendingMessageToGo = thread.lastSeenMessageTime;
-          this.lastSeenMessage = thread.lastMessageVO;
+          if (thread.lastMessageVO) {
+            this.lastSeenMessage = thread.lastMessageVO;
+          }
         }
       } else {
-        if (thread.lastMessageVO) {
-          this.lastSeenMessage = thread.lastMessageVO;
-        }
+        this.gotoBottom = true;
       }
       if (unreadBar !== this.state.unreadBar || newMessageUnreadCount !== 0) {
         this.setState({unreadBar, newMessageUnreadCount: 0});
@@ -513,7 +517,7 @@ export default class MainMessages extends Component {
     if (isDeleted) {
       return;
     }
-    this.goToSpecificMessage(time);
+    this.goToSpecificMessage(time, true);
   }
 
   onDragOver(e) {

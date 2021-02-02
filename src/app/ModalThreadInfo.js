@@ -35,7 +35,7 @@ function GapFragment() {
   )
 }
 
-function AvatarModalMediaFragment({participant, thread,}) {
+function AvatarModalMediaFragment({participant, thread}) {
   let image, caption;
   if (participant) {
     image = participant.image;
@@ -51,7 +51,7 @@ function AvatarModalMediaFragment({participant, thread,}) {
     }
     caption = thread.title;
   }
-  return image ? <IndexModalMediaFragment link={image} options={{caption}}
+  return image ? <IndexModalMediaFragment link={image === true ? null : image} options={{caption}}
                                           linkClassName={style.ModalThreadInfo__ModalMediaLink}/> : null;
 }
 

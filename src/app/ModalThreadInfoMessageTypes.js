@@ -276,7 +276,7 @@ export default class ModalThreadInfoMessageTypes extends Component {
         <Container className={style.ModalThreadInfoMessageTypes__Tab} id="message-types-tab">
           {
             tabs.map(key => (
-              <Container className={tabItemClassNames(key)} onClick={this.initRequest.bind(this, key)}>
+              <Container className={tabItemClassNames(key)} onClick={this.initRequest.bind(this, key)} key={key}>
                 <Text>{strings.messageTypes[key]}</Text>
               </Container>
             ))
