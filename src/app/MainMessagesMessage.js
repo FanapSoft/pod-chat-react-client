@@ -38,8 +38,8 @@ import style from "../../styles/app/MainMessagesMessage.scss";
   return {
     /*    participants: store.threadParticipantList.participants,
         participantsFetching: store.threadParticipantList.fetching,*/
-    threadLeftAsideShowing: store.threadLeftAsideShowing,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+    threadLeftAsideShowing: store.threadLeftAsideShowing
+
   };
 })
 export class MainMessagesMessage extends Component {
@@ -177,7 +177,6 @@ export class MainMessagesMessage extends Component {
       highLightMessage,
       onRepliedMessageClicked,
       threadLeftAsideShowing,
-      chatFileHashCodeMap,
       isMessageByMe,
       isGroup,
       isChannel
@@ -198,7 +197,6 @@ export class MainMessagesMessage extends Component {
       isMessageByMe,
       //isParticipantBlocked: showBlock({user, thread, participantsFetching, participants}),
       isOwner: checkForPrivilege(thread, THREAD_ADMIN),
-      chatFileHashCodeMap,
       isGroup,
       isChannel,
       thread,

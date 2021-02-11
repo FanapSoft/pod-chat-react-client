@@ -44,7 +44,7 @@ export default class AsideThreadsContextMenu extends Component {
     this.deleteCondition = false;
     this.pinToTopCondition = this.isOwner;
     this.replyCondition = !this.isChannel || this.isOwner;
-    this.messageInfoCondition = (this.isGroup || this.isChannel) && this.isOwner;
+    this.messageInfoCondition = false;
     this.isMessageByMe = false;
     this.onDelete = this.onDelete.bind(this);
     this.onForward = this.onForward.bind(this);
@@ -58,8 +58,10 @@ export default class AsideThreadsContextMenu extends Component {
     const {thread, user} = this.props;
     const instance = this.instance = e.detail.data.instance;
     const {message} = instance.props;
-    this.isMessageByMe = !this.isChannel || isMessageByMe(message, user, thread);
-    this.deleteCondition = this.isMessageByMe;
+    const isMessageByMeResult = isMessageByMe(message, user, thread);
+    this.isMessageByMe = !this.isChannel || isMessageByMeResult;
+    this.messageInfoCondition = (this.isGroup || this.isChannel) && (this.isOwner || isMessageByMeResult);
+    this.deleteCondition = this.isMessageByMe || this.isOwner;
     this.setState({
       message
     });

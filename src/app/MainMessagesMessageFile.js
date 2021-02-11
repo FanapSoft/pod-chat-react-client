@@ -58,7 +58,8 @@ import styleVar from "../../styles/variables.scss";
   return {
     smallVersion: store.chatSmallVersion,
     leftAsideShowing: store.threadLeftAsideShowing.isShowing,
-    chatAudioPlayer: store.chatAudioPlayer
+    chatAudioPlayer: store.chatAudioPlayer,
+    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
   };
 })
 class MainMessagesMessageFile extends Component {

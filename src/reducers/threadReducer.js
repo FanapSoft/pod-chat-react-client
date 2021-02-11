@@ -384,7 +384,7 @@ export const threadsReducer = (state = {
     }
     case MESSAGE_EDIT():
     case MESSAGE_SEEN(): {
-      const filteredThread = state.threads.filter(thread => thread.lastMessageVO && thread.lastMessageVO.id === action.payload.id);
+      const filteredThread = state.threads.filter(thread => thread.lastMessageVO && thread.lastMessageVO.id === action.payload);
       if (!filteredThread.length) {
         return state;
       }
@@ -772,8 +772,8 @@ export const threadMessageListReducer = (state = {
       return {
         ...state, ...stateGenerator(SUCCESS, updateStore(state.messages, {
           seen: true,
-          uniqueId: action.payload.uniqueId
-        }, {method: listUpdateStrategyMethods.UPDATE, by: "uniqueId", mix: true}), "messages")
+          id: action.payload
+        }, {method: listUpdateStrategyMethods.UPDATE, by: "id", mix: true}), "messages")
       };
     case MESSAGE_DELETE:
     case MESSAGE_CANCEL(SUCCESS):
