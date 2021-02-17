@@ -268,6 +268,44 @@ export function getFileFromHashMap(hashCode, metadata) {
   });
 }
 
+export function getFileFromHashMapWindow(hashCode, fieldKey, componenet, init, directCall) {
+  const id = hashCode;
+  const dispatch = directCall ? componenet : componenet.props.dispatch;
+  const downloadingResult = getFileDownloadingFromHashMapWindow(id);
+  if (downloadingResult) {
+    return downloadingResult;
+  }
+  if (!init) {
+    if (directCall) {
+      fieldKey(window.podspaceHashmap[id] = "LOADING")
+    } else {
+      componenet.setState({
+        [fieldKey]: window.podspaceHashmap[id] = "LOADING"
+      });
+    }
+  }
+  dispatch(chatGetFile(hashCode, result => {
+    if (directCall) {
+      fieldKey(window.podspaceHashmap[id] = URL.createObjectURL(result))
+    } else {
+      componenet.setState({
+        [fieldKey]: window.podspaceHashmap[id] = URL.createObjectURL(result)
+      });
+    }
+  })).then(downloadingUniqueId => {
+    window.podspaceHashmap[id] = "LOADING";
+  }, err=>{
+    if (directCall) {
+      fieldKey(window.podspaceHashmap[id] = "FAILED")
+    } else {
+      componenet.setState({
+        [fieldKey]: window.podspaceHashmap[id] = "FAILED"
+      });
+    }
+  });
+  return window.podspaceHashmap[id] = init ? "LOADING" : downloadingResult;
+}
+
 export function avatarUrlGenerator(url, size, metadata) {
   if (metadata) {
     const sizes = {

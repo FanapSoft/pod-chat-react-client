@@ -75,7 +75,7 @@
     "react-outside-click-handler": "^1.3.0",
     "react-router-dom": "^5.2.0",
     "react-toastify": "^6.2.0",
-    "react-virtuoso": "^1.5.3",
+    "react-virtuoso": "^1.5.5",
     "redux-promise-middleware": "^6.1.2",
     "redux-thunk": "^2.3.0",
     "sanitize-html": "^2.1.2",

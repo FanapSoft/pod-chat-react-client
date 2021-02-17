@@ -5,7 +5,6 @@ import {Virtuoso, GroupedVirtuoso} from 'react-virtuoso'
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import classnames from "classnames";
-import AsideThreadsLastSeenMessage from "./AsideThreadsLastSeenMessage";
 import AsideThreadsContextMenu from "./AsideThreadsContextMenu";
 import {
   isIosAndSafari,

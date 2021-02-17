@@ -484,7 +484,7 @@ export default class ChatSDK {
     this.chatAgent.getImageFromPodspace({
       hashCode,
       size, // 1: 100×75 , 2: 200×150, 3: 400×300
-      quality, // [0.0, 1.0] Float number
+      quality: quality || 1.0, // [0.0, 1.0] Float number
       crop, // Based on crop data from upload
       responseType: "blob"
     }, result => {

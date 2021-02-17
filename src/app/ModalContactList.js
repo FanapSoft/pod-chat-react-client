@@ -2,6 +2,7 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import classnames from "classnames";
+import {Virtuoso} from 'react-virtuoso'
 
 //strings
 import strings from "../constants/localization";
@@ -31,7 +32,7 @@ import {avatarUrlGenerator} from "../utils/helpers";
 
 
 export const statics = {
-  count: 50,
+  count: 10,
   userType: {
     ALL: "ALL",
     HAS_POD_USER: "HAS_POD_USER",
@@ -48,6 +49,7 @@ export function PartialLoadingFragment() {
     </Container>
   )
 }
+
 export function NoResultFragment({children}) {
   return <Container relative centerTextAlign>
     <Gap y={5}>
@@ -102,6 +104,7 @@ export function ContactSearchFragment({onSearchInputChange, onSearchChange, quer
     </Container>
   )
 }
+
 function AvatarTextFragment({contact}) {
   return <Text size="xs" inline
                color={contact.blocked ? "red" : "accent"}>{contact.blocked ? strings.blocked : contact.linkedUser ? "" : strings.isNotPodUser}</Text>;
@@ -231,7 +234,12 @@ class ModalContactList extends Component {
       onSelect,
       invert: true,
       AvatarTextFragment,
-      LeftActionFragment
+      LeftActionFragment,
+      endReached: () => {
+        if (contactsHasNext && !contactsPartialFetching) {
+          this.onScrollBottomThreshold();
+        }
+      }
     };
     return (
       <Modal isOpen={isShow} onClose={this.onClose} inContainer={smallVersion} fullScreen={smallVersion}
@@ -246,6 +254,7 @@ class ModalContactList extends Component {
         <ModalBody threshold={5}
                    onScrollBottomThresholdCondition={contactsHasNext && !contactsPartialFetching}
                    onScrollBottomThreshold={this.onScrollBottomThreshold}>
+
 
           {contacts.length ?
             <Container relative>

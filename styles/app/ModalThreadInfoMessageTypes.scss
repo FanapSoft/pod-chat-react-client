@@ -1,3 +1,5 @@
+@import "../mixin/responsive";
+
 .ModalThreadInfoMessageTypes {
 
 }
@@ -6,13 +8,27 @@
   display: flex;
   margin-bottom: 5px;
   border-bottom: 1px solid $color-gray-light;
+  overflow-x: auto;
+
 }
 
 .ModalThreadInfoMessageTypes__TabItem {
   flex-grow: 1;
   text-align: center;
   cursor: pointer;
+  min-width: 70px;
+
+  &.ModalThreadInfoMessageTypes__TabItem--mobileVersion {
+
+  }
 }
+
+@include grid("md") {
+  .ModalThreadInfoMessageTypes__TabItem {
+    min-width: 0;
+  }
+}
+
 
 .ModalThreadInfoMessageTypes__TabItem--active {
   border-bottom: 2px solid $color-accent;
@@ -66,15 +82,4 @@
   left: 0;
   height: 100%;
   width: 100%;
-}
-
-.ModalThreadInfoMessageTypes__FileContainer {
-  position: relative;
-  padding: 5px;
-  border-bottom: 1px solid $color-gray-light;
-  cursor: pointer;
-}
-
-.ModalThreadInfoMessageTypes__FileNameContainer {
-  overflow: hidden;
 }
