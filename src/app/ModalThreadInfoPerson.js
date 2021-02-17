@@ -14,7 +14,12 @@ import {
   contactRemove,
   contactListShowing, contactSearch, contactAdd
 } from "../actions/contactActions";
-import {threadLeave, threadModalThreadInfoShowing, threadNotification} from "../actions/threadActions";
+import {
+  threadLeave,
+  threadModalThreadInfoShowing,
+  threadNotification,
+  threadParticipantList
+} from "../actions/threadActions";
 import {chatModalPrompt} from "../actions/chatActions";
 
 //UI components
@@ -39,8 +44,14 @@ import {
 } from "react-icons/md";
 
 //styling
+import style from "../../styles/app/ModalThreadInfoPers.scss"
 import styleVar from "../../styles/variables.scss";
 import ModalThreadInfoMessageTypes from "./ModalThreadInfoMessageTypes";
+import ModalThreadInfoPersonHead from "./ModalThreadInfoPersonHead";
+import {Virtuoso, VirtuosoGrid} from "./_component/Virtuoso";
+import ModalThreadInfoMessageTypesImage from "./ModalThreadInfoMessageTypesImage";
+import ModalThreadInfoMessageTypesMedia from "./ModalThreadInfoMessageTypesMedia";
+import {types} from "../constants/messageTypes";
 
 
 export function getParticipant(participants, user) {
@@ -52,6 +63,14 @@ export function getParticipant(participants, user) {
     participant = {};
   }
   return participant;
+}
+
+
+function tabIsFile(selectedTab) {
+  if (types[selectedTab]) {
+    return selectedTab !== "picture";
+  }
+  return false
 }
 
 @connect(store => {
@@ -68,13 +87,24 @@ export default class ModalThreadInfo extends Component {
   constructor(props) {
     super(props);
     this.onRemoveThread = this.onRemoveThread.bind(this);
-    this.setScrollBottomThresholdCondition = this.setScrollBottomThresholdCondition.bind(this);
-    this.setOnScrollBottomThreshold = this.setOnScrollBottomThreshold.bind(this);
+    this.setEndReachCondition = this.setEndReachCondition.bind(this);
+    this.setOnEndReached = this.setOnEndReached.bind(this);
+    this.onTabSelect = this.onTabSelect.bind(this);
+    this.onEndReached = this.onEndReached.bind(this);
+    this.setMessageTypesData = this.setMessageTypesData.bind(this);
     this.state = {
-      scrollBottomThresholdCondition: false,
-      scrollBottomThreshold: null,
+      endCondition: false,
+      onEndReached: null,
+      selectedTab: "threadInfo",
+      mediaList: [],
       contact: {}
     };
+  }
+
+  onTabSelect(tab) {
+    this.setState({
+      selectedTab: tab
+    });
   }
 
   componentDidMount() {
@@ -185,12 +215,27 @@ export default class ModalThreadInfo extends Component {
     }, null, strings.remove));
   }
 
-  setScrollBottomThresholdCondition(scrollBottomThresholdCondition) {
-    this.setState({scrollBottomThresholdCondition});
+  onEndReached() {
+    const {onEndReached} = this.state;
+    onEndReached();
   }
 
-  setOnScrollBottomThreshold(scrollBottomThreshold) {
-    this.setState({scrollBottomThreshold});
+  setEndReachCondition(endCondition) {
+    this.setState({
+      endCondition
+    })
+  }
+
+  setOnEndReached(onEndReached) {
+    this.setState({onEndReached});
+  }
+
+  setMessageTypesData({messages, partialLoading}) {
+    this.setState({
+      mediaListPartialLoading: partialLoading,
+      mediaList: partialLoading ? this.state.mediaList : messages
+    })
+    //console.log(arguments)
   }
 
   onAddContact(participant) {
@@ -204,13 +249,34 @@ export default class ModalThreadInfo extends Component {
   }
 
   render() {
-    const {participants, thread, user, onClose, isShow, smallVersion, contactBlocking, notificationPending, GapFragment, AvatarModalMediaFragment} = this.props;
-    const {scrollBottomThresholdCondition, scrollBottomThreshold} = this.state;
+    const {participants, thread, user, onClose, isShow, smallVersion, contactBlocking, notificationPending, GapFragment, AvatarModalMediaFragment, dispatch} = this.props;
+    const {scrollBottomThresholdCondition, scrollBottomThreshold, mediaList, selectedTab, endCondition} = this.state;
     const isOnTheFly = thread.onTheFly;
     let participant = isOnTheFly ? thread.participant : getParticipant(participants, user);
     const participantImage = avatarUrlGenerator(isOnTheFly ? thread.image : participant.image, avatarUrlGenerator.SIZES.MEDIUM);
-    const isMyContact = participant.isMyContact || participant.contactId;
     const contact = this.state.contact || {};
+
+    const TabComponentSelector = {
+      "picture": {
+        Scroller: VirtuosoGrid,
+        props: {
+          listClassName: style.ModalThreadInfoPerson__ImageList,
+          itemClassName: style.ModalThreadInfoPerson__ImageListItem
+        },
+        ListItem: ({idx}) => {
+          return <ModalThreadInfoMessageTypesImage message={mediaList[idx]} dispatch={dispatch}/>
+        }
+      },
+      "file": {
+        Scroller: Virtuoso,
+        ListItem: ({idx}) => <ModalThreadInfoMessageTypesMedia message={mediaList[idx]}
+                                                               dispatch={dispatch}
+                                                               type={selectedTab}
+        />
+      },
+    };
+
+    const {Scroller, ListItem, Height, props} = TabComponentSelector[tabIsFile(selectedTab) ? "file" : selectedTab] || {};
     return (
       <Modal isOpen={isShow} onClose={onClose} inContainer={smallVersion} fullScreen={smallVersion} userSelect="none">
 
@@ -221,178 +287,64 @@ export default class ModalThreadInfo extends Component {
         <ModalBody threshold={5}
                    onScrollBottomThresholdCondition={scrollBottomThresholdCondition}
                    onScrollBottomThreshold={scrollBottomThreshold}>
-          <Container>
-            <Container relative>
-
-              <Container>
-                <Avatar>
-                  <AvatarImage src={avatarUrlGenerator(participantImage, avatarUrlGenerator.SIZES.LARGE)} size="xlg"
-                               text={avatarNameGenerator(thread.title).letter}
-                               textBg={avatarNameGenerator(thread.title).color}>
-                    <AvatarModalMediaFragment participant={participant}/>
-                  </AvatarImage>
-                  <AvatarName>
-                    <Heading h1>{thread.title}</Heading>
-                    <Text>{strings.lastSeen(date.prettifySince(participant ? participant.notSeenDuration : ""))}</Text>
-                  </AvatarName>
-                </Avatar>
-              </Container>
-
-              <Container bottomLeft>
-                <MdPerson size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-              </Container>
-
-            </Container>
-            <Fragment>
-              <GapFragment/>
-              <List>
-                {isMyContact ?
-
-                  <Fragment>
-                    {(contact.cellphoneNumber || (participant.username || (contact.linkedUser && contact.linkedUser.username))) &&
-                      <Container userSelect="text">
-
-                        {contact.cellphoneNumber &&
-                        <ListItem invert>
-
-                          <Container>
-                            <MdPhone size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                            <Gap x={20}>
-                              <Text inline>{contact.cellphoneNumber}</Text>
-                            </Gap>
-                          </Container>
-
-                        </ListItem>
-                        }
-                        {(participant.username || (contact.linkedUser && contact.linkedUser.username)) &&
-                        <ListItem invert>
-
-                          <Container>
-                            <MdPerson size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                            <Gap x={20}>
-                              <Text inline>{participant.username || contact.linkedUser.username}</Text>
-                            </Gap>
-                          </Container>
-
-                        </ListItem>
-                        }
-                      </Container>
-                    }
-
-                    {
-                      <ListItem selection invert onSelect={this.onEdit.bind(this, participant, contact)}>
-                        <Container relative>
-                          <MdEdit size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                          <Gap x={20}>
-                            <Text>{strings.edit}</Text>
-                          </Gap>
-                        </Container>
-                      </ListItem>
-                    }
-
-                    {
-                      <ListItem selection invert onSelect={this.onRemove.bind(this, participant)}>
-                        <Container relative>
-                          <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                          <Gap x={20}>
-                            <Text>{strings.remove}</Text>
-                          </Gap>
-                        </Container>
-                      </ListItem>
-                    }
-
-                  </Fragment>
-                  :
-                  <ListItem selection invert onSelect={this.onAddContact.bind(this, participant)}>
-                    <Container relative>
-                      <MdPersonAdd size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                      <Gap x={20}>
-                        <Text>{strings.addToContact}</Text>
-                      </Gap>
-                    </Container>
-                  </ListItem>
-                }
-              </List>
-              {!isOnTheFly &&
+          {
+            isOnTheFly ? < ModalThreadInfoPersonHead thread={thread}
+                                                     isOnTheFly={isOnTheFly}
+                                                     notificationPending={notificationPending}
+                                                     GapFragment={GapFragment}
+                                                     AvatarModalMediaFragment={AvatarModalMediaFragment}
+                                                     participantImage={participantImage}
+                                                     contact={contact}
+                                                     participant={participant}
+                                                     contactBlocking={contactBlocking}
+                                                     onEdit={this.onEdit}
+                                                     $this={this}
+                                                     onRemove={this.onRemove}
+                                                     onAddContact={this.onAddContact}
+                                                     onRemoveThread={this.onRemoveThread}
+                                                     onBlockSelect={this.onBlockSelect}
+                                                     onNotificationSelect={this.onNotificationSelect}/> :
               <Fragment>
-                <Container>
-                  {
-                    isMyContact &&
-                    <GapFragment/>
-                  }
-                  <List>
-
-                    {
-                      <ListItem selection invert onSelect={this.onRemoveThread.bind(this, participant)}>
-                        <Container relative>
-                          <MdDeleteForever size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                          <Gap x={20}>
-                            <Text>{strings.removeThread}</Text>
-                          </Gap>
-                        </Container>
-                      </ListItem>
-                    }
-
-                    <ListItem selection invert onSelect={this.onBlockSelect.bind(this, thread.id, participant.blocked)}>
-                      <Container relative>
-                        <MdBlock size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text>{strings.block}</Text>
-                        </Gap>
-                        <Container centerLeft>
-                          {contactBlocking ?
-                            <Container centerTextAlign>
-                              <Loading hasSpace><LoadingBlinkDots size="sm"/></Loading>
-                            </Container>
-                            :
-                            <Gap x={5}>
-                              <Text size="sm"
-                                    color={participant.blocked ? "red" : "green"}>{participant.blocked ? strings.blocked : ""}</Text>
-                            </Gap>
-                          }
-                        </Container>
-                      </Container>
-                    </ListItem>
-
-                    <ListItem selection invert onSelect={this.onNotificationSelect.bind(this, thread)}>
-
-                      <Container relative>
-                        <MdNotifications size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                        <Gap x={20}>
-                          <Text>{strings.notification}</Text>
-                        </Gap>
-                        <Container centerLeft>
-                          {notificationPending ?
-                            <Container centerTextAlign>
-                              <Loading hasSpace><LoadingBlinkDots size="sm"/></Loading>
-                            </Container>
-                            :
-                            <Gap x={5}>
-                              <Text size="sm"
-                                    color={thread.mute ? "red" : "green"}>{thread.mute ? strings.inActive : strings.active}</Text>
-                            </Gap>
-                          }
-
-                        </Container>
-                      </Container>
-                    </ListItem>
-                  </List>
-
-                </Container>
-                <GapFragment/>
                 <ModalThreadInfoMessageTypes thread={thread}
-                                             setScrollBottomThresholdCondition={this.setScrollBottomThresholdCondition}
-                                             setOnScrollBottomThreshold={this.setOnScrollBottomThreshold}/>
-              </Fragment>
-              }
-            </Fragment>
+                                             extraTabs={["threadInfo"]}
+                                             selectedTab={selectedTab}
+                                             setEndReachCondition={this.setEndReachCondition}
+                                             setOnEndReached={this.setOnEndReached}
+                                             setMessageTypesData={this.setMessageTypesData}
+                                             onTabSelect={this.onTabSelect}/>
 
-          </Container>
+                {selectedTab === "threadInfo" ?
+                  < ModalThreadInfoPersonHead thread={thread}
+                                              isOnTheFly={isOnTheFly}
+                                              notificationPending={notificationPending}
+                                              GapFragment={GapFragment}
+                                              AvatarModalMediaFragment={AvatarModalMediaFragment}
+                                              participantImage={participantImage}
+                                              contact={contact}
+                                              participant={participant}
+                                              contactBlocking={contactBlocking}
+                                              onEdit={this.onEdit}
+                                              $this={this}
+                                              onRemove={this.onRemove}
+                                              onAddContact={this.onAddContact}
+                                              onRemoveThread={this.onRemoveThread}
+                                              onBlockSelect={this.onBlockSelect}
+                                              onNotificationSelect={this.onNotificationSelect}/>
+                  : <Scroller {...props}
+                              style={{height: Height || `calc(100vh - 245px)`, overflowX: "hidden"}}
+                              totalCount={selectedTab === "people" ? participants.length : mediaList.length}
+                              endReached={e => endCondition && this.onEndReached()}
+                              itemContent={idx => <ListItem idx={idx}/>}/>
+
+                }
+              </Fragment>
+          }
+
 
         </ModalBody>
 
         <ModalFooter>
-          <Button text onClick={onClose}>{strings.close}</Button>
+          < Button text onClick={onClose}>{strings.close}</Button>
         </ModalFooter>
 
       </Modal>

@@ -4,134 +4,210 @@ import {withRouter} from "react-router-dom";
 import {avatarNameGenerator, avatarUrlGenerator, getMessageMetaData, isChannel} from "../utils/helpers";
 import strings from "../constants/localization";
 import styleVar from "../../styles/variables.scss";
-import {ContactSearchFragment} from "./ModalContactList";
-import style from "../../styles/app/ModalThreadInfoGroupMain.scss";
-import {ContactList} from "./_component/contactList";
-import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
-import {Button} from "../../../pod-chat-ui-kit/src/button";
 import Gap from "../../../pod-chat-ui-kit/src/gap";
 import {Heading, Text} from "../../../pod-chat-ui-kit/src/typography";
 import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
+import {
+  MdPersonAdd,
+  MdPerson,
+  MdPhone,
+  MdBlock,
+  MdNotifications,
+  MdEdit,
+  MdDelete,
+  MdDeleteForever
+} from "react-icons/md";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
-import {MdGroupAdd, MdArrowBack, MdSettings, MdBlock, MdNotifications, MdPersonAdd} from "react-icons/md";
-import ModalThreadInfoMessageTypes from "./ModalThreadInfoMessageTypes";
-import utilsStyle from "../../styles/utils/utils.scss";
-import checkForPrivilege from "../utils/privilege";
-import {THREAD_ADMIN} from "../constants/privilege";
+import date from "../utils/date";
 
 let foo = null;
 
 export default function f(props) {
   let {
-    thread, notificationPending,
+    thread,
+    notificationPending,
     GapFragment,
     AvatarModalMediaFragment,
-    onAddMemberSelect,
-    onSettingsSelect,
-    isThreadOwner,
+    participantImage,
+    contact,
+    participant,
+    contactBlocking,
+    onEdit,
     $this,
-    onLeaveSelect,
-    onNotificationSelect
+    onRemove,
+    onAddContact,
+    onRemoveThread,
+    onBlockSelect,
+    onNotificationSelect,
+    isOnTheFly
   } = props;
-  const [query, setQuery] = useState(null);
-  const iconClasses = `${utilsStyle["u-clickable"]} ${utilsStyle["u-hoverColorAccent"]}`;
 
-  const isChannelResult = isChannel(thread);
 
-  return <ListItem>
+  const isMyContact = participant.isMyContact || participant.contactId;
+
+  return <Container>
     <Container relative>
 
       <Container>
         <Avatar>
-          <AvatarImage
-            src={avatarUrlGenerator.apply($this, [thread.image, avatarUrlGenerator.SIZES.LARGE, getMessageMetaData(thread)])}
-            size="xlg"
-            text={avatarNameGenerator(thread.title).letter}
-            textBg={avatarNameGenerator(thread.title).color}>
-            <AvatarModalMediaFragment thread={thread}/>
+          <AvatarImage src={avatarUrlGenerator(participantImage, avatarUrlGenerator.SIZES.LARGE)} size="xlg"
+                       text={avatarNameGenerator(thread.title).letter}
+                       textBg={avatarNameGenerator(thread.title).color}>
+            <AvatarModalMediaFragment participant={participant}/>
           </AvatarImage>
           <AvatarName>
             <Heading h1>{thread.title}</Heading>
-            <Text>{thread.participantCount} {strings.member}</Text>
+            <Text>{strings.lastSeen(date.prettifySince(participant ? participant.notSeenDuration : ""))}</Text>
           </AvatarName>
         </Avatar>
       </Container>
 
       <Container bottomLeft>
-        {isThreadOwner ?
-          <Container inline>
-            <Container inline>
-              <MdGroupAdd size={styleVar.iconSizeMd} color={styleVar.colorGray} className={iconClasses}
-                          onClick={onAddMemberSelect}/>
-              <Gap x={5}/>
-              <MdSettings size={styleVar.iconSizeMd} color={styleVar.colorGray} className={iconClasses}
-                          onClick={onSettingsSelect}/>
-              <Gap x={5}/>
-            </Container>
-          </Container>
-          : ""}
+        <MdPerson size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
       </Container>
 
     </Container>
-
-    {thread.description &&
-    <Container>
+    <Fragment>
       <GapFragment/>
-      <Text color="accent" size="sm">{strings.description} :</Text>
-      <Text>{thread.description}</Text>
-    </Container>
-    }
-
-    <GapFragment/>
-
-    <Container>
       <List>
-        {
-          isThreadOwner ?
-            <ListItem selection invert onSelect={onAddMemberSelect}>
-              <Container relative display="inline-flex">
-                <MdPersonAdd size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                <Gap x={20}>
-                  <Text>{strings.addMember}</Text>
-                </Gap>
-              </Container>
-            </ListItem> : ""
-        }
-        <ListItem selection invert onSelect={onLeaveSelect}>
-          <Container relative display="inline-flex">
-            <MdBlock size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-            <Gap x={20}>
-              <Text>{strings.leaveGroup(isChannelResult)}</Text>
-            </Gap>
-          </Container>
-        </ListItem>
+        {isMyContact ?
 
-        <ListItem selection invert onSelect={onNotificationSelect}>
+          <Fragment>
+            {(contact.cellphoneNumber || (participant.username || (contact.linkedUser && contact.linkedUser.username))) &&
+            <Container userSelect="text">
 
-          <Container relative display="inline-flex" minWidth="100%">
-            <Container display="inline-flex" flex="1 1 0">
-              <MdNotifications size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-              <Gap x={20}>
-                <Text>{strings.notification}</Text>
-              </Gap>
-            </Container>
-            <Container flex="none">
-              {notificationPending ?
-                <Container centerTextAlign>
-                  <Loading><LoadingBlinkDots size="sm"/></Loading>
+              {contact.cellphoneNumber &&
+              <ListItem invert>
+
+                <Container>
+                  <MdPhone size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                  <Gap x={20}>
+                    <Text inline>{contact.cellphoneNumber}</Text>
+                  </Gap>
                 </Container>
-                :
-                <Gap x={5}>
-                  <Text size="sm"
-                        color={thread.mute ? "red" : "green"}>{thread.mute ? strings.inActive : strings.active}</Text>
-                </Gap>
+
+              </ListItem>
+              }
+              {(participant.username || (contact.linkedUser && contact.linkedUser.username)) &&
+              <ListItem invert>
+
+                <Container>
+                  <MdPerson size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                  <Gap x={20}>
+                    <Text inline>{participant.username || contact.linkedUser.username}</Text>
+                  </Gap>
+                </Container>
+
+              </ListItem>
               }
             </Container>
-          </Container>
-        </ListItem>
-      </List>
-    </Container>
+            }
 
-  </ListItem>
+            {
+              <ListItem selection invert onSelect={onEdit.bind($this, participant, contact)}>
+                <Container relative>
+                  <MdEdit size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                  <Gap x={20}>
+                    <Text>{strings.edit}</Text>
+                  </Gap>
+                </Container>
+              </ListItem>
+            }
+
+            {
+              <ListItem selection invert onSelect={onRemove.bind($this, participant)}>
+                <Container relative>
+                  <MdDelete size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                  <Gap x={20}>
+                    <Text>{strings.remove}</Text>
+                  </Gap>
+                </Container>
+              </ListItem>
+            }
+
+          </Fragment>
+          :
+          <ListItem selection invert onSelect={onAddContact.bind($this, participant)}>
+            <Container relative>
+              <MdPersonAdd size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+              <Gap x={20}>
+                <Text>{strings.addToContact}</Text>
+              </Gap>
+            </Container>
+          </ListItem>
+        }
+      </List>
+      {!isOnTheFly &&
+      <Fragment>
+        <Container>
+          {
+            isMyContact &&
+            <GapFragment/>
+          }
+          <List>
+
+            {
+              <ListItem selection invert onSelect={onRemoveThread.bind($this, participant)}>
+                <Container relative>
+                  <MdDeleteForever size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                  <Gap x={20}>
+                    <Text>{strings.removeThread}</Text>
+                  </Gap>
+                </Container>
+              </ListItem>
+            }
+
+            <ListItem selection invert onSelect={onBlockSelect.bind($this, thread.id, participant.blocked)}>
+              <Container relative>
+                <MdBlock size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                <Gap x={20}>
+                  <Text>{strings.block}</Text>
+                </Gap>
+                <Container centerLeft>
+                  {contactBlocking ?
+                    <Container centerTextAlign>
+                      <Loading hasSpace><LoadingBlinkDots size="sm"/></Loading>
+                    </Container>
+                    :
+                    <Gap x={5}>
+                      <Text size="sm"
+                            color={participant.blocked ? "red" : "green"}>{participant.blocked ? strings.blocked : ""}</Text>
+                    </Gap>
+                  }
+                </Container>
+              </Container>
+            </ListItem>
+
+            <ListItem selection invert onSelect={onNotificationSelect.bind(this, thread)}>
+
+              <Container relative>
+                <MdNotifications size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+                <Gap x={20}>
+                  <Text>{strings.notification}</Text>
+                </Gap>
+                <Container centerLeft>
+                  {notificationPending ?
+                    <Container centerTextAlign>
+                      <Loading hasSpace><LoadingBlinkDots size="sm"/></Loading>
+                    </Container>
+                    :
+                    <Gap x={5}>
+                      <Text size="sm"
+                            color={thread.mute ? "red" : "green"}>{thread.mute ? strings.inActive : strings.active}</Text>
+                    </Gap>
+                  }
+
+                </Container>
+              </Container>
+            </ListItem>
+          </List>
+
+        </Container>
+      </Fragment>
+      }
+    </Fragment>
+
+  </Container>
 }

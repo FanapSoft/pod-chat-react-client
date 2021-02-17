@@ -5,9 +5,14 @@ import Image from "../../../pod-chat-ui-kit/src/image";
 import style from "../../styles/app/ModalThreadInfoMessageTypesImage.scss";
 import {IndexModalMediaFragment} from "./index";
 import strings from "../constants/localization";
+import {threadGoToMessageId, threadModalThreadInfoShowing} from "../actions/threadActions";
 
 export function Imager({message, dispatch}) {
-
+  const gotoMessage = () => {
+    dispatch(threadModalThreadInfoShowing());
+    window.modalMediaRef.close();
+    dispatch(threadGoToMessageId(message.time));
+  };
   const idMessage = `${message.id}-message-types-picture`;
   let [thumb, setThumb] = useState(null);
   let [blurryThumb, setBlurryThumb] = useState(null);
@@ -26,7 +31,7 @@ export function Imager({message, dispatch}) {
                onClick={onFancyBoxClick}>
       <IndexModalMediaFragment
         options={{buttons: ["goto", "slideShow", "close"], caption: message.message}}
-        link={blurryThumb || thumb}>
+        link={thumb || blurryThumb}>
         <Image className={style.ModalThreadInfoMessageTypesImage__Image}
                setOnBackground
                style={{
