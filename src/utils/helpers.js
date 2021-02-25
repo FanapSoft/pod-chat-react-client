@@ -294,7 +294,8 @@ export function getFileFromHashMapWindow(hashCode, fieldKey, componenet, init, d
     }
   })).then(downloadingUniqueId => {
     window.podspaceHashmap[id] = "LOADING";
-  }, err=>{
+    window.podspaceHashmap[`${id}-cancelId`] = downloadingUniqueId;
+  }, err => {
     if (directCall) {
       fieldKey(window.podspaceHashmap[id] = "FAILED")
     } else {
@@ -304,6 +305,14 @@ export function getFileFromHashMapWindow(hashCode, fieldKey, componenet, init, d
     }
   });
   return window.podspaceHashmap[id] = init ? "LOADING" : downloadingResult;
+}
+
+export function cancelFileDownloadingFromHashMapWindow(id, dispatch) {
+  const cancelId = window.podspaceHashmap[`${id}-cancelId`];
+  if (cancelId) {
+    window.podspaceHashmap[`${id}-cancelId`] = window.podspaceHashmap[id] = null;
+    dispatch(chatCancelFileDownload(cancelId));
+  }
 }
 
 export function avatarUrlGenerator(url, size, metadata) {

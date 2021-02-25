@@ -256,6 +256,7 @@ let strings = new LocalizedStrings({
     gotoMessage: "رفتن به پیام",
     addToContact: "اضافه کردن به مخاطب‌ها",
     youCannotUseMicrophone: "شما دسترسی به میکروفون سیستم را نداده اید پس نمیتوانید از امکانات ضبط صدا استفاده کنید",
+    fileHaveProblem: "فایل مشکل دارد",
     messageTypes: {
       threadInfo: "اطلاعات",
       people: "اعضا",

@@ -71,6 +71,9 @@ export default class ModalThreadInfoMessageTypes extends Component {
     const initRequestTime = this.initRequestTime = Date.now();
     const keys = Object.keys(types);
     if (keys.indexOf(tab) === -1) {
+      if (selectedTab === tab) {
+        return;
+      }
       return onTabSelect(tab);
     }
     if (isJustConstructed !== true) {
@@ -112,9 +115,6 @@ export default class ModalThreadInfoMessageTypes extends Component {
         hasNext: result.hasPrevious
       };
       setMessageTypesData(state);
-      if (isJustConstructed !== true) {
-        document.getElementById("message-types-tab").scrollIntoView();
-      }
     });
   }
 

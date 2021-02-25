@@ -1,7 +1,6 @@
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
-import {avatarNameGenerator, avatarUrlGenerator} from "../utils/helpers";
-
+import {avatarUrlGenerator} from "../utils/helpers";
 
 //strings
 import strings from "../constants/localization";
@@ -12,46 +11,31 @@ import {
   contactBlock,
   contactAdding,
   contactRemove,
-  contactListShowing, contactSearch, contactAdd
+  contactListShowing, contactSearch
 } from "../actions/contactActions";
 import {
   threadLeave,
   threadModalThreadInfoShowing,
-  threadNotification,
-  threadParticipantList
+  threadNotification
 } from "../actions/threadActions";
 import {chatModalPrompt} from "../actions/chatActions";
 
 //UI components
+import Container from "../../../pod-chat-ui-kit/src/container";
 import Modal, {ModalBody, ModalHeader, ModalFooter} from "../../../pod-chat-ui-kit/src/modal";
 import {Button} from "../../../pod-chat-ui-kit/src/button";
-import Gap from "../../../pod-chat-ui-kit/src/gap";
-import {Heading, Text} from "../../../pod-chat-ui-kit/src/typography";
-import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
-import Container from "../../../pod-chat-ui-kit/src/container";
-import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
-import date from "../utils/date";
+import {Heading} from "../../../pod-chat-ui-kit/src/typography";
 import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
-import {
-  MdPersonAdd,
-  MdPerson,
-  MdPhone,
-  MdBlock,
-  MdNotifications,
-  MdEdit,
-  MdDelete,
-  MdDeleteForever
-} from "react-icons/md";
-
-//styling
-import style from "../../styles/app/ModalThreadInfoPers.scss"
-import styleVar from "../../styles/variables.scss";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
+import { MdPets} from "react-icons/md";
 import ModalThreadInfoMessageTypes from "./ModalThreadInfoMessageTypes";
 import ModalThreadInfoPersonHead from "./ModalThreadInfoPersonHead";
-import {Virtuoso, VirtuosoGrid} from "./_component/Virtuoso";
-import ModalThreadInfoMessageTypesImage from "./ModalThreadInfoMessageTypesImage";
-import ModalThreadInfoMessageTypesMedia from "./ModalThreadInfoMessageTypesMedia";
+import ModalThreadInfoTabSelector from "./ModalThreadInfoMediaScroller";
+
+//styling
 import {types} from "../constants/messageTypes";
+import styleVar from "../../styles/variables.scss";
 
 
 export function getParticipant(participants, user) {
@@ -230,8 +214,9 @@ export default class ModalThreadInfo extends Component {
     this.setState({onEndReached});
   }
 
-  setMessageTypesData({messages, partialLoading}) {
+  setMessageTypesData({messages, partialLoading, loading}) {
     this.setState({
+      mediaListLoading: loading,
       mediaListPartialLoading: partialLoading,
       mediaList: partialLoading ? this.state.mediaList : messages
     })
@@ -250,33 +235,12 @@ export default class ModalThreadInfo extends Component {
 
   render() {
     const {participants, thread, user, onClose, isShow, smallVersion, contactBlocking, notificationPending, GapFragment, AvatarModalMediaFragment, dispatch} = this.props;
-    const {scrollBottomThresholdCondition, scrollBottomThreshold, mediaList, selectedTab, endCondition} = this.state;
+    const {scrollBottomThresholdCondition, scrollBottomThreshold, mediaList, selectedTab, endCondition, mediaListLoading} = this.state;
     const isOnTheFly = thread.onTheFly;
     let participant = isOnTheFly ? thread.participant : getParticipant(participants, user);
     const participantImage = avatarUrlGenerator(isOnTheFly ? thread.image : participant.image, avatarUrlGenerator.SIZES.MEDIUM);
     const contact = this.state.contact || {};
 
-    const TabComponentSelector = {
-      "picture": {
-        Scroller: VirtuosoGrid,
-        props: {
-          listClassName: style.ModalThreadInfoPerson__ImageList,
-          itemClassName: style.ModalThreadInfoPerson__ImageListItem
-        },
-        ListItem: ({idx}) => {
-          return <ModalThreadInfoMessageTypesImage message={mediaList[idx]} dispatch={dispatch}/>
-        }
-      },
-      "file": {
-        Scroller: Virtuoso,
-        ListItem: ({idx}) => <ModalThreadInfoMessageTypesMedia message={mediaList[idx]}
-                                                               dispatch={dispatch}
-                                                               type={selectedTab}
-        />
-      },
-    };
-
-    const {Scroller, ListItem, Height, props} = TabComponentSelector[tabIsFile(selectedTab) ? "file" : selectedTab] || {};
     return (
       <Modal isOpen={isShow} onClose={onClose} inContainer={smallVersion} fullScreen={smallVersion} userSelect="none">
 
@@ -288,22 +252,22 @@ export default class ModalThreadInfo extends Component {
                    onScrollBottomThresholdCondition={scrollBottomThresholdCondition}
                    onScrollBottomThreshold={scrollBottomThreshold}>
           {
-            isOnTheFly ? < ModalThreadInfoPersonHead thread={thread}
-                                                     isOnTheFly={isOnTheFly}
-                                                     notificationPending={notificationPending}
-                                                     GapFragment={GapFragment}
-                                                     AvatarModalMediaFragment={AvatarModalMediaFragment}
-                                                     participantImage={participantImage}
-                                                     contact={contact}
-                                                     participant={participant}
-                                                     contactBlocking={contactBlocking}
-                                                     onEdit={this.onEdit}
-                                                     $this={this}
-                                                     onRemove={this.onRemove}
-                                                     onAddContact={this.onAddContact}
-                                                     onRemoveThread={this.onRemoveThread}
-                                                     onBlockSelect={this.onBlockSelect}
-                                                     onNotificationSelect={this.onNotificationSelect}/> :
+            isOnTheFly ? <ModalThreadInfoPersonHead thread={thread}
+                                                    isOnTheFly={isOnTheFly}
+                                                    notificationPending={notificationPending}
+                                                    GapFragment={GapFragment}
+                                                    AvatarModalMediaFragment={AvatarModalMediaFragment}
+                                                    participantImage={participantImage}
+                                                    contact={contact}
+                                                    participant={participant}
+                                                    contactBlocking={contactBlocking}
+                                                    onEdit={this.onEdit}
+                                                    $this={this}
+                                                    onRemove={this.onRemove}
+                                                    onAddContact={this.onAddContact}
+                                                    onRemoveThread={this.onRemoveThread}
+                                                    onBlockSelect={this.onBlockSelect}
+                                                    onNotificationSelect={this.onNotificationSelect}/> :
               <Fragment>
                 <ModalThreadInfoMessageTypes thread={thread}
                                              extraTabs={["threadInfo"]}
@@ -330,11 +294,36 @@ export default class ModalThreadInfo extends Component {
                                               onRemoveThread={this.onRemoveThread}
                                               onBlockSelect={this.onBlockSelect}
                                               onNotificationSelect={this.onNotificationSelect}/>
-                  : <Scroller {...props}
-                              style={{height: Height || `calc(100vh - 245px)`, overflowX: "hidden"}}
-                              totalCount={selectedTab === "people" ? participants.length : mediaList.length}
-                              endReached={e => endCondition && this.onEndReached()}
-                              itemContent={idx => <ListItem idx={idx}/>}/>
+                  :
+                  <Container style={{height: "calc(100vh - 300px)"}}>
+                    {mediaListLoading ?
+                      <Container center>
+                        <Loading><LoadingBlinkDots size="sm"/></Loading>
+                      </Container> :
+                      mediaList.length ?
+                        <ModalThreadInfoTabSelector dispatch={dispatch}
+                                                    totalCount={mediaList.length}
+                                                    endCondition={endCondition}
+                                                    mediaList={mediaList}
+                                                    onEndReached={this.onEndReached}
+                                                    selectedTab={selectedTab}/>
+                        :
+                        <Container relative center>
+                          <Gap y={5}>
+                            <Container flex style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+                              <Container>
+                                <MdPets size={styleVar.iconSizeLg} color={styleVar.colorGray}/>
+                              </Container>
+                              <Container>
+                                <Text>{strings.noResult}</Text>
+                              </Container>
+                            </Container>
+                          </Gap>
+                        </Container>
+                    }
+
+                  </Container>
+
 
                 }
               </Fragment>

@@ -38,8 +38,11 @@ import ModalThreadInfoMessageTypesImage from "./ModalThreadInfoMessageTypesImage
 import ModalThreadInfoMessageTypesMedia from "./ModalThreadInfoMessageTypesMedia";
 
 //styling
-import {MdArrowBack} from "react-icons/md";
+import {MdArrowBack, MdPets} from "react-icons/md";
 import style from "../../styles/app/ModalThreadInfoGroupMain.scss";
+import ModalThreadInfoGroup from "./ModalThreadInfoGroup";
+import ModalThreadInfoTabSelector from "./ModalThreadInfoMediaScroller";
+import styleVar from "../../styles/variables.scss";
 
 const constants = {
   count: 50,
@@ -63,12 +66,6 @@ function ModalContactListFooterFragment(addMembers, onPrevious, onClose) {
   )
 }
 
-function tabIsFile(selectedTab) {
-  if (types[selectedTab]) {
-    return selectedTab !== "picture";
-  }
-  return false
-}
 
 export function isOwner(thread, user) {
   return thread.inviter && user.id === thread.inviter.id;
@@ -274,6 +271,7 @@ class ModalThreadInfoGroupMain extends Component {
 
   onSearchChange(query) {
     const {dispatch, thread} = this.props;
+    dispatch(threadParticipantList());
     dispatch(threadParticipantList(thread.id, 0, constants.count, query));
   }
 
@@ -300,10 +298,11 @@ class ModalThreadInfoGroupMain extends Component {
     this.setState({onEndReached});
   }
 
-  setMessageTypesData({messages, partialLoading}) {
+  setMessageTypesData({messages, partialLoading, loading}) {
     this.setState({
       mediaListPartialLoading: partialLoading,
-      mediaList: partialLoading ? this.state.mediaList : messages
+      mediaListLoading: loading,
+      mediaList: partialLoading || loading ? this.state.mediaList : messages
     })
     //console.log(arguments)
   }
@@ -329,7 +328,7 @@ class ModalThreadInfoGroupMain extends Component {
       partialParticipantLoading,
       dispatch
     } = this.props;
-    const {removingParticipantIds, addMembers, internalStep, mediaList, selectedTab, endCondition, query} = this.state;
+    const {removingParticipantIds, addMembers, internalStep, mediaList, selectedTab, endCondition, query, mediaListLoading} = this.state;
     AvatarModalMediaFragment = AvatarModalMediaFragment.bind(this);
     if (internalStep === constants.ON_ADD_MEMBER) {
       return <ModalContactList isShow
@@ -381,40 +380,6 @@ class ModalThreadInfoGroupMain extends Component {
       )
     };
 
-    const TabComponentSelector = {
-      "people": {
-        Scroller: Virtuoso,
-        Height: "calc(100vh - 288px)",
-        ListItem: ({idx}) => {
-          return <ContactListItemMemoized invert
-                                          avatarSize={avatarUrlGenerator.SIZES.SMALL}
-                                          selection
-                                          contact={participants[idx]}
-                                          onSelect={this.onStartChat}
-                                          contacts={participants}
-                                          LeftActionFragment={conversationAction}/>
-        }
-      },
-      "picture": {
-        Scroller: VirtuosoGrid,
-        props: {
-          listClassName: style.ModalThreadInfoGroupMain__ImageList,
-          itemClassName: style.ModalThreadInfoGroupMain__ImageListItem
-        },
-        ListItem: ({idx}) => {
-          return <ModalThreadInfoMessageTypesImage message={mediaList[idx]} dispatch={dispatch}/>
-        }
-      },
-      "file": {
-        Scroller: Virtuoso,
-        ListItem: ({idx}) => <ModalThreadInfoMessageTypesMedia message={mediaList[idx]}
-                                                               dispatch={dispatch}
-                                                               type={selectedTab}
-        />
-      },
-    };
-
-    const {Scroller, ListItem, Height, props} = TabComponentSelector[tabIsFile(selectedTab) ? "file" : selectedTab] || {};
     let extraTabs = ["threadInfo"];
     if (hasAllowToSeenParticipant) {
       extraTabs.push("people");
@@ -471,12 +436,39 @@ class ModalThreadInfoGroupMain extends Component {
                                                                     onSettingsSelect={this.onSettingsSelect}
                                                                     onNotificationSelect={this.onNotificationSelect}
                                                                     onSearchChange={this.onSearchChange}/> :
+        <Container style={{height: selectedTab === "people" ? "auto": "calc(100vh - 300px)"}}>
+          {mediaListLoading ?
+            <Container center>
+              <Loading><LoadingBlinkDots size="sm"/></Loading>
+            </Container> :
+            mediaList.length || selectedTab === "people" ?
+              <ModalThreadInfoTabSelector dispatch={dispatch}
+                                          totalCount={selectedTab === "people" ? participants.length : mediaList.length}
+                                          endCondition={endCondition}
+                                          mediaList={mediaList}
+                                          onEndReached={this.onEndReached}
+                                          selectedTab={selectedTab}
+                                          onStartChat={this.onStartChat}
+                                          conversationAction={conversationAction}
+                                          participants={participants}/>
+                                          :
+            <Container relative center>
+              <Gap y={5}>
+                <Container flex style={{display:"flex", flexDirection: "column", alignItems: "center"}}>
+                  <Container>
+                    <MdPets size={styleVar.iconSizeLg} color={styleVar.colorGray}/>
+                  </Container>
+                  <Container>
+                    <Text>{strings.noResult}</Text>
+                  </Container>
+                </Container>
+              </Gap>
+            </Container>
+          }
 
-        <Scroller {...props}
-                  style={{height: Height || `calc(100vh - 245px)`, overflowX: "hidden"}}
-                  totalCount={selectedTab === "people" ? participants.length : mediaList.length}
-                  endReached={e => endCondition && this.onEndReached()}
-                  itemContent={idx => <ListItem idx={idx}/>}/>
+        </Container>
+
+
       }
 
     </Fragment>
