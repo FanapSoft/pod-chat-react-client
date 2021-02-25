@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {Fragment, useState} from "react";
 import {getImageFromHashMapWindow, getMessageMetaData} from "../utils/helpers";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import Image from "../../../pod-chat-ui-kit/src/image";
@@ -8,6 +8,7 @@ import strings from "../constants/localization";
 import {threadGoToMessageId, threadModalThreadInfoShowing} from "../actions/threadActions";
 import {MdWarning} from "react-icons/md";
 import style from "../../styles/app/ModalThreadInfoMessageTypesImage.scss";
+import oneone from "../../styles/images/_common/oneone.png";
 import styleVar from "../../styles/variables.scss";
 
 function gotoMessage(dispatch, message) {
@@ -27,20 +28,31 @@ export function ModalThreadInfoMessageTypesImage({message, dispatch}) {
 
   const idMessage = `${message.id}-message-types-picture`;
   let [thumb, setThumb] = useState(null);
-  let [blurryThumb, setBlurryThumb] = useState(null);
   const metaData = getMessageMetaData(message).file;
-  thumb = metaData && getImageFromHashMapWindow(metaData.fileHash, 3, null, setThumb, dispatch, false, true);
-  blurryThumb = metaData && getImageFromHashMapWindow(metaData.fileHash, 1, 0.01, setBlurryThumb, dispatch, false, true);
+  thumb = metaData && thumb !== true && getImageFromHashMapWindow(metaData.fileHash, 3, null, setThumb, dispatch, false, true);
   const isFailed = !metaData;
-  const isBlurry = blurryThumb && (!thumb || thumb === true);
-  const blurryImageLoading = !blurryThumb && (!thumb || thumb === true);
+  const goingNothing = !thumb || thumb === true;
   return (
-    isFailed ?
-      <Container center style={{width: "100%", textAlign: "center"}}>
-        <Text size="xs">{strings.fileHaveProblem}</Text>
-        <Container>
-          <MdWarning size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-        </Container>
+    isFailed || goingNothing ?
+      <Container center={!goingNothing} style={{width: "100%", textAlign: "center"}}>
+        {goingNothing ?
+          <Image
+            className={style.ModalThreadInfoMessageTypesImage__Image}
+            setOnBackground
+            src={oneone}
+            style={{
+              filter: "blur(8px)",
+              backgroundColor: style.colorGrayLight
+            }}/>
+          :
+          <Fragment>
+            <Text size="xs">{strings.fileHaveProblem}</Text>
+            <Container>
+              <MdWarning size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+            </Container>
+          </Fragment>
+        }
+
       </Container>
       :
       <Container data-fancybox key={idMessage}
@@ -48,18 +60,18 @@ export function ModalThreadInfoMessageTypesImage({message, dispatch}) {
 
         <IndexModalMediaFragment
           options={{buttons: ["goto", "slideShow", "close"], caption: message.message}}
-          link={thumb || blurryThumb}>
+          link={thumb}>
           <Image className={style.ModalThreadInfoMessageTypesImage__Image}
                  setOnBackground
                  style={{
-                   filter: blurryImageLoading || isBlurry ? "blur(8px)" : "none",
+                   zIndex: 1,
                    backgroundColor: style.colorGrayLight
                  }}
-                 src={blurryImageLoading || isBlurry ? blurryThumb : thumb}/>
+                 src={thumb}/>
 
         </IndexModalMediaFragment>
       </Container>
   )
 }
 
-export default React.memo(ModalThreadInfoMessageTypesImage, a=>true)
+export default React.memo(ModalThreadInfoMessageTypesImage, a => true)

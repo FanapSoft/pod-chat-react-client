@@ -271,7 +271,8 @@ export default class ChatSDK {
           'add_rule_to_user',
           'remove_role_from_user',
           'read_thread',
-          'edit_thread'
+          'edit_thread',
+          'ownership'
         ]
       }],
       threadId

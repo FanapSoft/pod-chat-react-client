@@ -1,7 +1,7 @@
 // src/box/_component/contactList
 import React, {memo} from "react";
 import * as ReactDOM from 'react-dom'
-import {Virtuoso} from "react-virtuoso";
+import {Virtuoso} from "./../_component/Virtuoso";
 import {avatarNameGenerator, avatarUrlGenerator} from "../../utils/helpers";
 
 //components
@@ -87,14 +87,13 @@ export function ContactListItem(props) {
 export const ContactListItemMemoized =  memo(ContactListItem, ()=> true);
 
 export function ContactList(props) {
-  const {contacts, endReached} = props;
+  const {contacts, endReached, height} = props;
   let filterContacts = [...contacts];
   return (
     <List>
       {
       <Virtuoso data={filterContacts}
-                className={style.AsideThreads__Scroller}
-                style={{  height: `calc(100vh - 245px)`}}
+                style={{  height: height || `calc(100vh - 300px)`}}
                 endReached={endReached || (a =>{})}
                 fixedItemHeight={65}
                 itemContent={(index, el) =><ContactListItem {...props} contact={el}/>}/>
