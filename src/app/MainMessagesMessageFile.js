@@ -104,7 +104,7 @@ class MainMessagesMessageFile extends Component {
       });
     }
     const fileResult = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]);
-    const result = typeof fileResult === "string" && fileResult.indexOf("blob") > -1 ? fileResult : null;
+    const result = typeof fileResult === "string" && fileResult.indexOf("http") > -1 ? fileResult : null;
     if (result) {
       const downloadRef = this.downloadTriggerRef.current;
       if (!downloadRef.href) {
@@ -187,7 +187,7 @@ class MainMessagesMessageFile extends Component {
     }
     this.isDownloading = true;
     this.isPlayable = isPlayable;
-    getFileFromHashMap.apply(this, [metaData.file.hashCode]);
+    getFileFromHashMap.apply(this, [metaData.file.hashCode, null, this.state.isVideo ? {responseType: "link"} : {}]);
   }
 
   onRetry() {

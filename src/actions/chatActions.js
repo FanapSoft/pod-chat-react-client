@@ -240,11 +240,11 @@ export const chatGetImage = (hashCode, size, quality, crop) => {
   }
 };
 
-export const chatGetFile = (hashCode, callBack) => {
+export const chatGetFile = (hashCode, callBack, params) => {
   return (dispatch, getState) => {
     const state = getState();
     const chatSDK = state.chatInstance.chatSDK;
-    return chatSDK.getFileFromPodspace(hashCode, callBack);
+    return chatSDK.getFileFromPodspace(hashCode, callBack, params);
   }
 };
 

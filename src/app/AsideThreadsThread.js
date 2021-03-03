@@ -137,4 +137,31 @@ function AsideThreadsThread({
   </Fragment>
 }
 
-export default React.memo(AsideThreadsThread);
+export default React.memo(AsideThreadsThread, (props, nextProps) => {
+    const {activeThread, isMenuShow, thread} = props;
+    const {activeThread: nextActiveThread, thread: nextThread, isMenuShow: nextIsMenuShow} = nextProps;
+    if (thread.time === nextThread.time) {
+      if (thread.mute === nextThread.mute) {
+        if (thread.unreadCount === nextThread.unreadCount) {
+          if (thread.image === nextThread.image) {
+            if (thread.isTyping === nextThread.isTyping) {
+              if (thread.title === nextThread.title) {
+                if (thread.lastMessageVO.id === nextThread.lastMessageVO.id) {
+                  if (thread.lastMessageVO.seen === nextThread.lastMessageVO.seen) {
+                    if (thread.lastMessageVO.message === nextThread.lastMessageVO.message) {
+                      if (isMenuShow === nextIsMenuShow) {
+                        if (activeThread === nextActiveThread) {
+                          return true;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+);

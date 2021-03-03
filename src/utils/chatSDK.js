@@ -470,9 +470,22 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  getFileFromPodspace(resolve, reject, hashCode, callBack) {
+  getFileFromPodspace(resolve, reject, hashCode, callBack, params = {}) {
+    if (params.responseType === "link") {
+      chatAgent.getFileFromPodspace({
+        hashCode,
+        ...params
+      }, result => {
+        if (!this._onError(result, reject)) {
+          return       setTimeout(e=>{callBack(result.result)}, 1000);
+        }
+      });
+      return resolve(undefined);
+
+    }
     const {uniqueId} = chatAgent.getFileFromPodspace({
       hashCode,
+      ...params
     }, result => {
       if (!this._onError(result, reject)) {
         return callBack(result.result);

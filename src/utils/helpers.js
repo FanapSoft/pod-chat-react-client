@@ -157,7 +157,7 @@ export function getFileDownloadingFromHashMap(id) {
   let result = chatFileHashCodeMap.find(e => e.id === id);
   if (result) {
     const {result: status} = result;
-    if (status.indexOf("blob") > -1) {
+    if (status.indexOf("http") > -1) {
       return status;
     } else {
       if (status === "LOADING") {
@@ -254,16 +254,23 @@ export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, com
   return init ? "LOADING" : downloadingResult;
 }
 
-export function getFileFromHashMap(hashCode, metadata) {
+export function getFileFromHashMap(hashCode, metadata, params) {
   const id = hashCode;
   const {dispatch} = this.props;
-  const downloadingResult = getFileDownloadingFromHashMap.call(this, id);
-  if (downloadingResult) {
-    return downloadingResult;
+  if (params && params.responseType !== "link") {
+    const downloadingResult = getFileDownloadingFromHashMap.call(this, id);
+    if (downloadingResult) {
+      return downloadingResult;
+    }
   }
+
   return dispatch(chatGetFile(hashCode, result => {
-    dispatch(chatFileHashCodeUpdate({id, result: URL.createObjectURL(result), metadata}));
-  })).then(downloadingUniqueId => {
+    dispatch(chatFileHashCodeUpdate({
+      id,
+      result: params && params.responseType === "link" ? result : URL.createObjectURL(result),
+      metadata
+    }));
+  }, params)).then(downloadingUniqueId => {
     dispatch(chatFileHashCodeUpdate({id, result: "LOADING", cancelId: downloadingUniqueId, metadata}));
   });
 }
