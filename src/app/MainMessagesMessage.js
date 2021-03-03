@@ -4,7 +4,6 @@ import {connect} from "react-redux";
 import "moment/locale/fa";
 import checkForPrivilege from "../utils/privilege";
 import {
-  findLastSeenMessage,
   isMessageIsFile,
   isMessageIsNewFile,
   mobileCheck,
@@ -17,7 +16,7 @@ import {THREAD_ADMIN} from "../constants/privilege";
 
 //actions
 import {
-  threadLeftAsideShowing, threadModalListShowing
+  threadLeftAsideShowing
 } from "../actions/threadActions";
 import {messageEditing} from "../actions/messageActions";
 import {chatModalPrompt} from "../actions/chatActions";
@@ -63,21 +62,30 @@ export class MainMessagesMessage extends Component {
 
   shouldComponentUpdate(nextProps, nextState, nextContext) {
     const {messageControlShow, messageTriggerShow} = nextState;
-    const {message, highLightMessage, showName} = nextProps;
+    const {message, highLightMessage, showName, lastSeenMessageTime} = nextProps;
     const {messageControlShow: currentMessageControlShow, messageTriggerShow: currentMessageTriggerShow} = this.state;
-    const {message: currentMessage, highLightMessage: currentHighLightMessage, showName: currentShowName} = this.props;
+    const {message: currentMessage, highLightMessage: currentHighLightMessage, showName: currentShowName, isGroup, isChannel} = this.props;
     if (currentMessageControlShow === messageControlShow) {
       if (currentMessageTriggerShow === messageTriggerShow) {
         if (currentMessage.message === message.message) {
           if (currentMessage.progress === message.progress) {
             if (currentHighLightMessage === highLightMessage) {
               if (currentShowName === showName) {
-                return false;
+                if(isChannel || isGroup) {
+                  return false;
+                } else {
+                  if (currentMessage.seen === message.seen) {
+                    if (currentMessage.time > lastSeenMessageTime) {
+                      return false;
+                    }
+                  }
+                }
               }
             }
           }
         }
       }
+
     }
     return true;
   }
@@ -179,9 +187,9 @@ export class MainMessagesMessage extends Component {
       threadLeftAsideShowing,
       isMessageByMe,
       isGroup,
-      isChannel
+      isChannel,
+      lastSeenMessageTime
     } = this.props;
-    const lastSeenMessageTime = findLastSeenMessage(messages);
     const {messageControlShow, messageTriggerShow} = this.state;
     const args = {
       onMessageControlShow: this.onMessageControlShow,

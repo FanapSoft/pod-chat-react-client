@@ -71,7 +71,7 @@ export default class LeftAsideMain extends Component {
     });
   }
 
-  onScrollBottomThreshold(){
+  onScrollBottomThreshold() {
 
   }
 
@@ -90,7 +90,8 @@ export default class LeftAsideMain extends Component {
       <Container relative>
         {
           seenList && seenList.length > 1 ?
-            <ContactList contacts={seenList}
+            <ContactList height={"calc(100vh - 89px)"}
+                         contacts={seenList}
                          avatarSize={avatarUrlGenerator.SIZES.SMALL}
                          selection
                          invert/>

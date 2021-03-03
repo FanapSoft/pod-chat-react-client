@@ -34,8 +34,15 @@ export function ModalThreadInfoMessageTypesImage({message, dispatch}) {
   const goingNothing = !thumb || thumb === true;
   return (
     isFailed || goingNothing ?
-      <Container center={!goingNothing} style={{width: "100%", textAlign: "center"}}>
-        {goingNothing ?
+      <Container center={isFailed} style={{width: "100%", textAlign: "center"}}>
+        {isFailed ?
+          <Fragment>
+            <Text size="xs">{strings.fileHaveProblem}</Text>
+            <Container>
+              <MdWarning size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
+            </Container>
+          </Fragment>
+          :
           <Image
             className={style.ModalThreadInfoMessageTypesImage__Image}
             setOnBackground
@@ -44,13 +51,6 @@ export function ModalThreadInfoMessageTypesImage({message, dispatch}) {
               filter: "blur(8px)",
               backgroundColor: style.colorGrayLight
             }}/>
-          :
-          <Fragment>
-            <Text size="xs">{strings.fileHaveProblem}</Text>
-            <Container>
-              <MdWarning size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-            </Container>
-          </Fragment>
         }
 
       </Container>

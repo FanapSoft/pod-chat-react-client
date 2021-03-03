@@ -382,15 +382,16 @@ export const threadsReducer = (state = {
       });
       return {...state, ...stateGenerator(SUCCESS, sortThreads(threads), "threads")};
     }
-    case MESSAGE_EDIT():
     case MESSAGE_SEEN(): {
-      const filteredThread = state.threads.filter(thread => thread.lastMessageVO && thread.lastMessageVO.id === action.payload);
+      let filteredThread = state.threads.filter(thread => thread.lastMessageVO && thread.lastMessageVO.id === action.payload);
       if (!filteredThread.length) {
         return state;
       }
+      filteredThread = filteredThread[0];
+      const {lastMessageVO, id} = filteredThread;
       const list = updateStore(
         filteredThread,
-        {id: action.payload.threadId, lastMessageVO: action.payload, lastMessage: action.payload.message},
+        {id: id, lastMessageVO: {...lastMessageVO, ...{seen: true}}},
         {
           mix: true,
           by: "id",

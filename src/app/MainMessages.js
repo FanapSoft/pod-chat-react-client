@@ -8,7 +8,11 @@ import {
   mobileCheck,
   isIosAndSafari,
   isGroup,
-  isMessageByMe, messageSelectedCondition, showMessageNameOrAvatar, isChannel
+  isMessageByMe,
+  messageSelectedCondition,
+  showMessageNameOrAvatar,
+  isChannel,
+  findLastSeenMessage
 } from "../utils/helpers";
 import isElementVisible from "../utils/dom";
 
@@ -620,6 +624,7 @@ export default class MainMessages extends Component {
 
                       <MainMessagesMessage thread={thread}
                                            messages={messages}
+                                           lastSeenMessageTime={!isChannelResult && !isGroupResult ? findLastSeenMessage(messages) : null}
                                            showName={showMessageNameOrAvatarResult}
                                            user={user}
                                            isChannel={isChannelResult}
