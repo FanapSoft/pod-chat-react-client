@@ -197,7 +197,7 @@ export default class ChatSDK {
           threadId: params.threadId,
           nextOffset,
           contentCount,
-          messages: rslt.history.concat(rslt.failed.concat(rslt.sending.concat(rslt.uploading))),
+          messages: rslt.history.concat(rslt.failed.concat(rslt.sending.concat(params.toTimeFull || (params.fromTimeFull && hasNext) ? [] : rslt.uploading))),
           hasNext: realHasNext,
           hasPrevious: realHasPrevious
         });
@@ -477,7 +477,9 @@ export default class ChatSDK {
         ...params
       }, result => {
         if (!this._onError(result, reject)) {
-          return       setTimeout(e=>{callBack(result.result)}, 1000);
+          return setTimeout(e => {
+            callBack(result.result)
+          }, 100);
         }
       });
       return resolve(undefined);

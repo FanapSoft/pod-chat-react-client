@@ -16,7 +16,7 @@ import {
   isMessageIsUploading,
   isMessageIsVideo,
   isMessageIsVoice,
-  mobileCheck
+  mobileCheck, updateLinkHashMap
 } from "../utils/helpers";
 
 //strings
@@ -89,7 +89,7 @@ class MainMessagesMessageFile extends Component {
     this.playAfterDownloadTrigger = null;
     this.justMountedTrigger = null;
     this.downloadTriggerRef = React.createRef();
-    this.isDownloading = false;
+    this.isDownloading = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]) === true;
     this.isPlayable = null;
     this.mainMessagesMessageRef = setInstance(this);
   }
@@ -172,22 +172,34 @@ class MainMessagesMessageFile extends Component {
 
   onDownload(isPlayable, e) {
     (e || isPlayable).stopPropagation && (e || isPlayable).stopPropagation();
-    const {metaData} = this.state;
+    const {metaData, isVideo} = this.state;
     const downloadRef = this.downloadTriggerRef.current;
-    if (isPlayable) {
-      if (this.playTrigger) {
-        const result = this.playTrigger(downloadRef.href);
-        if (downloadRef.href) {
-          return;
+    const pastAction = () => {
+      if (isPlayable) {
+        if (this.playTrigger) {
+          const result = this.playTrigger(downloadRef.href);
+          if (downloadRef.href) {
+            return;
+          }
         }
       }
+      if (downloadRef.href) {
+        return downloadRef.click();
+      }
+      this.isDownloading = true;
+      this.isPlayable = isPlayable;
+      getFileFromHashMap.apply(this, [metaData.file.hashCode, null, this.state.isVideo ? {responseType: "link"} : {}]);
+    };
+    //TODO: fix it when on new token coming
+    if (isVideo && downloadRef && downloadRef.href) {
+      updateLinkHashMap.apply(this, [metaData.file.hashCode, this.props.dispatch]).then(link => {
+        downloadRef.href = link;
+        pastAction();
+      });
+    } else {
+      pastAction();
     }
-    if (downloadRef.href) {
-      return downloadRef.click();
-    }
-    this.isDownloading = true;
-    this.isPlayable = isPlayable;
-    getFileFromHashMap.apply(this, [metaData.file.hashCode, null, this.state.isVideo ? {responseType: "link"} : {}]);
+
   }
 
   onRetry() {
@@ -237,6 +249,12 @@ class MainMessagesMessageFile extends Component {
       {mobileCheck() ?
         <MdArrowDownward color={styleVar.colorAccent} size={styleVar.iconSizeMd}/> : strings.download}
     </ContextItem>
+  }
+
+  componentWillUnmount() {
+    if (this.isDownloading) {
+      this.onCancelDownload();
+    }
   }
 
   render() {

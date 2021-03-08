@@ -5,7 +5,7 @@ import {
   getFileDownloadingFromHashMapWindow,
   getFileFromHashMap, getFileFromHashMapWindow,
   getMessageMetaData,
-  humanFileSize
+  humanFileSize, updateLinkHashMap
 } from "../utils/helpers";
 
 import Text from "../../../pod-chat-ui-kit/src/typography/Text";
@@ -43,14 +43,14 @@ function gotoMessage(dispatch, message) {
 }
 
 function openModalMedia(idMessage) {
-  window.modalMediaRef.getFancyBox().open({src: `#${idMessage}`});
+  window.modalMediaRef.getFancyBox().open({src: `#${idMessage}`, opts: {arrows: false, infobar: false}});
 }
 
 function onPlayClick(fileHash, dispatch, setDownloading, idMessage, idMessageTrigger, downloadable) {
   const fileStatusResult = fileStatus(fileHash);
   if (lastFileRequest.downloadFunction) {
     lastFileRequest.downloadFunction(false);
-    cancelFileDownloadingFromHashMapWindow(lastFileRequest.fileHash, dispatch);
+    //cancelFileDownloadingFromHashMapWindow(lastFileRequest.fileHash, dispatch);
   }
   lastFileRequest.downloadFunction = setDownloading;
   lastFileRequest.id = idMessage;
@@ -76,12 +76,28 @@ function onPlayClick(fileHash, dispatch, setDownloading, idMessage, idMessageTri
       if (lastFileRequest.id === idMessage) {
         setTimeout(() => {
           setDownloading(false);
-          pastAction()
+          pastAction();
         }, 100)
       }
-    }, dispatch, true, true)
+    }, dispatch, true, true, {responseType: "link"})
   } else {
-    pastAction();
+    //TODO: fix it when on new token coming
+    if (fileStatusResult !== "DOWNLOADING") {
+      updateLinkHashMap(fileHash, dispatch, true).then(link => {
+        if (downloadable) {
+          const elem = document.getElementById(idMessageTrigger);
+          if (elem) {
+            elem.href = link;
+          }
+        } else {
+          const elem = document.getElementById(idMessage);
+          if (elem) {
+            elem.src = link
+          }
+        }
+        pastAction();
+      })
+    }
   }
 }
 

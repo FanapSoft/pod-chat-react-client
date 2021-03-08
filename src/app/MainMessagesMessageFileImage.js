@@ -2,7 +2,12 @@ import React, {Fragment, useState, useEffect, useRef} from "react";
 import ReactDOM from "react-dom";
 import classnames from "classnames";
 import {IndexModalMediaFragment} from "./index";
-import {getImage, getImageFromHashMapWindow} from "../utils/helpers";
+import {
+  cancelFileDownloadingFromHashMap,
+  cancelFileDownloadingFromHashMapWindow,
+  getImage,
+  getImageFromHashMapWindow
+} from "../utils/helpers";
 
 
 import Image from "../../../pod-chat-ui-kit/src/image";

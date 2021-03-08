@@ -137,7 +137,7 @@ function AsideThreadsThread({
   </Fragment>
 }
 
-export default React.memo(AsideThreadsThread, (props, nextProps) => {
+export default React.memo(AsideThreadsThread/*, (props, nextProps) => {
     const {activeThread, isMenuShow, thread} = props;
     const {activeThread: nextActiveThread, thread: nextThread, isMenuShow: nextIsMenuShow} = nextProps;
     if (thread.time === nextThread.time) {
@@ -163,5 +163,5 @@ export default React.memo(AsideThreadsThread, (props, nextProps) => {
         }
       }
     }
-  }
+  }*/
 );

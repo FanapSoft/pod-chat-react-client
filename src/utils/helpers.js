@@ -204,7 +204,7 @@ export function getFileDownloadingFromHashMapWindow(id) {
   }
   const result = window.podspaceHashmap[id];
   if (result) {
-    if (result.indexOf("blob") > -1) {
+    if (result.indexOf("http") > -1) {
       return result;
     } else {
       if (result === "LOADING") {
@@ -254,6 +254,26 @@ export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, com
   return init ? "LOADING" : downloadingResult;
 }
 
+export function updateLinkHashMap(hashCode, dispatch, isWindowHashMap) {
+
+  return new Promise((resolve, reject) => {
+    dispatch(chatGetFile(hashCode, result => {
+      const downloadingResult = isWindowHashMap ? getFileDownloadingFromHashMapWindow(hashCode) : getFileDownloadingFromHashMap.call(this, hashCode);
+      resolve(result);
+      if (downloadingResult === result) {
+        return;
+      }
+      if (isWindowHashMap) {
+        return window.podspaceHashmap[hashCode] = result;
+      }
+      dispatch(chatFileHashCodeUpdate({
+        hashCode,
+        result
+      }));
+    }, {responseType: "link"}));
+  })
+}
+
 export function getFileFromHashMap(hashCode, metadata, params) {
   const id = hashCode;
   const {dispatch} = this.props;
@@ -275,13 +295,17 @@ export function getFileFromHashMap(hashCode, metadata, params) {
   });
 }
 
-export function getFileFromHashMapWindow(hashCode, fieldKey, componenet, init, directCall) {
+export function getFileFromHashMapWindow(hashCode, fieldKey, componenet, init, directCall, params) {
   const id = hashCode;
   const dispatch = directCall ? componenet : componenet.props.dispatch;
-  const downloadingResult = getFileDownloadingFromHashMapWindow(id);
-  if (downloadingResult) {
-    return downloadingResult;
+
+  if (params && params.responseType !== "link") {
+    const downloadingResult = getFileDownloadingFromHashMapWindow(id);
+    if (downloadingResult) {
+      return downloadingResult;
+    }
   }
+
   if (!init) {
     if (directCall) {
       fieldKey(window.podspaceHashmap[id] = "LOADING")
@@ -292,14 +316,15 @@ export function getFileFromHashMapWindow(hashCode, fieldKey, componenet, init, d
     }
   }
   dispatch(chatGetFile(hashCode, result => {
+    const fixedResult = params && params.responseType === "link" ? result : URL.createObjectURL(result);
     if (directCall) {
-      fieldKey(window.podspaceHashmap[id] = URL.createObjectURL(result))
+      fieldKey(window.podspaceHashmap[id] = fixedResult)
     } else {
       componenet.setState({
-        [fieldKey]: window.podspaceHashmap[id] = URL.createObjectURL(result)
+        [fieldKey]: window.podspaceHashmap[id] = fixedResult
       });
     }
-  })).then(downloadingUniqueId => {
+  }, params)).then(downloadingUniqueId => {
     window.podspaceHashmap[id] = "LOADING";
     window.podspaceHashmap[`${id}-cancelId`] = downloadingUniqueId;
   }, err => {
