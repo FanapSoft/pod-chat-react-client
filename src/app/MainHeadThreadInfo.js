@@ -34,7 +34,6 @@ import style from "../../styles/app/MainHeadThreadInfo.scss";
   return {
     chatState: store.chatState,
     chatRouterLess: store.chatRouterLess,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     threadShowing: store.threadShowing,
     participants: store.threadParticipantList.participants,
     user: store.user.user
@@ -45,6 +44,9 @@ class MainHeadThreadInfo extends Component {
   constructor(props) {
     super(props);
     this.onShowInfoClick = this.onShowInfoClick.bind(this);
+    this.state = {
+      avatar: null
+    }
   }
 
   onShowInfoClick() {

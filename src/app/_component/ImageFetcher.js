@@ -2,14 +2,13 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import Image from "../../../../pod-chat-ui-kit/src/image";
 import {
-  getImageFromHashMap
-} from "../../utils/helpers";
+  getImage
+} from "../../utils/hashmap";
 
 
 @connect(store => {
   return {
-    user: store.user.user,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+    user: store.user.user
   };
 })
 export default class ImageFetcher extends Component {
@@ -17,14 +16,17 @@ export default class ImageFetcher extends Component {
   constructor(props) {
     super(props);
     const {hashCode, size, quality} = props;
-    getImageFromHashMap.apply(this, [hashCode, size, quality]);
+    this.state = {
+      image: null,
+    };
+    getImage(hashCode, size, quality, "image", this, true);
   }
 
   render() {
     const {hashCode, size, quality, className, setOnBackground, ...other} = this.props;
-    let src = getImageFromHashMap.apply(this, [hashCode, size, quality]);
-    src = (typeof src === "string" && src.indexOf("blob") < 0) || src === true ? null : src;
-    return <Image src={src}
+    let {image} = this.state;
+    image = (typeof image === "string" && image.indexOf("blob") < 0) || image === true ? null : image;
+    return <Image src={image}
                   className={className}
                   setOnBackground={setOnBackground}
                   {...other}/>

@@ -1,12 +1,10 @@
 import React, {Fragment, useState} from "react";
 
 import {
-  cancelFileDownloadingFromHashMapWindow,
-  getFileDownloadingFromHashMapWindow,
-  getFileFromHashMap, getFileFromHashMapWindow,
   getMessageMetaData,
-  humanFileSize, updateLinkHashMap
+  humanFileSize
 } from "../utils/helpers";
+import {getFile, getImage, getFileDownloading, updateLink} from "../utils/hashmap";
 
 import Text from "../../../pod-chat-ui-kit/src/typography/Text";
 import Container from "../../../pod-chat-ui-kit/src/container";
@@ -25,7 +23,7 @@ const lastFileRequest = {
 };
 
 function fileStatus(fileHash) {
-  let fileResult = getFileDownloadingFromHashMapWindow(fileHash);
+  let fileResult = getFileDownloading(fileHash);
   const isDownloading = fileResult === true || fileResult === "LOADING";
   if (isDownloading) {
     return "DOWNLOADING";
@@ -72,7 +70,7 @@ function onPlayClick(fileHash, dispatch, setDownloading, idMessage, idMessageTri
 
   if (fileStatusResult === "NOT_STARTED") {
     setDownloading(true);
-    getFileFromHashMapWindow(fileHash, () => {
+    getFile(fileHash, () => {
       if (lastFileRequest.id === idMessage) {
         setTimeout(() => {
           setDownloading(false);
@@ -83,7 +81,7 @@ function onPlayClick(fileHash, dispatch, setDownloading, idMessage, idMessageTri
   } else {
     //TODO: fix it when on new token coming
     if (fileStatusResult !== "DOWNLOADING") {
-      updateLinkHashMap(fileHash, dispatch, true).then(link => {
+      updateLink(fileHash, dispatch, true).then(link => {
         if (downloadable) {
           const elem = document.getElementById(idMessageTrigger);
           if (elem) {
@@ -104,6 +102,7 @@ function onPlayClick(fileHash, dispatch, setDownloading, idMessage, idMessageTri
 import styleVar from "../../styles/variables.scss";
 import style from "../../styles/app/ModalThreadInfoMessageTypesMedia.scss";
 import {threadGoToMessageId, threadModalThreadInfoShowing} from "../actions/threadActions";
+
 
 export default function ({dispatch, message, type}) {
   const idMessage = `${message.id}-message-types-${type}`;

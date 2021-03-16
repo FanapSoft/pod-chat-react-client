@@ -2,11 +2,9 @@ import React, {Fragment, useState, useEffect, useRef} from "react";
 import ReactDOM from "react-dom";
 import classnames from "classnames";
 import {IndexModalMediaFragment} from "./index";
+import {getImage as getImageFromHashMap} from "../utils/hashmap";
 import {
-  cancelFileDownloadingFromHashMap,
-  cancelFileDownloadingFromHashMapWindow,
-  getImage,
-  getImageFromHashMapWindow
+  getImage
 } from "../utils/helpers";
 
 
@@ -98,9 +96,9 @@ export default function ({isUploading, showCancelIcon, message, metaData, smallV
   let [imageThumbLowQuality, setImageThumbLowQuality] = useState(null);
   let [modalMediaInstance, setModalMediaInstance] = useState(null);
 
-  imageThumb = getImageFromHashMapWindow(fileHash, imageQualities.medium.s, null, setImageThumb, dispatch, false, true);
-  imageModalPreview = getImageFromHashMapWindow(fileHash, null, imageQualities.high.q(metaData), setImageModalPreview, dispatch, false, true);
-  imageThumbLowQuality = getImageFromHashMapWindow(fileHash, imageQualities.low.s, imageQualities.low.q, setImageThumbLowQuality, dispatch, false, true);
+  imageThumb = getImageFromHashMap(fileHash, imageQualities.medium.s, null, setImageThumb, dispatch, false, true);
+  imageModalPreview = getImageFromHashMap(fileHash, null, imageQualities.high.q(metaData), setImageModalPreview, dispatch, false, true);
+  imageThumbLowQuality = getImageFromHashMap(fileHash, imageQualities.low.s, imageQualities.low.q, setImageThumbLowQuality, dispatch, false, true);
 
   imageThumb = imageThumb === true ? null : imageThumb;
   imageModalPreview = imageModalPreview === true ? null : imageModalPreview;

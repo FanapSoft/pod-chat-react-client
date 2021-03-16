@@ -44,7 +44,6 @@ const constants = {
     threadsHasNext: store.threads.hasNext,
     isShow: store.threadModalListShowing.isShowing,
     message: store.threadModalListShowing.message,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     user: store.user.user
   };
 }, null, null, {forwardRef: true})
@@ -59,7 +58,8 @@ export default class ModalThreadList extends Component {
       remainingThreadsHasNext: false,
       remainingThreadsPartialFetching: false,
       remainingThreads: [],
-      query: null
+      query: null,
+      avatar: null,
     }
   }
 

@@ -78,7 +78,6 @@ const statics = {
     chatInstance: store.chatInstance.chatSDK,
     chatRouterLess: store.chatRouterLess,
     chatSearchResult: store.chatSearchResult,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     user: store.user.user
   };
 })

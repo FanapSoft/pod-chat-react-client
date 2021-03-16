@@ -20,9 +20,8 @@ import utilsStyle from "../../styles/utils/utils.scss";
 import checkForPrivilege from "../utils/privilege";
 import {THREAD_ADMIN} from "../constants/privilege";
 
-let foo = null;
 
-export default function f(props) {
+export default function(props) {
   let {
     thread, notificationPending,
     GapFragment,

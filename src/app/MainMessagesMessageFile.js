@@ -4,9 +4,6 @@ import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import "moment/locale/fa";
 import {
-  cancelFileDownloadingFromHashMap,
-  getFileDownloadingFromHashMap,
-  getFileFromHashMap,
   getImage,
   getMessageMetaData,
   humanFileSize, isMessageHasError,
@@ -16,8 +13,11 @@ import {
   isMessageIsUploading,
   isMessageIsVideo,
   isMessageIsVoice,
-  mobileCheck, updateLinkHashMap
+  mobileCheck
 } from "../utils/helpers";
+
+import {cancelDownload, getFile, getFileDownloading, updateLink} from "../utils/hashmap";
+
 
 //strings
 import strings from "../constants/localization";
@@ -58,8 +58,7 @@ import styleVar from "../../styles/variables.scss";
   return {
     smallVersion: store.chatSmallVersion,
     leftAsideShowing: store.threadLeftAsideShowing.isShowing,
-    chatAudioPlayer: store.chatAudioPlayer,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+    chatAudioPlayer: store.chatAudioPlayer
   };
 })
 class MainMessagesMessageFile extends Component {
@@ -76,6 +75,7 @@ class MainMessagesMessageFile extends Component {
       isSound: isMessageIsSound(message),
       isVoice: isMessageIsVoice(message),
       isFile: !isMessageIsSound(message) && !isMessageIsVideo(message) && !isImageReal,
+      file: null,
       metaData
     };
     this.onCancelDownload = this.onCancelDownload.bind(this);
@@ -89,7 +89,7 @@ class MainMessagesMessageFile extends Component {
     this.playAfterDownloadTrigger = null;
     this.justMountedTrigger = null;
     this.downloadTriggerRef = React.createRef();
-    this.isDownloading = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]) === true;
+    this.isDownloading = getFileDownloading(metaData.fileHash) === true;
     this.isPlayable = null;
     this.mainMessagesMessageRef = setInstance(this);
   }
@@ -103,7 +103,7 @@ class MainMessagesMessageFile extends Component {
         });
       });
     }
-    const fileResult = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]);
+    const fileResult = getFileDownloading(metaData.fileHash);
     const result = typeof fileResult === "string" && fileResult.indexOf("http") > -1 ? fileResult : null;
     if (result) {
       const downloadRef = this.downloadTriggerRef.current;
@@ -116,9 +116,8 @@ class MainMessagesMessageFile extends Component {
     }
   }
 
-  componentDidUpdate(oldProps) {
+  componentDidUpdate(oldProps, oldState) {
     const {message, dispatch} = this.props;
-    const {chatFileHashCodeMap: oldChatFileHashCodeMap} = oldProps;
 
     if (message) {
       if (message.progress) {
@@ -133,10 +132,10 @@ class MainMessagesMessageFile extends Component {
     const downloadRef = this.downloadTriggerRef.current;
     if (!downloadRef.href) {
       const id = this.state.metaData.fileHash;
-      const result = getFileDownloadingFromHashMap.call(this, id);
-      const oldResult = oldChatFileHashCodeMap.find(e => e.id === id);
+      const result = getFileDownloading(id);
+      const oldResult = oldState.file;
       if (oldResult) {
-        if (oldResult.result === "LOADING") {
+        if (oldResult === "LOADING") {
           if (result !== true && result !== false) {
             this.buildDownloadAndPlayComponent(false, result);
           }
@@ -167,7 +166,7 @@ class MainMessagesMessageFile extends Component {
 
   onCancelDownload() {
     const {metaData} = this.state;
-    cancelFileDownloadingFromHashMap.call(this, metaData.fileHash);
+    cancelDownload(metaData.fileHash, this.props.dispatch);
   }
 
   onDownload(isPlayable, e) {
@@ -188,11 +187,11 @@ class MainMessagesMessageFile extends Component {
       }
       this.isDownloading = true;
       this.isPlayable = isPlayable;
-      getFileFromHashMap.apply(this, [metaData.file.hashCode, null, this.state.isVideo ? {responseType: "link"} : {}]);
+      getFile(metaData.file.hashCode, "file", this, false, false, this.state.isVideo ? {responseType: "link"} : {});
     };
     //TODO: fix it when on new token coming
     if (isVideo && downloadRef && downloadRef.href) {
-      updateLinkHashMap.apply(this, [metaData.file.hashCode, this.props.dispatch]).then(link => {
+      updateLink(metaData.file.hashCode, this.props.dispatch).then(link => {
         downloadRef.href = link;
         pastAction();
       });
@@ -288,7 +287,7 @@ class MainMessagesMessageFile extends Component {
       showProgress
     } = this.state;
     const downloadable = isMessageIsDownloadable(message);
-    const downloading = this.isDownloading && getFileDownloadingFromHashMap.call(this, metaData.fileHash) === true;
+    const downloading = this.isDownloading && getFileDownloading(metaData.fileHash) === true;
     const uploading = isMessageIsUploading(message);
     const audioPlaying = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.playing;
     const showProgressFinalDecision = showProgress || uploading || downloading;

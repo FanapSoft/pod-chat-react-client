@@ -9,8 +9,8 @@ import {
   CHAT_NOTIFICATION,
   CHAT_NOTIFICATION_CLICK_HOOK,
   CHAT_RETRY_HOOK,
-  CHAT_SIGN_OUT_HOOK,
-  CHAT_FILE_HASH_CODE_UPDATE, CHAT_AUDIO_PLAYER, CHAT_FILE_HASH_CODE_REMOVE, CHAT_AUDIO_RECORDER
+  CHAT_SIGN_OUT_HOOK
+  , CHAT_AUDIO_PLAYER, CHAT_AUDIO_RECORDER
 } from "../constants/actionTypes";
 import {listUpdateStrategyMethods, stateGenerator, stateGeneratorState, updateStore} from "../utils/storeHelper";
 
@@ -29,33 +29,6 @@ export const chatInstanceReducer = (state = {
       return {...state, ...stateGenerator("SUCCESS", action.payload, "chatSDK")};
     case CHAT_GET_INSTANCE("ERROR"):
       return {...state, ...stateGenerator("ERROR", action.payload)};
-    default:
-      return state;
-  }
-};
-
-export const chatFileHashCodeUpdateReducer = (state = {
-  hashCodeMap: [],
-  fetching: false,
-  fetched: false,
-  error: false
-}, action) => {
-  switch (action.type) {
-    case CHAT_FILE_HASH_CODE_UPDATE:
-      return {
-        ...state, ...stateGenerator(SUCCESS, updateStore(state.hashCodeMap, action.payload, {
-          method: listUpdateStrategyMethods.UPDATE,
-          upsert: true,
-          by: "id"
-        }), "hashCodeMap")
-      };
-    case CHAT_FILE_HASH_CODE_REMOVE:
-      return {
-        ...state, ...stateGenerator(SUCCESS, updateStore(state.hashCodeMap, action.payload, {
-          by: "id",
-          method: listUpdateStrategyMethods.REMOVE
-        }), "hashCodeMap")
-      };
     default:
       return state;
   }

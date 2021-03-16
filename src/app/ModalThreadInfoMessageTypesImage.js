@@ -1,5 +1,6 @@
 import React, {Fragment, useState} from "react";
-import {getImageFromHashMapWindow, getMessageMetaData} from "../utils/helpers";
+import {getMessageMetaData} from "../utils/helpers";
+import {getImage} from "../utils/hashmap";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import Image from "../../../pod-chat-ui-kit/src/image";
 import {Text} from "../../../pod-chat-ui-kit/src/typography";
@@ -29,7 +30,7 @@ export function ModalThreadInfoMessageTypesImage({message, dispatch}) {
   const idMessage = `${message.id}-message-types-picture`;
   let [thumb, setThumb] = useState(null);
   const metaData = getMessageMetaData(message).file;
-  thumb = metaData && thumb !== true && getImageFromHashMapWindow(metaData.fileHash, 3, null, setThumb, dispatch, false, true);
+  thumb = metaData && thumb !== true && getImage(metaData.fileHash, 3, null, setThumb, dispatch, false, true);
   const isFailed = !metaData;
   const goingNothing = !thumb || thumb === true;
   return (

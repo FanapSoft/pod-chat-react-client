@@ -5,8 +5,7 @@ import {types} from "../constants/messageTypes";
 
 //actions
 import {
-  threadGoToMessageId,
-  threadMessageGetListByTypes, threadModalThreadInfoShowing,
+  threadMessageGetListByTypes
 } from "../actions/threadActions";
 
 //UI components
@@ -18,22 +17,7 @@ import Container from "../../../pod-chat-ui-kit/src/container";
 import style from "../../styles/app/ModalThreadInfoMessageTypes.scss";
 import Text from "../../../pod-chat-ui-kit/src/typography/Text";
 import strings from "../constants/localization";
-import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
-import Image from "../../../pod-chat-ui-kit/src/image";
-import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
-import styleVar from "../../styles/variables.scss";
-import {
-  MdArrowDownward,
-  MdPlayArrow,
-  MdClose
-} from "react-icons/md";
-import {IndexModalMediaFragment} from "./index";
-import {
-  getFileDownloadingFromHashMap,
-  getFileFromHashMap,
-  getImageFromHashMapWindow, getMessageMetaData,
-  humanFileSize, mobileCheck
-} from "../utils/helpers";
+import { mobileCheck} from "../utils/helpers";
 
 @connect()
 export default class ModalThreadInfoMessageTypes extends Component {

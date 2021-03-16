@@ -80,8 +80,7 @@ export function isOwner(thread, user) {
     participantsHasNext: store.threadParticipantList.hasNext,
     participantsNextOffset: store.threadParticipantList.nextOffset,
     participantsFetching: store.threadParticipantList.fetching,
-    participantsPartialFetching: store.threadParticipantListPartial.fetching,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+    participantsPartialFetching: store.threadParticipantListPartial.fetching
   }
 }, null, null, {forwardRef: true})
 class ModalThreadInfoGroupMain extends Component {
@@ -97,6 +96,7 @@ class ModalThreadInfoGroupMain extends Component {
       endCondition: false,
       onEndReached: null,
       selectedTab: "threadInfo",
+      avatar: null,
       mediaList: []
     };
     this.onSelect = this.onSelect.bind(this);

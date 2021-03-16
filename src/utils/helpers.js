@@ -1,7 +1,7 @@
 import React from "react";
 import {ifvisible} from "ifvisible.js";
 import queryString from "query-string";
-import {chatGetImage, chatFileHashCodeUpdate, chatGetFile, chatCancelFileDownload} from "../actions/chatActions";
+import {getImage as getImageFromHashMap} from "../utils/hashmap";
 import {emoji, emojiCategories, emojiSpriteDimensions, emojiSpriteMeta} from "../constants/emoji";
 import sanitizeHTML from "sanitize-html";
 import {sanitizeRule} from "../app/_component/Input";
@@ -149,205 +149,9 @@ export function avatarNameGenerator(firstName, lastName) {
     return getColor(`${split[0][0]}${split[1][0]}`);
   }
   return getColor(`${firstName[0]}${lastName[1]}`);
-
 }
 
-export function getFileDownloadingFromHashMap(id) {
-  const {chatFileHashCodeMap} = this.props;
-  let result = chatFileHashCodeMap.find(e => e.id === id);
-  if (result) {
-    const {result: status} = result;
-    if (status.indexOf("http") > -1) {
-      return status;
-    } else {
-      if (status === "LOADING") {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-
-export function cancelFileDownloadingFromHashMap(id) {
-  const {dispatch, chatFileHashCodeMap} = this.props;
-  let result = chatFileHashCodeMap.find(e => e.id === id);
-  if (result) {
-    const {result: status, cancelId} = result;
-    if (status === "LOADING") {
-      dispatch(chatCancelFileDownload(cancelId));
-      dispatch(chatFileHashCodeUpdate(id, true));
-      return true;
-    }
-  }
-  return false;
-}
-
-
-export function getImageFromHashMap(hashCode, size, quality) {
-  const id = `${hashCode}-${size}-${quality}`;
-  const {dispatch} = this.props;
-  const downloadingResult = getFileDownloadingFromHashMap.call(this, id);
-  if (downloadingResult) {
-    return downloadingResult;
-  }
-  dispatch(chatFileHashCodeUpdate({id, result: "LOADING"}));
-  dispatch(chatGetImage(hashCode, size, quality)).then(result => {
-    dispatch(chatFileHashCodeUpdate({id, result: URL.createObjectURL(result)}));
-  });
-  return id;
-}
-
-export function getFileDownloadingFromHashMapWindow(id) {
-  if (!window.podspaceHashmap) {
-    window.podspaceHashmap = {};
-  }
-  const result = window.podspaceHashmap[id];
-  if (result) {
-    if (result.indexOf("http") > -1) {
-      return result;
-    } else {
-      if (result === "LOADING") {
-        return true;
-      }
-    }
-  }
-  return null;
-}
-
-export function getImageFromHashMapWindow(hashCode, size, quality, fieldKey, componenet, init, directCall) {
-  const id = `${hashCode}-${size}-${quality}`;
-  const dispatch = directCall ? componenet : componenet.props.dispatch;
-  const downloadingResult = getFileDownloadingFromHashMapWindow(id);
-  if (downloadingResult) {
-    return downloadingResult;
-  }
-  const lastResult = window.podspaceHashmap[id] || "";
-  if (lastResult.indexOf("FAIL") < 0) {
-    if (!init) {
-      if (directCall) {
-        fieldKey(window.podspaceHashmap[id] = "LOADING")
-      } else {
-        componenet.setState({
-          [fieldKey]: window.podspaceHashmap[id] = "LOADING"
-        });
-      }
-    }
-  }
-  dispatch(chatGetImage(hashCode, size, quality)).then(result => {
-    if (directCall) {
-      fieldKey(window.podspaceHashmap[id] = URL.createObjectURL(result))
-    } else {
-      componenet.setState({
-        [fieldKey]: window.podspaceHashmap[id] = URL.createObjectURL(result)
-      });
-    }
-
-  }, err => {
-    const failCount = +lastResult.split("-")[1] ? +lastResult.split("-")[1] : 1;
-    if (failCount >= 3) {
-      return;
-    }
-    window.podspaceHashmap[id] = `FAIL-${failCount + 1}`;
-    getImageFromHashMapWindow.apply(null, arguments);
-  });
-  return init ? "LOADING" : downloadingResult;
-}
-
-export function updateLinkHashMap(hashCode, dispatch, isWindowHashMap) {
-
-  return new Promise((resolve, reject) => {
-    dispatch(chatGetFile(hashCode, result => {
-      const downloadingResult = isWindowHashMap ? getFileDownloadingFromHashMapWindow(hashCode) : getFileDownloadingFromHashMap.call(this, hashCode);
-      resolve(result);
-      if (downloadingResult === result) {
-        return;
-      }
-      if (isWindowHashMap) {
-        return window.podspaceHashmap[hashCode] = result;
-      }
-      dispatch(chatFileHashCodeUpdate({
-        hashCode,
-        result
-      }));
-    }, {responseType: "link"}));
-  })
-}
-
-export function getFileFromHashMap(hashCode, metadata, params) {
-  const id = hashCode;
-  const {dispatch} = this.props;
-  if (params && params.responseType !== "link") {
-    const downloadingResult = getFileDownloadingFromHashMap.call(this, id);
-    if (downloadingResult) {
-      return downloadingResult;
-    }
-  }
-
-  return dispatch(chatGetFile(hashCode, result => {
-    dispatch(chatFileHashCodeUpdate({
-      id,
-      result: params && params.responseType === "link" ? result : URL.createObjectURL(result),
-      metadata
-    }));
-  }, params)).then(downloadingUniqueId => {
-    dispatch(chatFileHashCodeUpdate({id, result: "LOADING", cancelId: downloadingUniqueId, metadata}));
-  });
-}
-
-export function getFileFromHashMapWindow(hashCode, fieldKey, componenet, init, directCall, params) {
-  const id = hashCode;
-  const dispatch = directCall ? componenet : componenet.props.dispatch;
-
-  if (params && params.responseType !== "link") {
-    const downloadingResult = getFileDownloadingFromHashMapWindow(id);
-    if (downloadingResult) {
-      return downloadingResult;
-    }
-  }
-
-  if (!init) {
-    if (directCall) {
-      fieldKey(window.podspaceHashmap[id] = "LOADING")
-    } else {
-      componenet.setState({
-        [fieldKey]: window.podspaceHashmap[id] = "LOADING"
-      });
-    }
-  }
-  dispatch(chatGetFile(hashCode, result => {
-    const fixedResult = params && params.responseType === "link" ? result : URL.createObjectURL(result);
-    if (directCall) {
-      fieldKey(window.podspaceHashmap[id] = fixedResult)
-    } else {
-      componenet.setState({
-        [fieldKey]: window.podspaceHashmap[id] = fixedResult
-      });
-    }
-  }, params)).then(downloadingUniqueId => {
-    window.podspaceHashmap[id] = "LOADING";
-    window.podspaceHashmap[`${id}-cancelId`] = downloadingUniqueId;
-  }, err => {
-    if (directCall) {
-      fieldKey(window.podspaceHashmap[id] = "FAILED")
-    } else {
-      componenet.setState({
-        [fieldKey]: window.podspaceHashmap[id] = "FAILED"
-      });
-    }
-  });
-  return window.podspaceHashmap[id] = init ? "LOADING" : downloadingResult;
-}
-
-export function cancelFileDownloadingFromHashMapWindow(id, dispatch) {
-  const cancelId = window.podspaceHashmap[`${id}-cancelId`];
-  if (cancelId) {
-    window.podspaceHashmap[`${id}-cancelId`] = window.podspaceHashmap[id] = null;
-    dispatch(chatCancelFileDownload(cancelId));
-  }
-}
-
-export function avatarUrlGenerator(url, size, metadata) {
+export function avatarUrlGenerator(url, size, metadata, directCall) {
   if (metadata) {
     const sizes = {
       SMALL: 1,
@@ -358,7 +162,7 @@ export function avatarUrlGenerator(url, size, metadata) {
     if (metadata) {
       const {fileHash} = metadata;
       if (fileHash) {
-        return getImageFromHashMap.apply(this, [fileHash, sizes[size], 1]);
+        return getImageFromHashMap(fileHash, sizes[size], 1, directCall ? directCall : "avatar", directCall ? this.props.dispatch : this, false, directCall);
       }
     }
   }

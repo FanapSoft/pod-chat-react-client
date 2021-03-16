@@ -1,4 +1,4 @@
-import React, {Fragment} from "react";
+import React, {Fragment, useState} from "react";
 import {avatarNameGenerator, avatarUrlGenerator, getMessageMetaData} from "../utils/helpers";
 import AsideThreadsLastSeenMessage from "./AsideThreadsLastSeenMessage";
 
@@ -31,6 +31,7 @@ function AsideThreadsThread({
                               $this
                             }) {
   const {MEDIUM} = avatarUrlGenerator.SIZES;
+  let [avatar, setAvatar] = useState(null);
   let touchPosition, showMenuTimeOutId, trigger;
   const onThreadTouchStart = (thread, e) => {
     e.stopPropagation();
@@ -71,7 +72,7 @@ function AsideThreadsThread({
                      onTouchEnd={onThreadTouchEnd.bind(null, thread)}>
             <Avatar cssClassNames={style.AsideThreadsThread__AvatarContainer}>
               <AvatarImage
-                src={avatarUrlGenerator.apply($this, [thread.image, MEDIUM, getMessageMetaData(thread)])}
+                src={avatarUrlGenerator.apply($this, [thread.image, MEDIUM, getMessageMetaData(thread), setAvatar])}
                 customSize="55px"
                 text={avatarNameGenerator(thread.title).letter}
                 textBg={avatarNameGenerator(thread.title).color}/>
