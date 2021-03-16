@@ -87,7 +87,8 @@ export default class MainMessages extends Component {
       bottomButtonShowing: false,
       highLightMessage: null,
       unreadBar: null,
-      newMessageUnreadCount: 0
+      newMessageUnreadCount: 0,
+      canPaste: true
     };
     this.scroller = React.createRef();
     this.onScrollBottomEnd = this.onScrollBottomEnd.bind(this);
@@ -103,7 +104,14 @@ export default class MainMessages extends Component {
     this.onFileDrop = this.onFileDrop.bind(this);
     this.onPaste = this.onPaste.bind(this);
     this.goToSpecificMessage = this.goToSpecificMessage.bind(this);
-    document.body.addEventListener("paste", this.onPaste);
+    const modalMedia = modalMediaRef.getJqueryScope()(document);
+    modalMedia.on('afterClose.fb', () => {
+      this.setState({canPaste: true})
+    });
+    modalMedia.on('afterShow.fb', () => {
+      this.setState({canPaste: false})
+    });
+    document.body.addEventListener("paste", e => this.state.canPaste && this.onPaste(e));
 
     //Controller fields
     this.gotoBottom = false;

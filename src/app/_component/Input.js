@@ -283,7 +283,7 @@ export default class MainFooterInput extends Component {
 
     return (
       <Container relative className={containerClassNames}>
-        <Container className={editBoxClassNames} onPaste={this.onPaste}>
+        <Container className={editBoxClassNames}>
           <InputTextArea
             ref={inputNode}
             className={inputContainerClassNames}
