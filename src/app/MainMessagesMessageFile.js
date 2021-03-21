@@ -136,7 +136,7 @@ class MainMessagesMessageFile extends Component {
       const oldResult = oldState.file;
       if (oldResult) {
         if (oldResult === "LOADING") {
-          if (result !== true && result !== false) {
+          if (result !== true && result !== false && result) {
             this.buildDownloadAndPlayComponent(false, result);
           }
         }
@@ -167,6 +167,10 @@ class MainMessagesMessageFile extends Component {
   onCancelDownload() {
     const {metaData} = this.state;
     cancelDownload(metaData.fileHash, this.props.dispatch);
+    //just a trigger nothing ;)
+    this.setState({
+      metaData
+    })
   }
 
   onDownload(isPlayable, e) {

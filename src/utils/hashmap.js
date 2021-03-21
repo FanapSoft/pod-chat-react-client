@@ -34,7 +34,7 @@ function checkForDownloadResult(id, directCall, component, init, fieldKey) {
   }
 }
 
-function postDownload(id, promised, directCall, fieldKey, downloadResult, component, params, failCallBack) {
+function postDownload(id, promised, directCall, fieldKey, downloadResult, component, params, failCallBack, dontCheckFail) {
   promised.then(result => {
     const fixedResult = params && params.responseType === "link" ? result : URL.createObjectURL(result);
     if (directCall) {
@@ -45,6 +45,9 @@ function postDownload(id, promised, directCall, fieldKey, downloadResult, compon
       });
     }
   }, result => {
+    if(dontCheckFail) {
+      return;
+    }
     const failCount = downloadResult ? +downloadResult.split("-")[1] ? +downloadResult.split("-")[1] : 1 : 1;
     if (failCount >= 3) {
       return;
@@ -87,7 +90,7 @@ export function getFile(hashCode, fieldKey, component, init, directCall, params)
       window.podspaceHashmap[`${id}-cancelId`] = downloadingUniqueId;
     }
   }, params));
-  postDownload(id, promised, directCall, fieldKey, downloadResult, component, params, () => {}/*getFile.apply(null, arguments)*/);
+  postDownload(id, promised, directCall, fieldKey, downloadResult, component, params, () => {}/*getFile.apply(null, arguments)*/, true);
   return init ? "LOADING" : downloadResult;
 }
 

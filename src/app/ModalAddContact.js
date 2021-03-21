@@ -175,6 +175,7 @@ class ModalAddContact extends Component {
           <form onSubmit={this.onSubmit}>
             {!contactEdit &&
             <InputText max={40} onChange={this.onFieldChange.bind(this, "addBy")}
+                       dir="ltr"
                        value={addBy}
                        placeholder={`${strings.mobilePhoneOrUsername} ( ${strings.required} )`}/>
             }

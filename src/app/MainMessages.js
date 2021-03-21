@@ -3,6 +3,7 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import classnames from "classnames";
 import "moment/locale/fa";
+import checkForPrivilege from "./../utils/privilege";
 import {
   OnWindowFocusInOut,
   mobileCheck,
@@ -554,9 +555,13 @@ export default class MainMessages extends Component {
   }
 
   onPaste(e) {
-    if (e.clipboardData) {
-      e.dataTransfer = e.clipboardData;
-      this.onFileDrop(e, true);
+    const {thread} = this.props;
+    const isChannelBool = isChannel(thread);
+    if (!isChannelBool || (isChannelBool && checkForPrivilege(thread, "ownership"))) {
+      if (e.clipboardData) {
+        e.dataTransfer = e.clipboardData;
+        this.onFileDrop(e, true);
+      }
     }
   }
 
