@@ -16,10 +16,6 @@
   overflow: hidden;
 }
 
-.AsideThreads__Threads {
-  overflow-y: auto;
-}
-
 .AsideThreads__Overlay {
   position: absolute;
   top: 0;
@@ -29,26 +25,47 @@
   z-index: 2;
 }
 
-.AsideThreads__Threads--fullHeight {
+.AsideThreads__GroupsHead {
+  justify-content: center;
+  display: flex;
+}
+
+.AsideThreads__GroupsHeadTextContainer {
+  border-radius: 5px;
+  padding: 0 10px;
+  background-color: rgba($color-accent-dark, .2);
+}
+
+.AsideThreads__Scroller {
   height: 100%;
 }
 
-.AsideThreads__AvatarContainer {
-  width: calc(100% - 53px);
-  overflow: hidden;
-}
+.AsideThreads__Scroller:not(.AsideThreads__Scroller--mobileVersion) {
 
+  &::-webkit-scrollbar {
+    width: 7px;
+    background-color: #d4d4d4;
+    visibility: hidden;
+    position: relative;
+    z-index: 0;
+  }
 
-.AsideThreads__PinOverlay {
-  background-color: rgba($color-accent, 0.1);
-  border-bottom: 1px solid rgba($color-primary-light, 0.18);
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-}
+  &::-webkit-scrollbar-thumb {
+    background-color: #9c9c9c;
+    border-radius: 2px;
+    cursor: pointer;
+    visibility: hidden;
+  }
 
-.AsideThreads__ThreadCheck {
-  transition: opacity 0.1s ease 0s;
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #808080;
+  }
+  &:hover {
+    &::-webkit-scrollbar {
+      visibility: visible;
+    }
+    &::-webkit-scrollbar-thumb {
+      visibility: visible;
+    }
+  }
 }

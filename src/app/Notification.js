@@ -26,6 +26,7 @@ const defaultAvatar = "../../../styles/images/_common/default-avatar.png";
     chatNotificationClickHook: store.chatNotificationClickHook,
     threads: store.threads.threads,
     messageNew: store.messageNew,
+    supportMode: store.chatSupportMode,
     messagePinned: store.messagePinned,
     user: store.user.user,
     chatInstance: store.chatInstance.chatSDK,
@@ -185,8 +186,10 @@ export default class Notification extends Component {
 
   componentDidUpdate(oldProps) {
     if (Push.Permission.has() && this.props.chatNotification) {
-      const {messageNew, messagePinned} = this.props;
+      const {messageNew, messagePinned, supportMode} = this.props;
       const {messageNew: oldMessageNew, messagePinned: oldMessagePinned} = oldProps;
+
+
       let newPinMessage = true;
       let newMessage = true;
       if (messagePinned) {
@@ -208,6 +211,14 @@ export default class Notification extends Component {
         newMessage = false;
       }
       if (newPinMessage || newMessage) {
+        if(supportMode) {
+          if(messageNew && messageNew.threadId !== supportMode) {
+            return;
+          }
+          if(newPinMessage && newPinMessage.threadId !== supportMode) {
+            return;
+          }
+        }
         this.pinNotify = newPinMessage;
         this._showNotificationLogic();
       }

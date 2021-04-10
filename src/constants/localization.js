@@ -6,7 +6,7 @@ let strings = new LocalizedStrings({
     podchat: "تاک",
     search: "جستجو",
     tryAgain: "تلاش دوباره",
-    pleaseStartAThreadFirst: "یه نفرو برای چت انتخاب کن!!",
+    pleaseStartAThreadFirst: "یک نفر را برای چت انتخاب کنید",
     pleaseWriteHere: "اینجا بنویسید...",
     recordingVoice: "در حال ضبط صدا",
     waitingForChatInstance: "در حالت برقراری ارتباط با سرور چت",
@@ -20,13 +20,13 @@ let strings = new LocalizedStrings({
       return `اصلاح مخاطب ${contact.firstName || ""} ${contact.lastName || ""}`;
     },
     removeContact: "حذف مخاطب",
-    contactList: "لیست مخاطبین",
+    contactList: "لیست مخاطب‌ها",
     cancel: "لغو",
     close: "بستن",
     startChat: "شروع گفتگو",
     edited: "اصلاح شد",
     groupDescription: isChannel => `توضیحات ${isChannel ? "کانال" : "گروه"}`,
-    waitingForMessageFetching: "در حالت دریافت پیامهای قبلی",
+    waitingForMessageFetching: "در حالت دریافت پیام‌های قبلی",
     creatingChatWith: (firstName, lastName) => {
       return `در حال ایجاد گفتگو با ${firstName} ${lastName}`;
     },
@@ -36,7 +36,7 @@ let strings = new LocalizedStrings({
     forward: "ارسال",
     thereIsNoMessageToShow: "هیچ پیامی برای نمایش وجود ندارد",
     mobilePhone: "شماره موبایل",
-    mobilePhoneOrUsername: "شماره موبایل یا یوزرنیم",
+    mobilePhoneOrUsername: "شماره موبایل یا نام کاربری",
     unknown: "نامشخص",
     required: "اجباری",
     firstName: "نام",
@@ -49,7 +49,7 @@ let strings = new LocalizedStrings({
     pinToTop: "چسباندن به بالا",
     unpinFromTop: "برداشتن از بالا",
     forwardFrom: "ارسال شده از طرف",
-    selectContacts: "انتخاب مخاطبها",
+    selectContacts: "انتخاب مخاطب‌ها",
     openThread: "باز کردن گفتگو",
     download: "دانلود",
     createGroup: isChannel => `ایجاد ${isChannel ? "کانال" : "گروه"}`,
@@ -82,16 +82,16 @@ let strings = new LocalizedStrings({
     remove: "حذف",
     groupInfo: isChannel => `اطلاعات ${isChannel ? "کانال" : "گروه"}`,
     contactInfo: "اطلاعات مخاطب",
-    contacts: "مخاطبین",
+    contacts: "مخاطب‌ها",
     imageText: "متن تصویر",
     send: "بفرست",
     firstOrFamilyNameIsRequired: "نام یا نام خانوادگی اجباری است",
     mobilePhoneIsRequired: "شماره موبایل یا نام کاربری اجباری است",
-    youCannotAddYourself: "شما نمیتوانید شماره موبایل خودتان را وارد نمایید",
+    youCannotAddYourself: "نمیتوانید شماره موبایل خودتان را وارد نمایید",
     copyText: "کپی",
-    howDoYouPinThisMessage: "چطور این پیام رو به بالا میچسبونید",
+    howDoYouPinThisMessage: "چسباندن پیام به چه نحوی باشد",
     pinAndNotifyAll: "چسباندن و با خبر سازی همه",
-    onlyPin: "فقط بچسبه به بالا",
+    onlyPin: "فقط چسباندن به بالا",
     batchMessageSentToThread(messagesCount, isGroup, isChannel) {
       if (isChannel || isGroup) {
         return `${messagesCount} پیام در ${isGroup ? "گروه" : "کانال"} ارسال شده`;
@@ -100,15 +100,15 @@ let strings = new LocalizedStrings({
     },
     areYouSureAboutDeletingMessage(messagesCount) {
       if (!messagesCount) {
-        return "از حذف این پیغام مطمئنید";
+        return "از حذف این پیغام اطمینان دارید";
       }
-      return `از حذف ${messagesCount} پیام مطمئنید`
+      return `از حذف ${messagesCount} پیام اطمینان دارید`
     },
     areYouSureAboutDeletingContact(contactName) {
       if (contactName) {
         return `میخواهید "${contactName}" را حذف کنید`;
       }
-      return `از حذف این مخاطب مطمئنید`
+      return `از حذف این مخاطب اطمینان دارید`
     },
     typing(name) {
       if (!name) {
@@ -120,12 +120,12 @@ let strings = new LocalizedStrings({
       if (contactName) {
         return `میخواهید "${contactName}" را از لیست سیاه خارج کنید`;
       }
-      return `از خارج کردن این مخاطب از لیست سیاه مطمئنید`
+      return `از خارج کردن این مخاطب از لیست سیاه اطمینان دارید`
     },
     areYouSureAboutLeavingGroup(threadName, isChannel) {
       return `میخواهید ${isChannel ? "کانال" : "گروه"} "${threadName}" را ترک کنید`;
     },
-    areYouSureRemovingThread: "از پاک کردن این گفتگو مطمئنید",
+    areYouSureRemovingThread: "از پاک کردن این گفتگو اطمینان دارید",
     areYouSureAboutRemovingMember(participantName, isChannel) {
       return `میخواهید "${participantName}" از ${isChannel ? "کانال" : "گروه"} حذف کنید`;
     },
@@ -133,7 +133,7 @@ let strings = new LocalizedStrings({
       CLOSE: "بستن",
       NEXT: "بعدی",
       PREV: "قبلی",
-      ERROR: "نمیتونم باز کنم این فایلو فکر کنم مشکل شبکست",
+      ERROR: "خطایی در فرآیند باز کردن این فایل رخ داد",
       PLAY_START: "شروع به نمایش خودکار",
       PLAY_STOP: "توقف نمایش خودکار",
       FULL_SCREEN: "نمایش تمام صفحه",
@@ -167,24 +167,24 @@ let strings = new LocalizedStrings({
     noResult: "نتیجه ای وجود ندارد",
     noBodyReadMessage: "کسی این پیام را نخوانده",
     conversations: "گفتگوها",
-    searchSomething: "کلمه ای تایپ کنید",
+    searchSomething: "کلمه‌ای تایپ کنید",
     searchMessages: "جستجو پیامها",
-    messageSeenList: "لیست خواننده ها",
+    messageSeenList: "لیست خواننده‌ها",
     edit: "اصلاح",
-    block: "مسدود سازی",
+    block: "مسدودسازی",
     notification: "اعلانات",
     blocked: "مسدود شده",
     active: "فعال",
     inActive: "غیرفعال",
     reportSpam: "اعلام گفتگو هجو",
-    areYouSureToDoIt: "از انجام این کار مطمئنید",
+    areYouSureToDoIt: "از انجام این کار اطمینان دارید",
     leaveGroup: isChannel => `ترک ${isChannel ? "کانال" : "گروه"}`,
     chatState: {
       networkDisconnected: "عدم ارتباط",
       reconnecting: "اتصال به شبکه",
       connectingToChat: "در حال اتصال"
     },
-    waitingForContact: "در حال دریافت مخاطبین",
+    waitingForContact: "در حال دریافت لیست مخاطب‌ها",
     waitingForGettingContactInfo: "دریافت اطلاعات مخاطب",
     noContactPleaseAddFirst: "مخاطبی وجود ندارد کسی را اضافه کنید",
     signedOut: "خروج",
@@ -202,31 +202,31 @@ let strings = new LocalizedStrings({
     forMeOnly: "فقط برای من",
     forMeAndOthers: "برای من و دیگران",
     sendLocation: "فرستادن موقعیت مکانی",
-    removeMessageThatYouCanDeleteForAll: "برای من و اونایی که برای دیگران هم میشه",
+    removeMessageThatYouCanDeleteForAll: "برای من و تمامی کسانی که امکان حذف برایشان ممکن است",
     adminList: "لیست مدیران",
     admins: "مدیران",
     addAdmin: "اضافه کردن مدیر",
-    doAdd: "اضافه کن",
-    canceledIDontWant: "ولش کن نمیخواد",
+    doAdd: "اضافه کردن",
+    canceledIDontWant: "انصراف",
     draft: "پیشنویس",
     personPinnedMessage(isChannel) {
       return `پیامی به بالای ${isChannel ? "کانال" : "گروه"} چسبیده شد`
     },
-    areYouSureAboutAddThisPersonToAdminList: "آیا مطمئنید میخوهید این کاربر را به لیست مدیران اضافه کنید",
+    areYouSureAboutAddThisPersonToAdminList: "از افزودن این کاربر به لیست مدیران اطمینان دارید",
     howWeShouldDeleteThisMessageForYou: count => {
       if (count) {
-        return `این ${count} تا پیام رو چطوری دوست داری برات حذف کنیم`
+        return `این ${count} تا پیام را چگونه حذف کنیم`
       }
-      return "این پیام رو چطوری دوست داری برات حذف کنیم";
+      return "این پیام رو چگونه حذف کنیم";
     },
-    searchingForContacts: "در حال جستجو مخاطبین",
+    searchingForContacts: "در حال جستجو مخاطب‌ها",
     searchingForThreads: "در حال جستجو گفتگوها",
     iCanceled: "منصرف شدم",
     unreadMessages: "پیامهای خوانده نشده",
-    seenLastMessage: "پیام ها را خواندم",
+    seenLastMessage: "پیام‌ها را خواندم",
     removeThread: "حذف گفتگو",
     fileSelected(count) {
-      return `${count} فایل برای ارسال داریم نظری در موردشون داری بنویس`
+      return `${count} فایل برای ارسال داریم اگر نظری دارید، در ادامه بنویسید`
     },
     comment: "نظر",
     emojiCatNames: {
@@ -254,15 +254,17 @@ let strings = new LocalizedStrings({
     },
     areYouSureABoutSendingThisMessage: "از فرستادن این پیام مطئنید",
     gotoMessage: "رفتن به پیام",
-    addToContact: "اضافه کردن به مخاطبین",
+    addToContact: "اضافه کردن به مخاطب‌ها",
     youCannotUseMicrophone: "شما دسترسی به میکروفون سیستم را نداده اید پس نمیتوانید از امکانات ضبط صدا استفاده کنید",
+    fileHaveProblem: "فایل مشکل دارد",
     messageTypes: {
+      threadInfo: "اطلاعات",
       people: "اعضا",
       picture: "تصاویر",
-      file: "فایلها",
+      file: "فایل‌ها",
       video: "ویدیوها",
       sound: "صداها",
-      voice: "وویس ها"
+      voice: "ضبط شده‌ها"
     }
   },
   it: {}

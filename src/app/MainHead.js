@@ -28,10 +28,12 @@ import MainHeadBatchActions from "./MainHeadBatchActions";
 //styling
 import style from "../../styles/app/MainHead.scss";
 import styleVar from "../../styles/variables.scss";
+import {chatSupportModuleBadgeShowing} from "../actions/chatActions";
 
 @connect(store => {
   return {
     smallVersion: store.chatSmallVersion,
+    supportMode: store.chatSupportMode,
     threadSelectMessageShowing: store.threadSelectMessageShowing,
     threadCheckedMessageList: store.threadCheckedMessageList
   };
@@ -45,6 +47,7 @@ class MainHead extends Component {
     this.onLeftAsideShow = this.onLeftAsideShow.bind(this);
     this.onSelectMessagesHide = this.onSelectMessagesHide.bind(this);
     this.onSelectMessagesShow = this.onSelectMessagesShow.bind(this);
+    this.closeSupportModule = this.closeSupportModule.bind(this);
   }
 
   onShowInfoClick() {
@@ -58,6 +61,10 @@ class MainHead extends Component {
     if (!chatRouterLess) {
       history.push("/");
     }
+  }
+
+  closeSupportModule() {
+    this.props.dispatch(chatSupportModuleBadgeShowing(true));
   }
 
   onLeftAsideShow(e) {
@@ -78,7 +85,7 @@ class MainHead extends Component {
   }
 
   render() {
-    const {thread, smallVersion, threadSelectMessageShowing, threadCheckedMessageList} = this.props;
+    const {thread, smallVersion, threadSelectMessageShowing, threadCheckedMessageList, supportMode} = this.props;
     const showLoading = !thread.id;
     const classNames = classnames({
       [style.MainHead]: true,
@@ -120,7 +127,7 @@ class MainHead extends Component {
                   !threadSelectMessageShowing &&
                   <Container>
                     {
-                      thread.lastMessageVO &&
+                      thread.lastMessageVO && !supportMode &&
                       <Container className={style.MainHead__SearchContainer} inline onClick={this.onSelectMessagesShow}>
                         <MdCheck size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
                       </Container>
@@ -128,8 +135,13 @@ class MainHead extends Component {
                     <Container className={style.MainHead__SearchContainer} inline onClick={this.onLeftAsideShow}>
                       <MdSearch size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
                     </Container>
-                    <Container className={style.MainHead__BackContainer} inline onClick={this.onThreadHide}>
-                      <MdChevronLeft size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
+                    <Container className={style.MainHead__BackContainer} inline onClick={supportMode ? this.closeSupportModule : this.onThreadHide}>
+                      {supportMode ?
+                        <MdClose size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
+                        :
+                        <MdChevronLeft size={styleVar.iconSizeMd} color={styleVar.colorWhite}/>
+                      }
+
                     </Container>
                   </Container>
                 }

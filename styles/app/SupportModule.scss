@@ -1,0 +1,11 @@
+.SupportModule {
+  width: 400px;
+  height: 680px;
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 0 24px $color-gray;
+  transition: opacity .2s ease-in-out;
+}

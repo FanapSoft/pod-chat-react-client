@@ -19,6 +19,7 @@ export default class ChatSDK {
       ssoGrantDevicesAddress: "/oauth2/grants/devices", // {**REQUIRED**} Socket Address
       platformHost: props.config.local ? "http://172.16.106.26:8080/hamsam" : "https://sandbox.pod.land:8043/srv/basic-platform", // {**REQUIRED**} Platform Core Address
       fileServer: "https://sandbox.pod.land:8443", // {**REQUIRED**} File Server Address
+      podSpaceFileServer: "https://podspace.podland.ir",
       serverName: "chat-server", // {**REQUIRED**} Server to to register on
       token: null, // {**REQUIRED**} SSO Token Zamani
       wsConnectionWaitTime: 500, // Time out to wait for socket to get ready after open
@@ -47,6 +48,7 @@ export default class ChatSDK {
     this.onChatReady = props.onChatReady;
     this.onChatState = props.onChatState;
     this.onChatError = props.onChatError;
+    window.sdk = this;
     this._onMessageEvents();
     this._onThreadEvents();
     this._onContactsEvents();
@@ -195,7 +197,7 @@ export default class ChatSDK {
           threadId: params.threadId,
           nextOffset,
           contentCount,
-          messages: rslt.history.concat(rslt.failed.concat(rslt.sending)),
+          messages: rslt.history.concat(rslt.failed.concat(rslt.sending.concat(params.toTimeFull || (params.fromTimeFull && hasNext) ? [] : rslt.uploading))),
           hasNext: realHasNext,
           hasPrevious: realHasPrevious
         });
@@ -270,7 +272,8 @@ export default class ChatSDK {
           'add_rule_to_user',
           'remove_role_from_user',
           'read_thread',
-          'edit_thread'
+          'edit_thread',
+          'ownership'
         ]
       }],
       threadId
@@ -467,15 +470,29 @@ export default class ChatSDK {
   }
 
   @promiseDecorator
-  getFileFromPodspace(resolve, reject, hashCode, callBack) {
-    const {uniqueId} = chatAgent.getFileFromPodspace({
+  getFileFromPodspace(resolve, reject, hashCode, callBack, params = {}) {
+    if (params.responseType === "link") {
+      this.chatAgent.getFileFromPodspace({
+        hashCode,
+        ...params
+      }, result => {
+        if (!this._onError(result, reject)) {
+          return setTimeout(e => {
+            resolve(result.result)
+          }, 100);
+        }
+      });
+      return callBack(undefined);
+    }
+    const {uniqueId} = this.chatAgent.getFileFromPodspace({
       hashCode,
+      ...params
     }, result => {
       if (!this._onError(result, reject)) {
-        return callBack(result.result);
+        return resolve(result.result);
       }
     });
-    resolve(uniqueId);
+    callBack(uniqueId);
   }
 
   @promiseDecorator
@@ -483,7 +500,7 @@ export default class ChatSDK {
     this.chatAgent.getImageFromPodspace({
       hashCode,
       size, // 1: 100×75 , 2: 200×150, 3: 400×300
-      quality, // [0.0, 1.0] Float number
+      quality: quality || 1.0, // [0.0, 1.0] Float number
       crop, // Based on crop data from upload
       responseType: "blob"
     }, result => {
@@ -666,19 +683,14 @@ export default class ChatSDK {
   @promiseDecorator
   seenMessage(resolve, reject, messageId, ownerId, threadId) {
     resolve({messageId, threadId});
-    this.chatAgent.seen({messageId, ownerId}, (result) => {
+    this.chatAgent.seen({messageId, threadId}, (result) => {
       this._onError(result, reject)
     });
   }
 
   @promiseDecorator
   getUserInfo(resolve, reject) {
-    this.chatAgent.getUserInfo((result) => {
-      if (!this._onError(result, reject)) {
-        this.user = result.result.user;
-        return resolve(result.result.user);
-      }
-    });
+    resolve(this.user = this.chatAgent.getCurrentUser());
   }
 
   @promiseDecorator

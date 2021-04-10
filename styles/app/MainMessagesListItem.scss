@@ -1,0 +1,8 @@
+
+.MainMessagesListItem__MessageContainer {
+  display: flex;
+}
+
+.MainMessagesListItem__MessageContainer--left {
+  flex-direction: row-reverse;
+}

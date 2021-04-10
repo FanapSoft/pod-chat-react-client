@@ -1,14 +1,16 @@
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
-import {getName} from "./_component/contactList";
+import {ContactListItemMemoized, getName} from "./_component/contactList";
 import ModalContactList, {statics as modalContactListStatics} from "./ModalContactList";
 import checkForPrivilege from "../utils/privilege";
 import {THREAD_ADMIN} from "../constants/privilege";
+import {types} from "../constants/messageTypes";
+import {Virtuoso, VirtuosoGrid} from "./_component/Virtuoso";
 
 //strings
 import strings from "../constants/localization";
-import {avatarNameGenerator, avatarUrlGenerator, getMessageMetaData} from "../utils/helpers";
+import {avatarUrlGenerator} from "../utils/helpers";
 
 //actions
 import {
@@ -23,23 +25,24 @@ import {
 import {chatModalPrompt} from "../actions/chatActions";
 
 //UI components
-import {ContactList} from "./_component/contactList";
 import {ContactSearchFragment, PartialLoadingFragment} from "./ModalContactList";
 import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 import {Button} from "../../../pod-chat-ui-kit/src/button";
 import Gap from "../../../pod-chat-ui-kit/src/gap";
-import {Heading, Text} from "../../../pod-chat-ui-kit/src/typography";
-import Avatar, {AvatarImage, AvatarName} from "../../../pod-chat-ui-kit/src/avatar";
+import {Text} from "../../../pod-chat-ui-kit/src/typography";
 import Container from "../../../pod-chat-ui-kit/src/container";
-import List, {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import {ListItem} from "../../../pod-chat-ui-kit/src/list";
+import ModalThreadInfoMessageTypes from "./ModalThreadInfoMessageTypes";
+import ModalThreadInfoGroupMainHead from "./ModalThreadInfoGroupMainHead";
+import ModalThreadInfoMessageTypesImage from "./ModalThreadInfoMessageTypesImage";
+import ModalThreadInfoMessageTypesMedia from "./ModalThreadInfoMessageTypesMedia";
 
 //styling
-import {MdGroupAdd, MdArrowBack, MdSettings, MdBlock, MdNotifications, MdPersonAdd} from "react-icons/md";
+import {MdArrowBack, MdPets} from "react-icons/md";
 import style from "../../styles/app/ModalThreadInfoGroupMain.scss";
+import ModalThreadInfoGroup from "./ModalThreadInfoGroup";
+import ModalThreadInfoTabSelector from "./ModalThreadInfoMediaScroller";
 import styleVar from "../../styles/variables.scss";
-import utilsStyle from "../../styles/utils/utils.scss";
-import ModalThreadInfoMessageTypes from "./ModalThreadInfoMessageTypes";
-
 
 const constants = {
   count: 50,
@@ -63,6 +66,7 @@ function ModalContactListFooterFragment(addMembers, onPrevious, onClose) {
   )
 }
 
+
 export function isOwner(thread, user) {
   return thread.inviter && user.id === thread.inviter.id;
 }
@@ -76,8 +80,7 @@ export function isOwner(thread, user) {
     participantsHasNext: store.threadParticipantList.hasNext,
     participantsNextOffset: store.threadParticipantList.nextOffset,
     participantsFetching: store.threadParticipantList.fetching,
-    participantsPartialFetching: store.threadParticipantListPartial.fetching,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+    participantsPartialFetching: store.threadParticipantListPartial.fetching
   }
 }, null, null, {forwardRef: true})
 class ModalThreadInfoGroupMain extends Component {
@@ -90,7 +93,11 @@ class ModalThreadInfoGroupMain extends Component {
       removingParticipantIds: [],
       partialParticipantLoading: false,
       query: null,
-      selectedTab: "people"
+      endCondition: false,
+      onEndReached: null,
+      selectedTab: "threadInfo",
+      avatar: null,
+      mediaList: []
     };
     this.onSelect = this.onSelect.bind(this);
     this.onDeselect = this.onDeselect.bind(this);
@@ -100,17 +107,19 @@ class ModalThreadInfoGroupMain extends Component {
     this.onSettingsSelect = this.onSettingsSelect.bind(this);
     this.onLeaveSelect = this.onLeaveSelect.bind(this);
     this.onNotificationSelect = this.onNotificationSelect.bind(this);
-    this.onScrollBottomThreshold = this.onScrollBottomThreshold.bind(this);
     this.onSearchInputChange = this.onSearchInputChange.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
     this.onClose = this.onClose.bind(this);
     this.onPrevious = this.onPrevious.bind(this);
     this.onTabSelect = this.onTabSelect.bind(this);
-    this.setOnScrollBottomThreshold = this.setOnScrollBottomThreshold.bind(this);
+    this.onEndReached = this.onEndReached.bind(this);
+    this.setMessageTypesData = this.setMessageTypesData.bind(this);
+    this.setOnEndReached = this.setOnEndReached.bind(this);
+    this.setEndReachCondition = this.setEndReachCondition.bind(this);
   }
 
   componentDidMount() {
-    const {setHeaderFooterComponent, setOnScrollBottomThreshold, thread, user, participantsHasNext, participantsPartialFetching, setScrollBottomThresholdCondition} = this.props;
+    const {setHeaderFooterComponent, thread, participantsHasNext, participantsPartialFetching} = this.props;
     const isGroup = thread.group;
     const isChannel = thread.type === 8;
     const FooterFragment = () => {
@@ -129,13 +138,24 @@ class ModalThreadInfoGroupMain extends Component {
       return strings.groupInfo(isChannel);
     };
     setHeaderFooterComponent(HeaderFragment, FooterFragment);
-    setOnScrollBottomThreshold(this.onScrollBottomThreshold);
-    setScrollBottomThresholdCondition(participantsHasNext && !participantsPartialFetching);
+    this.setState({
+      endCondition: participantsHasNext && !participantsPartialFetching
+    });
   }
 
   componentDidUpdate(oldProps) {
-    const {participantsHasNext, participantsPartialFetching, setScrollBottomThresholdCondition} = this.props;
-    setScrollBottomThresholdCondition(participantsHasNext && !participantsPartialFetching);
+    const {endCondition, selectedTab} = this.state;
+    if (selectedTab === "people") {
+      const {participantsHasNext, participantsPartialFetching} = this.props;
+      const newCondition = participantsHasNext && !participantsPartialFetching;
+      if (newCondition !== endCondition) {
+        this.setState({
+          endCondition: newCondition
+        });
+      }
+    }
+
+
   }
 
   onAddMemberSelect() {
@@ -251,20 +271,40 @@ class ModalThreadInfoGroupMain extends Component {
 
   onSearchChange(query) {
     const {dispatch, thread} = this.props;
+    dispatch(threadParticipantList());
     dispatch(threadParticipantList(thread.id, 0, constants.count, query));
   }
 
-  onScrollBottomThreshold() {
-    const {scrollBottomThreshold} = this.state;
-    if (scrollBottomThreshold) {
-      scrollBottomThreshold();
-    }
-    if (this.state.selectedTab !== "people") {
+  onEndReached() {
+    const {onEndReached, selectedTab} = this.state;
+    if (selectedTab !== "people") {
+      if (onEndReached) {
+        onEndReached();
+      }
       return;
     }
     const {participantsNextOffset, dispatch, thread} = this.props;
     const {query} = this.state;
     dispatch(threadParticipantList(thread.id, participantsNextOffset, constants.count, query));
+  }
+
+  setEndReachCondition(endCondition) {
+    this.setState({
+      endCondition
+    })
+  }
+
+  setOnEndReached(onEndReached) {
+    this.setState({onEndReached});
+  }
+
+  setMessageTypesData({messages, partialLoading, loading}) {
+    this.setState({
+      mediaListPartialLoading: partialLoading,
+      mediaListLoading: loading,
+      mediaList: partialLoading || loading ? this.state.mediaList : messages
+    })
+    //console.log(arguments)
   }
 
   onTabSelect(tab) {
@@ -276,18 +316,20 @@ class ModalThreadInfoGroupMain extends Component {
     });
   }
 
-  setOnScrollBottomThreshold(scrollBottomThreshold) {
-    this.setState({scrollBottomThreshold});
-  }
 
   render() {
     let {
-      participants, thread, user, participantsFetching, participantsPartialFetching, notificationPending,
-      GapFragment, AvatarModalMediaFragment,
-      setScrollBottomThresholdCondition
+      participants,
+      thread,
+      user,
+      participantsPartialFetching,
+      AvatarModalMediaFragment,
+      participantsFetching,
+      partialParticipantLoading,
+      dispatch
     } = this.props;
+    const {removingParticipantIds, addMembers, internalStep, mediaList, selectedTab, endCondition, query, mediaListLoading} = this.state;
     AvatarModalMediaFragment = AvatarModalMediaFragment.bind(this);
-    const {removingParticipantIds, partialParticipantLoading, query, addMembers, internalStep} = this.state;
     if (internalStep === constants.ON_ADD_MEMBER) {
       return <ModalContactList isShow
                                selectiveMode
@@ -300,9 +342,7 @@ class ModalThreadInfoGroupMain extends Component {
                                onDeselect={this.onDeselect}/>
     }
     const isThreadOwner = checkForPrivilege(thread, THREAD_ADMIN);
-    const isChannel = thread.type === 8;
-    const iconClasses = `${utilsStyle["u-clickable"]} ${utilsStyle["u-hoverColorAccent"]}`;
-    const hasAllowToSeenParticipant = thread.type !== 8 || checkForPrivilege(thread, THREAD_ADMIN);
+    const hasAllowToSeenParticipant = thread.type !== 8 || isThreadOwner;
     const conversationAction = ({contact: participant}) => {
       const participantId = participant.id;
       const isAdmin = participant.admin;
@@ -340,145 +380,99 @@ class ModalThreadInfoGroupMain extends Component {
       )
     };
 
+    let extraTabs = ["threadInfo"];
+    if (hasAllowToSeenParticipant) {
+      extraTabs.push("people");
+    }
 
-    return (
-
+    return <Fragment>
       <Container>
-        <Container relative>
-
-          <Container>
-            <Avatar>
-              <AvatarImage src={avatarUrlGenerator.apply(this, [thread.image, avatarUrlGenerator.SIZES.LARGE, getMessageMetaData(thread)])} size="xlg"
-                           text={avatarNameGenerator(thread.title).letter}
-                           textBg={avatarNameGenerator(thread.title).color}>
-                <AvatarModalMediaFragment thread={thread}/>
-              </AvatarImage>
-              <AvatarName>
-                <Heading h1>{thread.title}</Heading>
-                <Text>{thread.participantCount} {strings.member}</Text>
-              </AvatarName>
-            </Avatar>
-          </Container>
-
-          <Container bottomLeft>
-            {isThreadOwner ?
-              <Container inline>
-                <Container inline>
-                  <MdGroupAdd size={styleVar.iconSizeMd} color={styleVar.colorGray} className={iconClasses}
-                              onClick={this.onAddMemberSelect}/>
-                  <Gap x={5}/>
-                  <MdSettings size={styleVar.iconSizeMd} color={styleVar.colorGray} className={iconClasses}
-                              onClick={this.onSettingsSelect}/>
-                  <Gap x={5}/>
-                </Container>
-              </Container>
-              : ""}
-          </Container>
-
-        </Container>
-
-        {thread.description &&
-        <Container>
-          <GapFragment/>
-          <Text color="accent" size="sm">{strings.description} :</Text>
-          <Text>{thread.description}</Text>
-        </Container>
-        }
-
-        <GapFragment/>
-
-        <Container>
-          <List>
-            {
-              isThreadOwner ?
-                <ListItem selection invert onSelect={this.onAddMemberSelect}>
-                  <Container relative display="inline-flex">
-                    <MdPersonAdd size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                    <Gap x={20}>
-                      <Text>{strings.addMember}</Text>
-                    </Gap>
-                  </Container>
-                </ListItem> : ""
-            }
-            <ListItem selection invert onSelect={this.onLeaveSelect}>
-              <Container relative display="inline-flex">
-                <MdBlock size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                <Gap x={20}>
-                  <Text>{strings.leaveGroup(isChannel)}</Text>
-                </Gap>
-              </Container>
-            </ListItem>
-
-            <ListItem selection invert onSelect={this.onNotificationSelect}>
-
-              <Container relative display="inline-flex" minWidth="100%">
-                <Container display="inline-flex" flex="1 1 0">
-                  <MdNotifications size={styleVar.iconSizeMd} color={styleVar.colorGray}/>
-                  <Gap x={20}>
-                    <Text>{strings.notification}</Text>
-                  </Gap>
-                </Container>
-                <Container flex="none">
-                  {notificationPending ?
-                    <Container centerTextAlign>
-                      <Loading><LoadingBlinkDots size="sm"/></Loading>
-                    </Container>
-                    :
-                    <Gap x={5}>
-                      <Text size="sm"
-                            color={thread.mute ? "red" : "green"}>{thread.mute ? strings.inActive : strings.active}</Text>
-                    </Gap>
-                  }
-                </Container>
-              </Container>
-            </ListItem>
-          </List>
-        </Container>
-
-        <GapFragment/>
-
-        <ModalThreadInfoMessageTypes thread={thread} defaultTab={hasAllowToSeenParticipant && "people"}
-                                     onTabSelect={this.onTabSelect.bind(this)}
-                                     setScrollBottomThresholdCondition={setScrollBottomThresholdCondition}
-                                     setOnScrollBottomThreshold={this.setOnScrollBottomThreshold}>
-
-          {hasAllowToSeenParticipant &&
+        <ModalThreadInfoMessageTypes thread={thread}
+                                     extraTabs={extraTabs}
+                                     selectedTab={selectedTab}
+                                     setEndReachCondition={this.setEndReachCondition}
+                                     setOnEndReached={this.setOnEndReached}
+                                     setMessageTypesData={this.setMessageTypesData}
+                                     onTabSelect={this.onTabSelect}/>
+        {selectedTab === "people" &&
+        <Fragment>
           <ContactSearchFragment onSearchInputChange={this.onSearchInputChange}
                                  onSearchChange={this.onSearchChange} query={query}
                                  inputClassName={style.ModalThreadInfoGroupMain__SearchInput}/>
-          }
-          {hasAllowToSeenParticipant &&
           <Container>
             {participantsFetching && !partialParticipantLoading ?
               <Container centerTextAlign>
                 <Loading><LoadingBlinkDots size="sm"/></Loading>
               </Container>
               :
-              participants.length ?
-                <Container relative>
-                  <ContactList invert
-                               avatarSize={avatarUrlGenerator.SIZES.SMALL}
-                               selection
-                               onSelect={this.onStartChat}
-                               contacts={participants} LeftActionFragment={conversationAction}/>
-                  {participantsPartialFetching && <PartialLoadingFragment/>}
-                </Container> :
-                query && query.trim() &&
-                <Container relative centerTextAlign>
-                  <Gap y={5}>
-                    <Container>
-                      <Text>{strings.thereIsNoContactWithThisKeyword(query)}</Text>
-                    </Container>
-                  </Gap>
-                </Container>
+              (!participants.length && (query && query.trim())) &&
+              <Container relative centerTextAlign>
+                <Gap y={5}>
+                  <Container>
+                    <Text>{strings.thereIsNoContactWithThisKeyword(query)}</Text>
+                  </Container>
+                </Gap>
+              </Container>
             }
           </Container>
-          }
-        </ModalThreadInfoMessageTypes>
-
+        </Fragment>
+        }
       </Container>
 
-    );
+
+      {selectedTab === "threadInfo" ? <ModalThreadInfoGroupMainHead {...this.props}
+                                                                    AvatarModalMediaFragment={AvatarModalMediaFragment}
+                                                                    selectedTab={selectedTab}
+                                                                    setEndReachCondition={this.setEndReachCondition}
+                                                                    setOnEndReached={this.setOnEndReached}
+                                                                    setMessageTypesData={this.setMessageTypesData}
+                                                                    onTabSelect={this.onTabSelect}
+                                                                    hasAllowToSeenParticipant={hasAllowToSeenParticipant}
+                                                                    participantsPartialFetching={participantsPartialFetching}
+                                                                    $this={this}
+                                                                    onLeaveSelect={this.onLeaveSelect}
+                                                                    isThreadOwner={isThreadOwner}
+                                                                    onAddMemberSelect={this.onAddMemberSelect}
+                                                                    onSettingsSelect={this.onSettingsSelect}
+                                                                    onNotificationSelect={this.onNotificationSelect}
+                                                                    onSearchChange={this.onSearchChange}/> :
+        <Container style={{height: selectedTab === "people" ? "auto": "calc(100vh - 300px)"}}>
+          {mediaListLoading ?
+            <Container center>
+              <Loading><LoadingBlinkDots size="sm"/></Loading>
+            </Container> :
+            mediaList.length || selectedTab === "people" ?
+              <ModalThreadInfoTabSelector dispatch={dispatch}
+                                          totalCount={selectedTab === "people" ? participants.length : mediaList.length}
+                                          endCondition={endCondition}
+                                          mediaList={mediaList}
+                                          onEndReached={this.onEndReached}
+                                          selectedTab={selectedTab}
+                                          onStartChat={this.onStartChat}
+                                          conversationAction={conversationAction}
+                                          participants={participants}/>
+                                          :
+            <Container relative center>
+              <Gap y={5}>
+                <Container flex style={{display:"flex", flexDirection: "column", alignItems: "center"}}>
+                  <Container>
+                    <MdPets size={styleVar.iconSizeLg} color={styleVar.colorGray}/>
+                  </Container>
+                  <Container>
+                    <Text>{strings.noResult}</Text>
+                  </Container>
+                </Container>
+              </Gap>
+            </Container>
+          }
+
+        </Container>
+
+
+      }
+
+    </Fragment>
+
   }
 }
 

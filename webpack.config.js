@@ -67,7 +67,7 @@ module.exports = (e, argv) => {
                   localIdentName: mode === "production" ? "[hash:base64:5]" : "[local]",
                   getLocalIdent: (loaderContext, localIdentName, localName, options) => {
                     if ( mode === "production") {
-                      return loaderContext.resourcePath.includes('ModalMedia') || loaderContext.resourcePath.includes('emoji') || localName.includes('leaflet') ?
+                      return loaderContext.resourcePath.includes('ModalMedia') || loaderContext.resourcePath.includes('emoji') || localName.includes('leaflet') || localName.includes('Toastify') ?
                         localName :
                         null
                     }
@@ -91,7 +91,7 @@ module.exports = (e, argv) => {
         },
         {
           test: /\.(png|jpg|gif|ttf|eot|woff2|woff|mp3|svg)$/,
-          exclude: /((oneone|layers|layers-2x|marker-icon|marker-icon-2x|marker-shadow)\.png)|(cover\.jpg)/,
+          exclude: /((oneone|talk-logo|layers|layers-2x|marker-icon|marker-icon-2x|marker-shadow|map-fake)\.png)|(cover\.jpg)/,
           use: [
             {
               loader: "url-loader",
@@ -103,7 +103,7 @@ module.exports = (e, argv) => {
           ]
         },
         {
-          test: /((oneone|layers|layers-2x|marker-icon|marker-icon-2x|marker-shadow)\.png)|(cover\.jpg)/,
+          test: /((oneone|talk-logo|layers|layers-2x|marker-icon|marker-icon-2x|marker-shadow|map-fake)\.png)|(cover\.jpg)/,
           use: {
             loader: "file-loader",
             options: {

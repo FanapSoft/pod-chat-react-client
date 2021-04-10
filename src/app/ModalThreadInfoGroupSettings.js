@@ -36,11 +36,7 @@ const statics = {
   MAIN: "MAIN"
 };
 
-@connect(store => {
-  return {
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
-  };
-}, null, null, {forwardRef: true})
+@connect(null, null, null, {forwardRef: true})
 export default class ModalThreadInfoGroupSettings extends Component {
 
   constructor(props) {
@@ -57,7 +53,8 @@ export default class ModalThreadInfoGroupSettings extends Component {
       state: statics.MAIN,
       groupName: thread.title,
       groupDesc: thread.description,
-      image: metadata && metadata.fileHash ? metadata.fileHash : thread.image
+      image: metadata && metadata.fileHash ? metadata.fileHash : thread.image,
+      avatar: null,
     };
   }
 

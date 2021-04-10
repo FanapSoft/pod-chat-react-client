@@ -5,8 +5,7 @@ import {types} from "../constants/messageTypes";
 
 //actions
 import {
-  threadGoToMessageId,
-  threadMessageGetListByTypes, threadModalThreadInfoShowing,
+  threadMessageGetListByTypes
 } from "../actions/threadActions";
 
 //UI components
@@ -18,43 +17,24 @@ import Container from "../../../pod-chat-ui-kit/src/container";
 import style from "../../styles/app/ModalThreadInfoMessageTypes.scss";
 import Text from "../../../pod-chat-ui-kit/src/typography/Text";
 import strings from "../constants/localization";
-import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
-import Image from "../../../pod-chat-ui-kit/src/image";
-import Shape, {ShapeCircle} from "../../../pod-chat-ui-kit/src/shape";
-import styleVar from "../../styles/variables.scss";
-import {
-  MdArrowDownward,
-  MdPlayArrow,
-  MdClose
-} from "react-icons/md";
-import {IndexModalMediaFragment} from "./index";
-import {
-  getFileDownloadingFromHashMap,
-  getFileFromHashMap,
-  getImageFromHashMapWindow, getMessageMetaData,
-  humanFileSize
-} from "../utils/helpers";
+import { mobileCheck} from "../utils/helpers";
 
-@connect(store => {
-  return {
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
-  };
-})
+@connect()
 export default class ModalThreadInfoMessageTypes extends Component {
 
   constructor(props) {
     super(props);
-    if (!props.defaultTab) {
-      this.initRequest("picture", true);
+    const keys = Object.keys(types);
+    const {selectedTab} = props;
+    if (keys.indexOf(selectedTab) > -1) {
+      this.initRequest(selectedTab, true);
     }
     this.createButton();
-    this.onScrollBottomThreshold = this.onScrollBottomThreshold.bind(this);
-    const {setOnScrollBottomThreshold, setScrollBottomThresholdCondition} = props;
-    setOnScrollBottomThreshold(this.onScrollBottomThreshold);
-    setScrollBottomThresholdCondition(false);
+    this.onEndReached = this.onEndReached.bind(this);
+    const {setOnEndReached, setEndReachCondition} = props;
+    setOnEndReached(this.onEndReached);
+    setEndReachCondition(false);
     this.state = {
-      activeTab: props.defaultTab || "picture",
-      defaultTab: props.defaultTab,
       loading: true,
       messages: [],
       hasNext: true
@@ -71,26 +51,32 @@ export default class ModalThreadInfoMessageTypes extends Component {
   }
 
   initRequest(tab, isJustConstructed) {
-    const {thread, dispatch, setScrollBottomThresholdCondition, onTabSelect, defaultTab} = this.props;
+    const {selectedTab, thread, dispatch, setEndReachCondition, onTabSelect, defaultTab, setMessageTypesData} = this.props;
     const initRequestTime = this.initRequestTime = Date.now();
+    const keys = Object.keys(types);
+    if (keys.indexOf(tab) === -1) {
+      if (selectedTab === tab) {
+        return;
+      }
+      return onTabSelect(tab);
+    }
     if (isJustConstructed !== true) {
-      if (this.state.activeTab === tab) {
+      if (selectedTab === tab) {
         return;
       }
       if (onTabSelect) {
         onTabSelect(tab);
       }
-      setScrollBottomThresholdCondition(false);
-      this.setState({
-        activeTab: tab,
+      setEndReachCondition(false);
+      const state = {
         partialLoading: false,
         loading: true,
         hasNext: false,
         nextOffset: 0,
-        thumb: null,
-        blurryThumb: null,
         messages: []
-      });
+      };
+      setMessageTypesData(state);
+      this.setState(state);
     }
     if (defaultTab === tab) {
       return
@@ -99,176 +85,64 @@ export default class ModalThreadInfoMessageTypes extends Component {
       if (this.initRequestTime && initRequestTime < this.initRequestTime) {
         return;
       }
-      setScrollBottomThresholdCondition(result.hasPrevious);
+      setEndReachCondition(result.hasPrevious);
       this.setState({
         loading: false,
         messages: result.messages,
         nextOffset: result.nextOffset,
         hasNext: result.hasPrevious
       });
-      if (isJustConstructed !== true) {
-        document.getElementById("message-types-tab").scrollIntoView();
-      }
+      const state = {
+        loading: false,
+        messages: result.messages,
+        nextOffset: result.nextOffset,
+        hasNext: result.hasPrevious
+      };
+      setMessageTypesData(state);
     });
   }
 
-  onScrollBottomThreshold() {
-    const {activeTab, messages, nextOffset, hasNext, partialLoading} = this.state;
-    const {thread, setScrollBottomThresholdCondition, dispatch} = this.props;
+  onEndReached() {
+    const {messages, nextOffset, hasNext, partialLoading} = this.state;
+    const {selectedTab, thread, setEndReachCondition, setMessageTypesData, dispatch} = this.props;
+    const keys = Object.keys(types);
+    if (keys.indexOf(selectedTab) === -1) {
+      return;
+    }
     if (!hasNext) {
       return;
     }
     if (partialLoading) {
       return;
     }
-    this.setState({
+    const state = {
       partialLoading: true
-    });
-    dispatch(threadMessageGetListByTypes(thread.id, types[activeTab], 25, nextOffset)).then(result => {
-      setScrollBottomThresholdCondition(result.hasPrevious);
-      this.setState({
+    };
+    setMessageTypesData(state);
+    this.setState(state);
+    dispatch(threadMessageGetListByTypes(thread.id, types[selectedTab], 25, nextOffset)).then(result => {
+      setEndReachCondition(result.hasPrevious);
+      const state = {
         partialLoading: false,
         messages: messages.concat(result.messages),
         nextOffset: result.nextOffset,
         hasNext: result.hasPrevious
-      });
-    });
-  }
-
-  buildComponent(type, message) {
-    const {dispatch} = this.props;
-    const idMessage = `${message.id}-message-types-${type}`;
-    const idMessageTrigger = `${idMessage}-trigger`;
-    const metaData = getMessageMetaData(message).file;
-    if (!metaData) {
-      return null;
-    }
-    const {originalName, size} = metaData;
-    const gotoMessage = () => {
-      dispatch(threadModalThreadInfoShowing());
-      window.modalMediaRef.close();
-      dispatch(threadGoToMessageId(message.time));
-    };
-    const setOrGetAttributeFromLinkTrigger = value => {
-      const elem = document.getElementById(idMessageTrigger);
-      if (value === true) {
-        if (elem) {
-          return elem;
-        }
-        return {
-          click: e => {
-          }
-        };
-      }
-      if (elem) {
-        if (value) {
-          return elem.setAttribute("play", value);
-        }
-        return elem.getAttribute("play");
-      }
-    };
-    const onPlayClick = result => {
-      if (result) {
-        return document.getElementById(idMessageTrigger).click();
-      }
-      setOrGetAttributeFromLinkTrigger("true");
-      getFileFromHashMap.apply(this, [metaData.fileHash])
-    };
-
-    if (type === "picture") {
-      const thumb = getImageFromHashMapWindow(metaData.fileHash, 3, null, "thumb", this);
-      const blurryThumb = getImageFromHashMapWindow(metaData.fileHash, 1, 0.01, "blurryThumb", this);
-      const isBlurry = blurryThumb && (!thumb || thumb === true);
-      const onFancyBoxClick = e => {
-        //window.modalMediaRef.getFancyBox().open()
-        setTimeout(e => {
-          document.getElementsByClassName("fancybox-button--goto")[0].addEventListener("click", gotoMessage);
-        }, 200)
       };
-      return (
-        <Container className={style.ModalThreadInfoMessageTypes__ImageContainer} data-fancybox key={idMessage}
-                   onClick={onFancyBoxClick}>
-          <IndexModalMediaFragment
-            options={{buttons: ["goto", "slideShow", "close"], caption: message.message}}
-            link={thumb}>
-            <Image className={style.ModalThreadInfoMessageTypes__Image}
-                   setOnBackground
-                   style={{
-                     filter: isBlurry ? "blur(8px)" : "none"
-                   }}
-                   src={isBlurry ? blurryThumb : thumb}/>
-          </IndexModalMediaFragment>
-
-        </Container>
-      )
-    } else if (type === "file" || type === "sound" || type === "video" || type === "voice") {
-      const fileResult = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]);
-      const result = typeof fileResult === "string" && fileResult.indexOf("blob") > -1 ? fileResult : null;
-      const isDownloading = fileResult === true;
-      const isPlaying = result && setOrGetAttributeFromLinkTrigger() === "true";
-      if (isPlaying) {
-        setTimeout(e => {
-          setOrGetAttributeFromLinkTrigger(true).click();
-          setOrGetAttributeFromLinkTrigger("false");
-        }, 300);
-      }
-      return (
-        <Container className={style.ModalThreadInfoMessageTypes__FileContainer} onClick={gotoMessage} key={idMessage}>
-          <Container maxWidth="calc(100% - 30px)">
-
-            <Container className={style.ModalThreadInfoMessageTypes__FileNameContainer}>
-              <Text whiteSpace="noWrap" bold>
-                {originalName}
-              </Text>
-            </Container>
-
-            <Text size="xs" color="gray">{humanFileSize(size, true)}</Text>
-          </Container>
-          <Container centerLeft onClick={e => e.stopPropagation()}>
-            {type === "file" ?
-              <Text id={idMessageTrigger} link={`#${idMessage}`} download={originalName} href={result} linkClearStyle/>
-              :
-              <Text id={idMessageTrigger} link={`#${idMessage}`} linkClearStyle data-fancybox/>
-            }
-            {type === "video" ?
-              <video controls id={idMessage} style={{display: "none"}}
-                     src={result}/> :
-              type === "sound" || type === "voice" ? <audio controls id={idMessage} style={{display: "none"}}
-                                                            src={result}/> : ""
-            }
-            {
-              isDownloading ?
-                <Loading><LoadingBlinkDots size="sm"/></Loading>
-                :
-                type === "file" ?
-                  <MdArrowDownward style={{cursor: "pointer"}} color={styleVar.colorAccent} size={styleVar.iconSizeSm}
-                                   onClick={onPlayClick.bind(this, result)}/>
-                  :
-                  <MdPlayArrow style={{cursor: "pointer"}} color={styleVar.colorAccent} size={styleVar.iconSizeSm}
-                               onClick={onPlayClick.bind(this, result)}/>
-            }
-          </Container>
-        </Container>
-      )
-    }
-    return 1;
+      setMessageTypesData(state);
+      this.setState(state);
+    });
   }
 
   render() {
-    const {activeTab, loading, messages, partialLoading} = this.state;
-    const {defaultTab, children} = this.props;
-    const tabs = Object.keys(types);
-    if (defaultTab) {
-      tabs.unshift(defaultTab);
+    const {selectedTab, extraTabs} = this.props;
+    let tabs = Object.keys(types);
+    if (extraTabs) {
+      tabs = extraTabs.concat(tabs);
     }
     const tabItemClassNames = activeTabItem => classnames({
       [style["ModalThreadInfoMessageTypes__TabItem"]]: true,
-      [style["ModalThreadInfoMessageTypes__TabItem--active"]]: activeTabItem === activeTab,
-    });
-
-    const messageContainerClassNames = mode => classnames({
-      [style["ModalThreadInfoMessageTypes__MessageContainer"]]: true,
-      [style[`ModalThreadInfoMessageTypes__MessageContainer--${mode}`]]: true,
+      [style["ModalThreadInfoMessageTypes__TabItem--mobileVersion"]]: mobileCheck(),
+      [style["ModalThreadInfoMessageTypes__TabItem--active"]]: activeTabItem === selectedTab,
     });
 
     return (
@@ -276,44 +150,12 @@ export default class ModalThreadInfoMessageTypes extends Component {
         <Container className={style.ModalThreadInfoMessageTypes__Tab} id="message-types-tab">
           {
             tabs.map(key => (
-              <Container className={tabItemClassNames(key)} onClick={this.initRequest.bind(this, key)}>
+              <Container className={tabItemClassNames(key)} onClick={this.initRequest.bind(this, key)} key={key}>
                 <Text>{strings.messageTypes[key]}</Text>
               </Container>
             ))
           }
         </Container>
-
-        {defaultTab && defaultTab === activeTab ? children :
-          <Container className={style.ModalThreadInfoMessageTypes__Content} relative>
-            {loading ?
-              <Container center>
-                <Loading><LoadingBlinkDots size="sm"/></Loading>
-              </Container> :
-              <Fragment>
-                <Container className={messageContainerClassNames(activeTab)}>
-                  {
-                    messages.length > 0 ?
-                      messages.map(message => (
-                        this.buildComponent(activeTab, message)
-                      ))
-                      :
-                      <Container center>
-                        <Text size="sm">{strings.noResult}</Text>
-                      </Container>
-                  }
-
-                </Container>
-                {
-                  partialLoading &&
-                  <Container centerTextAlign>
-                    <Loading><LoadingBlinkDots size="sm"/></Loading>
-                  </Container>
-                }
-              </Fragment>
-
-            }
-          </Container>}
-
       </Container>
     )
   }

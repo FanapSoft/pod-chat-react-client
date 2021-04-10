@@ -2,7 +2,10 @@ import React, {Fragment, useState, useEffect, useRef} from "react";
 import ReactDOM from "react-dom";
 import classnames from "classnames";
 import {IndexModalMediaFragment} from "./index";
-import {getImage, getImageFromHashMapWindow, isMessageHasError} from "../utils/helpers";
+import {getFileDownloading, getImage as getImageFromHashMap} from "../utils/hashmap";
+import {
+  getImage
+} from "../utils/helpers";
 
 
 import Image from "../../../pod-chat-ui-kit/src/image";
@@ -14,6 +17,7 @@ import MainMessagesMessageFileControlIcon from "./MainMessagesMessageFileControl
 
 import style from "../../styles/app/MainMessagesMessageFileImage.scss";
 import imageFragmentStyle from "../../styles/app/MainMessagesMessageFileImageFragment.scss";
+import mapFake from "../../styles/images/MainMessagesMessageFileImage/map-fake.png";
 
 
 const imageQualities = {
@@ -72,7 +76,7 @@ function MainMessagesMessageFileImageFragment({smallVersion, message, isBlurry, 
   return <Image className={mainMessagesFileImageClassNames}
                 src={message.id ? isBlurry ? imageThumbLowQuality : imageThumb : imageSizeLink.imageLink}
                 style={{
-                  backgroundColor: gettingImageThumb ? "#fff" : "none",
+                  backgroundColor: "#fff",
                   maxWidth: `${imageSizeLink.width}px`,
                   width: `${imageSizeLink.width}px`,
                   height: `${imageSizeLink.height}px`,
@@ -80,7 +84,7 @@ function MainMessagesMessageFileImageFragment({smallVersion, message, isBlurry, 
                 }} {...other}/>;
 }
 
-export default function ({isUploading, showCancelIcon, message, metaData, smallVersion, leftAsideShowing, setShowProgress, onCancel, dispatch}) {
+export default function ({isUploading, showCancelIcon, message, metaData, smallVersion, leftAsideShowing, setShowProgress, onCancel, setPlayDownloadTrigger, setDownloadIconShowCondition, dispatch}) {
   const imageSizeLink = getImage(metaData, message.id, smallVersion || leftAsideShowing);
   const linkRef = useRef(null);
 
@@ -91,28 +95,62 @@ export default function ({isUploading, showCancelIcon, message, metaData, smallV
   let [imageModalPreview, setImageModalPreview] = useState(null);
   let [imageThumbLowQuality, setImageThumbLowQuality] = useState(null);
   let [modalMediaInstance, setModalMediaInstance] = useState(null);
+  let [test, setTest] = useState(true);
 
-  imageThumb = getImageFromHashMapWindow(fileHash, imageQualities.medium.s, null, setImageThumb, dispatch, false, true);
-  imageModalPreview = getImageFromHashMapWindow(fileHash, null, imageQualities.high.q(metaData), setImageModalPreview, dispatch, false, true);
-  imageThumbLowQuality = getImageFromHashMapWindow(fileHash, imageQualities.low.s, imageQualities.low.q, setImageThumbLowQuality, dispatch, false, true);
+  const onDownload = e=>{
+    if (!test) {
+      return;
+    }
+    setTest(false);
+  };
+
+  const oneMonthOld = Date.now() - (message.time / 1000000) >= (1000 * 60 * 60 * 24 * 30) && test;
+  const showDownloadIconCondition = oneMonthOld && !isLocationMap;
+
+  imageThumb = oneMonthOld && !isLocationMap ? null : getImageFromHashMap(fileHash, imageQualities.medium.s, null, setImageThumb, dispatch, false, true);
+  imageThumbLowQuality = getImageFromHashMap(fileHash, imageQualities.low.s, imageQualities.low.q, setImageThumbLowQuality, dispatch, false, true);
+  imageModalPreview = getFileDownloading(`${fileHash}-null-${imageQualities.high.q(metaData)}`);
 
   imageThumb = imageThumb === true ? null : imageThumb;
-  imageModalPreview = imageModalPreview === true ? null : imageModalPreview;
   imageThumbLowQuality = imageThumbLowQuality === true ? null : imageThumbLowQuality;
+  imageModalPreview = imageModalPreview === true ? null : imageModalPreview;
 
-  const gettingImageThumb = !isUploading && (!imageThumbLowQuality && !imageThumb);
-  const isBlurry = imageThumbLowQuality && !imageThumb && !isUploading;
+  const gettingImageThumb = (!oneMonthOld && !isUploading) && ((!imageThumbLowQuality || !test) && !imageThumb);
+  const isBlurry = (imageThumbLowQuality && !imageThumb && !isUploading) || (isLocationMap && isUploading) || (oneMonthOld && !isLocationMap);
+
+  if (isLocationMap && isUploading) {
+    imageSizeLink.imageLink = mapFake;
+    imageSizeLink.width = 300;
+    imageSizeLink.height = 225;
+  }
 
   useEffect(function () {
     setShowProgress(gettingImageThumb ? "downloading" : false);
     if (modalMediaInstance) {
+      if (imageModalPreview === "LOADING" || imageModalPreview === true) {
+        return;
+      }
       updateSlide(imageModalPreview, imageThumb, modalMediaInstance);
     }
-  }, [imageThumb, imageModalPreview, modalMediaInstance]);
+  }, [imageThumb, imageModalPreview, modalMediaInstance, test]);
 
   modalMediaRef.getJqueryScope()(document).on('afterShow.fb', (e, instance) => {
-    setModalMediaInstance(instance);
-    updateSlide(imageModalPreview, imageThumb, instance);
+    const slide = instance.current;
+    const {src} = slide;
+    imageThumb = getImageFromHashMap(fileHash, imageQualities.medium.s, null, setImageThumb, dispatch, false, true);
+    if (src === imageThumb) {
+      if (imageModalPreview === "LOADING" || imageModalPreview === true) {
+        instance.showLoading();
+      } else if (!imageModalPreview) {
+        instance.showLoading();
+        imageModalPreview = getImageFromHashMap(fileHash, null, imageQualities.high.q(metaData), setImageModalPreview, dispatch, false, true);
+      } else {
+        updateSlide(imageModalPreview, imageThumb, instance);
+      }
+    }
+    if (!modalMediaInstance) {
+      setModalMediaInstance(instance);
+    }
   });
 
 
@@ -124,6 +162,7 @@ export default function ({isUploading, showCancelIcon, message, metaData, smallV
                                                 message={message}
                                                 smallVersion={smallVersion}
                                                 gettingImageThumb={gettingImageThumb}
+                                                oneMonthOld={oneMonthOld}
                                                 imageThumb={imageThumb}
                                                 imageThumbLowQuality={imageThumbLowQuality}
                                                 isBlurry={isBlurry}/>
@@ -137,9 +176,10 @@ export default function ({isUploading, showCancelIcon, message, metaData, smallV
 
           <Container display="flex" relative>
 
-            {showCancelIcon &&
+            {(showCancelIcon || showDownloadIconCondition) &&
             <MainMessagesMessageFileControlIcon
-              isCancel
+              isCancel={showCancelIcon}
+              isDownload={!showCancelIcon && showDownloadIconCondition}
               inlineStyle={
                 {
                   marginRight: 0,
@@ -147,7 +187,7 @@ export default function ({isUploading, showCancelIcon, message, metaData, smallV
                   maxWidth: `${imageSizeLink.width}px`,
                   zIndex: style.zIndex1
                 }}
-              onClick={onCancel}
+              onClick={showDownloadIconCondition && !showCancelIcon ? onDownload: onCancel}
               fixCenter/>
             }
 

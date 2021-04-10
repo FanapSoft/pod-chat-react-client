@@ -1,18 +1,12 @@
 // src/MainMessagesMessage
-import React, {Component} from "react";
+import React, {Component, memo} from "react";
 import {connect} from "react-redux";
 import "moment/locale/fa";
-import {showBlock} from "./MainFooterSpam";
-import {MessageDeletePrompt, PinMessagePrompt} from "./_component/prompts";
 import checkForPrivilege from "../utils/privilege";
 import {
-  findLastSeenMessage,
-  isGroup,
-  isMessageByMe,
   isMessageIsFile,
   isMessageIsNewFile,
   mobileCheck,
-  showMessageNameOrAvatar,
   messageDatePetrification
 } from "../utils/helpers";
 
@@ -22,7 +16,7 @@ import {THREAD_ADMIN} from "../constants/privilege";
 
 //actions
 import {
-  threadLeftAsideShowing, threadModalListShowing
+  threadLeftAsideShowing
 } from "../actions/threadActions";
 import {messageEditing} from "../actions/messageActions";
 import {chatModalPrompt} from "../actions/chatActions";
@@ -41,26 +35,23 @@ import style from "../../styles/app/MainMessagesMessage.scss";
 
 @connect(store => {
   return {
-    participants: store.threadParticipantList.participants,
-    participantsFetching: store.threadParticipantList.fetching,
+    /*    participants: store.threadParticipantList.participants,
+        participantsFetching: store.threadParticipantList.fetching,*/
     threadLeftAsideShowing: store.threadLeftAsideShowing,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap
+    supportMode: store.chatSupportMode
   };
 })
-export default class MainMessagesMessage extends Component {
+export class MainMessagesMessage extends Component {
 
   constructor(props) {
     super(props);
     this.onMouseOver = this.onMouseOver.bind(this);
     this.onMouseLeave = this.onMouseLeave.bind(this);
-    this.onDelete = this.onDelete.bind(this);
-    this.onForward = this.onForward.bind(this);
-    this.onReply = this.onReply.bind(this);
-    this.onShare = this.onShare.bind(this);
-    this.onPin = this.onPin.bind(this);
     this.onMessageControlHide = this.onMessageControlHide.bind(this);
     this.onMessageControlShow = this.onMessageControlShow.bind(this);
     this.onMessageSeenListClick = this.onMessageSeenListClick.bind(this);
+    this.onReply = this.onReply.bind(this);
+    this.setInstance = this.setInstance.bind(this);
     this.containerRef = React.createRef();
     this.contextTriggerRef = React.createRef();
     this.state = {
@@ -69,10 +60,45 @@ export default class MainMessagesMessage extends Component {
     };
   }
 
+  shouldComponentUpdate(nextProps, nextState, nextContext) {
+    const {messageControlShow, messageTriggerShow} = nextState;
+    const {message, highLightMessage, showName, lastSeenMessageTime} = nextProps;
+    const {messageControlShow: currentMessageControlShow, messageTriggerShow: currentMessageTriggerShow} = this.state;
+    const {message: currentMessage, highLightMessage: currentHighLightMessage, showName: currentShowName, isGroup, isChannel} = this.props;
+    if (currentMessageControlShow === messageControlShow) {
+      if (currentMessageTriggerShow === messageTriggerShow) {
+        if (currentMessage.message === message.message) {
+          if (currentMessage.progress === message.progress) {
+            if (currentHighLightMessage === highLightMessage) {
+              if (currentShowName === showName) {
+                if(isChannel || isGroup) {
+                  return false;
+                } else {
+                  if (currentMessage.seen === message.seen) {
+                    if (currentMessage.time > lastSeenMessageTime) {
+                      return false;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+    }
+    return true;
+  }
+
   onMessageSeenListClick(e) {
     const {message, dispatch} = this.props;
     e.stopPropagation();
     dispatch(threadLeftAsideShowing(true, THREAD_LEFT_ASIDE_SEEN_LIST, message.id));
+  }
+
+  onReply() {
+    const {dispatch, message} = this.props;
+    dispatch(messageEditing(message, "REPLYING"));
   }
 
   onMouseOver() {
@@ -110,10 +136,6 @@ export default class MainMessagesMessage extends Component {
     });
   }
 
-  onMessageInfo() {
-
-  }
-
   onMessageControlShow(e) {
     if (!this.state.messageControlShow) {
       this.setState({
@@ -121,40 +143,6 @@ export default class MainMessagesMessage extends Component {
       });
       return true;
     }
-  }
-
-  onPin() {
-    const {dispatch, message} = this.props;
-    dispatch(chatModalPrompt(true,
-      null, null, null, null,
-      <PinMessagePrompt message={message} dispatch={dispatch}/>));
-  }
-
-  onShare() {
-    const {dispatch, message} = this.props;
-    dispatch(chatModalPrompt(true,
-      null, null, null, null,
-      <MainMessagesMessageShare message={message}/>));
-  }
-
-  onDelete(e) {
-    const {dispatch, message, user, thread} = this.props;
-    dispatch(chatModalPrompt(true,
-      null, null, null, null,
-      <MessageDeletePrompt thread={thread} message={message} dispatch={dispatch} user={user}/>));
-    this.onMessageControlHide();
-  }
-
-  onForward() {
-    const {dispatch, message} = this.props;
-    dispatch(threadModalListShowing(true, message));
-    this.onMessageControlHide && this.onMessageControlHide();
-  }
-
-  onReply() {
-    const {dispatch, message} = this.props;
-    dispatch(messageEditing(message, "REPLYING"));
-    this.onMessageControlHide && this.onMessageControlHide();
   }
 
   onThreadTouchStart(message, e) {
@@ -165,9 +153,6 @@ export default class MainMessagesMessage extends Component {
       clearTimeout(this.showMenuTimeOutId);
       this.showMenuTimeOutId = null;
       if (this.touchPosition === touchPosition) {
-        this.setState({
-          isMenuShow: message.id
-        });
         this.contextTriggerRef.current.handleContextClick(e);
       }
     }, 700);
@@ -185,48 +170,46 @@ export default class MainMessagesMessage extends Component {
     }
   }
 
+  setInstance(instance) {
+    this.instance = instance;
+    return this;
+  }
+
   render() {
     const {
       message,
       messages,
+      showName,
       user,
       thread,
       highLightMessage,
       onRepliedMessageClicked,
-      participantsFetching,
-      participants,
       threadLeftAsideShowing,
-      chatFileHashCodeMap
+      isMessageByMe,
+      isGroup,
+      isChannel,
+      lastSeenMessageTime,
+      supportMode
     } = this.props;
-    const lastSeenMessageTime = findLastSeenMessage(messages);
     const {messageControlShow, messageTriggerShow} = this.state;
-    const isGroupReal = isGroup(thread);
-    const isMessageByMeReal = isMessageByMe(message, user, thread);
     const args = {
       onMessageControlShow: this.onMessageControlShow,
       onMessageSeenListClick: this.onMessageSeenListClick,
       onMessageControlHide: this.onMessageControlHide,
       onRepliedMessageClicked: onRepliedMessageClicked,
-      onDelete: this.onDelete,
-      onForward: this.onForward,
-      onReply: this.onReply,
-      onPin: this.onPin,
-      onShare: this.onShare,
-      isFirstMessage: showMessageNameOrAvatar(message, messages),
+      setInstance: this.setInstance,
+      isFirstMessage: showName,
       datePetrification: messageDatePetrification.bind(null, message.time),
       messageControlShow,
       messageTriggerShow,
       forceSeen: message.time <= lastSeenMessageTime,
-      isChannel: thread.group && thread.type === 8,
-      isMessageByMe: isMessageByMeReal,
-      isParticipantBlocked: showBlock({user, thread, participantsFetching, participants}),
+      isMessageByMe,
+      //isParticipantBlocked: showBlock({user, thread, participantsFetching, participants}),
       isOwner: checkForPrivilege(thread, THREAD_ADMIN),
-      chatFileHashCodeMap: chatFileHashCodeMap,
-      isGroup: isGroupReal,
-      user,
+      isGroup,
+      isChannel,
       thread,
       message,
-      messages,
       highLightMessage
     };
 
@@ -237,9 +220,9 @@ export default class MainMessagesMessage extends Component {
                  relative
                  className={style.MainMessagesMessage__Container}
                  style={{
-                   maxWidth: mobileCheck() ? "70%" : threadLeftAsideShowing && window.innerWidth < 1100 ? "60%" : "50%",
-                   marginRight: isGroup ? null : isMessageByMeReal ? "5px" : null,
-                   marginLeft: isGroup ? null : isMessageByMeReal ? null : "5px"
+                   maxWidth: mobileCheck() || supportMode ? "70%" : threadLeftAsideShowing && window.innerWidth < 1100 ? "60%" : "50%",
+                   marginRight: isGroup ? null : isMessageByMe ? "5px" : null,
+                   marginLeft: isGroup ? null : isMessageByMe ? null : "5px"
                  }}
                  ref={this.containerRef}
                  onDoubleClick={message.id && this.onReply}
@@ -250,7 +233,8 @@ export default class MainMessagesMessage extends Component {
                  onMouseOver={this.onMouseOver}
                  onMouseLeave={this.onMouseLeave}>
 
-        <ContextTrigger id={message.id || Math.random()} holdToDisplay={-1} contextTriggerRef={this.contextTriggerRef}>
+        <ContextTrigger id={message.id ? "messages-context-menu" : Math.random()} holdToDisplay={-1}
+                        contextTriggerRef={this.contextTriggerRef} collect={() => this}>
           {isMessageIsFile(message) ?
             isMessageIsNewFile(message) || !message.id ?
               <MainMessagesMessageFile {...args}/>
@@ -264,3 +248,5 @@ export default class MainMessagesMessage extends Component {
     )
   }
 }
+
+export default memo(MainMessagesMessage);

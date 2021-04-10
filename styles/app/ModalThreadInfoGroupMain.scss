@@ -13,3 +13,20 @@
   margin: 5px;
   border-bottom: 2px solid $color-gray;
 }
+
+
+.ModalThreadInfoGroupMain__ImageList {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.ModalThreadInfoGroupMain__ImageListItem {
+  flex-basis: calc(33.33333% - 2px);
+  position: relative;
+  margin: 1px;
+  &:before {
+    content: "";
+    display: block;
+    padding-top: 100%;
+  }
+}

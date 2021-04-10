@@ -41,10 +41,14 @@ import {
   CHAT_DESTROY,
   THREAD_THUMBNAIL_UPDATE,
   CHAT_FILE_HASH_CODE_UPDATE,
-  CHAT_AUDIO_PLAYER, CHAT_FILE_HASH_CODE_REMOVE, CHAT_AUDIO_RECORDER
+  CHAT_AUDIO_PLAYER,
+  CHAT_FILE_HASH_CODE_REMOVE,
+  CHAT_AUDIO_RECORDER,
+  CHAT_SUPPORT_MODE,
+  CHAT_SUPPORT_MODULE_BADGE_SHOWING
 } from "../constants/actionTypes";
 import {messageInfo} from "./messageActions";
-import {statics} from "../app/MainMessages";
+import {THREAD_HISTORY_LIMIT_PER_REQUEST} from "../constants/historyFetchLimits";
 
 
 let firstReadyPassed = false;
@@ -69,7 +73,7 @@ function findInTyping(threadId, userId, remove) {
 }
 
 export const chatSetInstance = config => {
-  return (dispatch, state) => {
+  return (dispatch, getState) => {
     dispatch({
       type: CHAT_GET_INSTANCE(),
       payload: null
@@ -117,6 +121,9 @@ export const chatSetInstance = config => {
           case THREAD_REMOVED_FROM:
             return dispatch(threadLeave(thread.result.thread, true));
           default:
+            if (type === "THREAD_LAST_ACTIVITY_TIME") {
+              return;
+            }
             thread.changeType = type;
             if (thread.result) {
               if (!thread.result.thread) {
@@ -133,6 +140,14 @@ export const chatSetInstance = config => {
         }
       },
       onMessageEvents: (message, type) => {
+        const {thread} = getState().thread;
+        if (type === "MESSAGE_NEW") {
+          if (thread) {
+            if (thread.id !== message.threadId) {
+              return;
+            }
+          }
+        }
         dispatch({
           type: type,
           payload: message
@@ -169,7 +184,7 @@ export const chatSetInstance = config => {
               payload: {threadId, user}
             });
           }, 1500);
-          const lastThread = state().threads.threads.find(e => e.id === threadId);
+          const lastThread = getState().threads.threads.find(e => e.id === threadId);
           if (lastThread.isTyping && lastThread.isTyping.isTyping) {
             return;
           }
@@ -189,14 +204,22 @@ export const chatSetInstance = config => {
         });
       },
       onChatError(e) {
-        if (e && e.code && e.code === 21) {
-          const {chatRetryHook, chatInstance} = state();
-          if (chatRetryHook) {
-            chatRetryHook().then(token => {
-              chatInstance.setToken(token);
-              chatInstance.reconnect();
-            });
+
+        if (e && e.code) {
+          if (e.code === 208) {
+            const event = new CustomEvent('podchat-error', {detail: e});
+            document.body.dispatchEvent(event);
           }
+          if (e.code === 21) {
+            const {chatRetryHook, chatInstance} = getState();
+            if (chatRetryHook) {
+              chatRetryHook().then(token => {
+                chatInstance.setToken(token);
+                chatInstance.reconnect();
+              });
+            }
+          }
+
         }
       },
       onChatReady(e) {
@@ -221,11 +244,11 @@ export const chatGetImage = (hashCode, size, quality, crop) => {
   }
 };
 
-export const chatGetFile = (hashCode, callBack) => {
+export const chatGetFile = (hashCode, callBack, params) => {
   return (dispatch, getState) => {
     const state = getState();
     const chatSDK = state.chatInstance.chatSDK;
-    return chatSDK.getFileFromPodspace(hashCode, callBack);
+    return chatSDK.getFileFromPodspace(hashCode, callBack, params);
   }
 };
 
@@ -292,7 +315,7 @@ export const restoreChatState = () => {
         const lastMassage = messages[messages.length - 1];
         const firstInitial = !thread.lastMessageVO || (lastMassage && thread.lastMessageVO.time < lastMassage.time);
         const offsetOrTimeNanos = firstInitial ? undefined : lastMassage.time + 200;
-        getThreadHistory(chatSDK, threadId, statics.historyFetchCount, offsetOrTimeNanos, !firstInitial).then(payload => {
+        getThreadHistory(chatSDK, threadId, THREAD_HISTORY_LIMIT_PER_REQUEST, offsetOrTimeNanos, !firstInitial).then(payload => {
           const {messages} = payload;
           if (firstInitial) {
             dispatch({
@@ -320,6 +343,24 @@ export const chatSmallVersion = isSmall => {
     return dispatch({
       type: CHAT_SMALL_VERSION,
       payload: isSmall
+    });
+  }
+};
+
+export const chatSupportMode = isSupportMode => {
+  return dispatch => {
+    return dispatch({
+      type: CHAT_SUPPORT_MODE,
+      payload: isSupportMode
+    });
+  }
+};
+
+export const chatSupportModuleBadgeShowing = showing => {
+  return dispatch => {
+    return dispatch({
+      type: CHAT_SUPPORT_MODULE_BADGE_SHOWING,
+      payload: showing
     });
   }
 };

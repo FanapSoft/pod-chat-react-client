@@ -1,0 +1,15 @@
+.ModalThreadInfoTabSelector__ImageList {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.ModalThreadInfoTabSelector__ImageListItem {
+  flex-basis: calc(33.33333% - 2px);
+  position: relative;
+  margin: 1px;
+  &:before {
+    content: "";
+    display: block;
+    padding-top: 100%;
+  }
+}

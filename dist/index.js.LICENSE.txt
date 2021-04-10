@@ -16,16 +16,6 @@ object-assign
 */
 
 /*!
- * 
- * persian-date -  1.1.0
- * Reza Babakhani <babakhani.reza@gmail.com>
- * http://babakhani.github.io/PersianWebToolkit/docs/persian-date/
- * Under MIT license 
- * 
- * 
- */
-
-/*!
  * JavaScript Cookie v2.2.1
  * https://github.com/js-cookie/js-cookie
  *
@@ -73,7 +63,7 @@ object-assign
  */
 
 /*!
- * wavesurfer.js 4.3.0 (2020-12-13)
+ * wavesurfer.js 4.6.0 (2021-03-05)
  * https://wavesurfer-js.org
  * @license BSD-3-Clause
  */
@@ -123,8 +113,6 @@ object-assign
 /*! debounce */
 
 /*! https://mths.be/punycode v1.3.2 by @mathias */
-
-/*! no static exports found */
 
 /*!***********************!*\
   !*** ./src/drawer.js ***!

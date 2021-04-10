@@ -1,6 +1,7 @@
 import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
 import {avatarNameGenerator, avatarUrlGenerator, getMessageMetaData} from "../utils/helpers";
+import {Virtuoso} from "./_component/Virtuoso";
 
 //strings
 import strings from "../constants/localization";
@@ -28,6 +29,7 @@ import {contactGetList} from "../actions/contactActions";
 import {ContactList} from "./_component/contactList";
 import Loading, {LoadingBlinkDots} from "../../../pod-chat-ui-kit/src/loading";
 
+
 //styling
 
 const constants = {
@@ -42,7 +44,6 @@ const constants = {
     threadsHasNext: store.threads.hasNext,
     isShow: store.threadModalListShowing.isShowing,
     message: store.threadModalListShowing.message,
-    chatFileHashCodeMap: store.chatFileHashCodeUpdate.hashCodeMap,
     user: store.user.user
   };
 }, null, null, {forwardRef: true})
@@ -57,7 +58,8 @@ export default class ModalThreadList extends Component {
       remainingThreadsHasNext: false,
       remainingThreadsPartialFetching: false,
       remainingThreads: [],
-      query: null
+      query: null,
+      avatar: null,
     }
   }
 
@@ -141,7 +143,7 @@ export default class ModalThreadList extends Component {
         name: `${isContact.firstName}${isContact.lastName ? ` ${isContact.lastName}` : ''}`
       };
       dispatch(threadCreateOnTheFly(user.coreUserId, user)).then(thread => {
-          dispatch(messageEditing(message, constants.forwarding, thread ? thread.id : `ON_THE_FLY_${user.id}`));
+        dispatch(messageEditing(message, constants.forwarding, thread ? thread.id : `ON_THE_FLY_${user.id}`));
       });
     } else {
       dispatch(threadCreateWithExistThread(thread));
@@ -184,9 +186,7 @@ export default class ModalThreadList extends Component {
           </Container>
         </ModalHeader>
 
-        <ModalBody threshold={5}
-                   onScrollBottomThresholdCondition={!query && (remainingThreadsHasNext && !remainingThreadsPartialFetching)}
-                   onScrollBottomThreshold={this.onScrollBottomThreshold}>
+        <ModalBody>
           {isQueriedResult &&
           <Fragment>
             <Text bold color="accent">{strings.conversations}</Text>
@@ -197,20 +197,26 @@ export default class ModalThreadList extends Component {
             threadsHasResult ?
               <Container relative>
                 <List>
-                  {(isQueriedResult ? queryThreads : realThreads).map(el => (
-                    <ListItem key={el.id} selection invert onSelect={this.onSelect.bind(this, el)}>
-                      <Container relative>
+                  <Virtuoso style={{height: isQueriedResult ? "195px" : `calc(100vh - 300px)`}}
+                            data={isQueriedResult ? queryThreads : realThreads}
+                            endReached={e => (!query && (remainingThreadsHasNext && !remainingThreadsPartialFetching)) && this.onScrollBottomThreshold()}
+                            itemContent={(idx, el) => {
+                              return <ListItem key={el.id} selection invert onSelect={this.onSelect.bind(this, el)}>
+                                <Container relative>
 
-                        <Avatar>
-                          <AvatarImage src={avatarUrlGenerator.apply(this, [el.image, avatarUrlGenerator.SIZES.SMALL, getMessageMetaData(el)])}
-                                       text={avatarNameGenerator(el.title).letter}
-                                       textBg={avatarNameGenerator(el.title).color}/>
-                          <AvatarName>{el.title}</AvatarName>
-                        </Avatar>
+                                  <Avatar>
+                                    <AvatarImage
+                                      src={avatarUrlGenerator.apply(this, [el.image, avatarUrlGenerator.SIZES.SMALL, getMessageMetaData(el)])}
+                                      text={avatarNameGenerator(el.title).letter}
+                                      textBg={avatarNameGenerator(el.title).color}/>
+                                    <AvatarName>{el.title}</AvatarName>
+                                  </Avatar>
 
-                      </Container>
-                    </ListItem>
-                  ))}
+                                </Container>
+                              </ListItem>
+                            }}>
+
+                  </Virtuoso>
                 </List>
                 {remainingThreadsPartialFetching && <PartialLoadingFragment/>}
               </Container>
@@ -226,13 +232,17 @@ export default class ModalThreadList extends Component {
             isContactsQueriedHasResult ?
               <Container relative>
                 <ContactList selection
+                             height="195px"
                              invert
                              avatarSize={avatarUrlGenerator.SIZES.SMALL}
                              onSelect={this.onSelect.bind(this)}
                              contacts={queryContacts}/>
               </Container>
               :
-              <NoResultFragment>{queryContactsSearching ? `${strings.searchingForContacts}...` : strings.thereIsNoContactWithThisKeyword()}</NoResultFragment>
+              isQueriedResult ?
+                <NoResultFragment>{queryContactsSearching ? `${strings.searchingForContacts}...` : strings.thereIsNoContactWithThisKeyword()}</NoResultFragment>
+                :
+                ""
           }
 
         </ModalBody>

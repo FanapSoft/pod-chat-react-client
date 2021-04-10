@@ -1,39 +1,22 @@
 // src/list/BoxSceneMessages
-import React, {Component, Fragment} from "react";
+import React, {Component} from "react";
 import {connect} from "react-redux";
-import classnames from "classnames";
 import "moment/locale/fa";
-import {avatarNameGenerator, OnWindowFocusInOut, mobileCheck} from "../utils/helpers";
 
 //strings
-
+import strings from "../constants/localization";
 
 //actions
-import {messageSeen} from "../actions/messageActions";
-import {
-  threadMessageGetListByMessageId,
-  threadMessageGetListPartial,
-  threadMessageGetList,
-  threadUnreadMentionedMessageGetList,
-  threadCheckedMessageList,
-  threadNewMessage,
-  threadFilesToUpload,
-  threadCreateOnTheFly, threadUnreadMentionedMessageRemove
-} from "../actions/threadActions";
 
 //components
-
-
-//styling
-import {
-  MdExpandMore,
-} from "react-icons/md";
-import style from "../../styles/app/MainMessagesUnreadBar.scss";
-import styleVar from "../../styles/variables.scss";
 import Container from "../../../pod-chat-ui-kit/src/container";
 import Gap from "../../../pod-chat-ui-kit/src/gap";
 import Text from "../../../pod-chat-ui-kit/src/typography/Text";
-import strings from "../constants/localization";
+
+//styling
+
+import style from "../../styles/app/MainMessagesUnreadBar.scss";
+
 
 
 @connect(store => {

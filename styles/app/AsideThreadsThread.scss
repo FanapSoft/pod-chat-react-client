@@ -1,0 +1,20 @@
+.AsideThreadsThread__AvatarContainer {
+  width: calc(100% - 53px);
+  overflow: hidden;
+}
+
+
+.AsideThreadsThread__PinOverlay {
+  background-color: rgba($color-accent, 0.1);
+  border-bottom: 1px solid rgba($color-primary-light, 0.18);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+
+.AsideThreadsThread__ThreadCheck {
+  transition: opacity 0.1s ease 0s;
+}

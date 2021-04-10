@@ -1,4 +1,4 @@
-function createParams(threadId, offset, loadAfter, query, count, cache = true, messageType) {
+function createParams(threadId, offset, loadAfter, query, count, cache, messageType) {
   const isOffset = offset && (offset + "").length < 19;
   return {
     threadId,

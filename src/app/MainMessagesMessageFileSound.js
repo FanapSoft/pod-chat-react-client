@@ -44,7 +44,6 @@ export default function ({message, thread, setPlayTrigger, setPlayAfterDownloadT
       waveColor: styleVar.colorAccentLight,
       progressColor: styleVar.colorAccent,
       normalize: true,
-      backend: "MediaElement",
       cursorColor: styleVar.colorAccentDark,
       height: 20,
       barWidth: 2,

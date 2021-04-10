@@ -3,7 +3,15 @@ import React, {Component} from "react";
 import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import "moment/locale/fa";
-import {humanFileSize, mobileCheck, emailify, mentionify, urlify, getMessageMetaData} from "../utils/helpers";
+import {
+  humanFileSize,
+  mobileCheck,
+  emailify,
+  mentionify,
+  urlify,
+  getMessageMetaData,
+  clearHtml
+} from "../utils/helpers";
 import classnames from "classnames";
 
 //strings
@@ -19,7 +27,6 @@ import {
 import MainMessagesMessageBox from "./MainMessagesMessageBox";
 import MainMessagesMessageBoxFooter from "./MainMessagesMessageBoxFooter";
 import MainMessagesMessageBoxSeen from "./MainMessagesMessageBoxSeen";
-import MainMessagesMessageBoxControl from "./MainMessagesMessageBoxControl";
 import MainMessagesMessageBoxHighLighter from "./MainMessagesMessageBoxHighLighter";
 import {IndexModalMediaFragment} from "./index";
 import Image from "../../../pod-chat-ui-kit/src/image";
@@ -40,7 +47,6 @@ import styleVar from "../../styles/variables.scss";
 import {ContextItem} from "../../../pod-chat-ui-kit/src/menu/Context";
 import strings from "../constants/localization";
 import {decodeEmoji} from "./_component/EmojiIcons.js";
-
 
 
 export function getImage(metaData, isFromServer, smallVersion) {
@@ -95,6 +101,7 @@ class MainMessagesMessageFile extends Component {
     super(props);
     this.onCancel = this.onCancel.bind(this);
     this.onRetry = this.onRetry.bind(this);
+    this.mainMessagesMessageRef = props.setInstance(this);
   }
 
   componentDidUpdate() {
@@ -130,11 +137,20 @@ class MainMessagesMessageFile extends Component {
     dispatch(messageCancelFile(message.uniqueId, message.threadId));
   }
 
+  createContextMenuChildren() {
+    const {
+      message
+    } = this.props;
+    let metaData = getMessageMetaData(message).file || {};
+    return <ContextItem onClick={this.onDownload.bind(this, metaData)}>
+      {mobileCheck() ?
+        <MdArrowDownward color={styleVar.colorAccent} size={styleVar.iconSizeMd}/> : strings.download}
+    </ContextItem>
+  }
+
   render() {
     const {
-      onDelete,
-      onForward,
-      onReply, isMessageByMe,
+      isMessageByMe,
       isFirstMessage,
       thread,
       messageControlShow,
@@ -145,15 +161,11 @@ class MainMessagesMessageFile extends Component {
       onRepliedMessageClicked,
       onMessageSeenListClick,
       onMessageControlHide,
-      onShare,
-      isParticipantBlocked,
       leftAsideShowing,
       smallVersion,
       forceSeen,
       isChannel,
-      isOwner,
-      isGroup,
-      onPin
+      isGroup
     } = this.props;
     let metaData = getMessageMetaData(message).file || {};
     const mimeType = metaData.mimeType;
@@ -188,24 +200,6 @@ class MainMessagesMessageFile extends Component {
                                 isFirstMessage={isFirstMessage}
                                 isMessageByMe={isMessageByMe}>
           <MainMessagesMessageBoxHighLighter message={message} highLightMessage={highLightMessage}/>
-          <MainMessagesMessageBoxControl
-            isParticipantBlocked={isParticipantBlocked}
-            isOwner={isOwner}
-            isMessageByMe={isMessageByMe}
-            onPin={onPin}
-            isChannel={isChannel}
-            isGroup={isGroup}
-            onShare={onShare}
-            messageControlShow={messageControlShow}
-            message={message}
-            onMessageSeenListClick={onMessageSeenListClick}
-            onMessageControlHide={onMessageControlHide}
-            onDelete={onDelete} onForward={onForward} onReply={onReply}>
-            <ContextItem onClick={this.onDownload.bind(this, metaData)}>
-              {mobileCheck() ?
-                <MdArrowDownward color={styleVar.colorAccent} size={styleVar.iconSizeMd}/> : strings.download}
-            </ContextItem>
-          </MainMessagesMessageBoxControl>
           <Container>
             <Container relative
                        className={style.MainMessagesMessageFile__FileContainer}>
@@ -218,7 +212,7 @@ class MainMessagesMessageFile extends Component {
                   </IndexModalMediaFragment>
                   <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e => e.stopPropagation()}>
                     <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
-                      {mentionify(emailify(urlify(decodeEmoji(message.message))))}
+                      {mentionify(emailify(decodeEmoji(urlify(clearHtml(message.message)))))}
                     </Text>
                   </Container>
 
@@ -270,18 +264,20 @@ class MainMessagesMessageFile extends Component {
 
             <Container userSelect={mobileCheck() ? "none" : "text"} onDoubleClick={e => e.stopPropagation()}>
               <Text isHTML wordWrap="breakWord" whiteSpace="preWrap" color="text" dark>
-                {mentionify(emailify(urlify(decodeEmoji(message.message))))}
+                {mentionify(emailify(decodeEmoji(urlify(clearHtml(message.message)))))}
               </Text>
             </Container>
             }
           </Container>
           <MainMessagesMessageBoxFooter message={message} onMessageControlShow={onMessageControlShow}
-                               isMessageByMe={isMessageByMe}
-                               onMessageControlHide={onMessageControlHide}
-                               messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
-            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread} forceSeen={forceSeen}
-                          onMessageSeenListClick={onMessageSeenListClick} onRetry={this.onRetry}
-                          onCancel={this.onCancel}/>
+                                        mainMessagesMessageRef={this.mainMessagesMessageRef}
+                                        isMessageByMe={isMessageByMe}
+                                        onMessageControlHide={onMessageControlHide}
+                                        messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
+            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread}
+                                        forceSeen={forceSeen}
+                                        onMessageSeenListClick={onMessageSeenListClick} onRetry={this.onRetry}
+                                        onCancel={this.onCancel}/>
           </MainMessagesMessageBoxFooter>
         </MainMessagesMessageBox>
       </Container>

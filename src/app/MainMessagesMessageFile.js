@@ -4,9 +4,6 @@ import {connect} from "react-redux";
 import {withRouter} from "react-router-dom";
 import "moment/locale/fa";
 import {
-  cancelFileDownloadingFromHashMap,
-  getFileDownloadingFromHashMap,
-  getFileFromHashMap,
   getImage,
   getMessageMetaData,
   humanFileSize, isMessageHasError,
@@ -18,6 +15,9 @@ import {
   isMessageIsVoice,
   mobileCheck
 } from "../utils/helpers";
+
+import {cancelDownload, getFile, getFileDownloading, updateLink} from "../utils/hashmap";
+
 
 //strings
 import strings from "../constants/localization";
@@ -46,14 +46,12 @@ import MainMessagesMessageFileControlIcon from "./MainMessagesMessageFileControl
 import MainMessagesMessageFileCaption from "./MainMessagesMessageFileCaption";
 import MainMessagesMessageBox from "./MainMessagesMessageBox";
 import MainMessagesMessageBoxHighLighter from "./MainMessagesMessageBoxHighLighter";
-import MainMessagesMessageBoxControl from "./MainMessagesMessageBoxControl";
 import MainMessagesMessageBoxFooter from "./MainMessagesMessageBoxFooter";
 import MainMessagesMessageBoxSeen from "./MainMessagesMessageBoxSeen";
 
 //styling
 import style from "../../styles/app/MainMessagesMessageFile.scss";
 import styleVar from "../../styles/variables.scss";
-
 
 
 @connect(store => {
@@ -67,7 +65,7 @@ class MainMessagesMessageFile extends Component {
 
   constructor(props) {
     super(props);
-    const {leftAsideShowing, smallVersion, message} = props;
+    const {leftAsideShowing, smallVersion, message, setInstance} = props;
     const metaData = getMessageMetaData(message);
     const isImageReal = isMessageIsImage(message) || (isMessageIsImage(message) && !message.id);
     this.state = {
@@ -77,6 +75,7 @@ class MainMessagesMessageFile extends Component {
       isSound: isMessageIsSound(message),
       isVoice: isMessageIsVoice(message),
       isFile: !isMessageIsSound(message) && !isMessageIsVideo(message) && !isImageReal,
+      file: null,
       metaData
     };
     this.onCancelDownload = this.onCancelDownload.bind(this);
@@ -90,22 +89,22 @@ class MainMessagesMessageFile extends Component {
     this.playAfterDownloadTrigger = null;
     this.justMountedTrigger = null;
     this.downloadTriggerRef = React.createRef();
-    this.isDownloading = false;
+    this.isDownloading = getFileDownloading(metaData.fileHash) === true;
     this.isPlayable = null;
-
+    this.mainMessagesMessageRef = setInstance(this);
   }
 
   componentDidMount() {
-    const {isImage,imageIsSuitableSize, metaData} = this.state;
-    if(isImage && imageIsSuitableSize) {
-      window.addEventListener("resize", e=>{
+    const {isImage, imageIsSuitableSize, metaData} = this.state;
+    if (isImage && imageIsSuitableSize) {
+      window.addEventListener("resize", e => {
         this.setState({
           imageIsSuitableSize
         });
       });
     }
-    const fileResult = getFileDownloadingFromHashMap.apply(this, [metaData.fileHash]);
-    const result = typeof fileResult === "string" && fileResult.indexOf("blob") > -1 ? fileResult : null;
+    const fileResult = getFileDownloading(metaData.fileHash);
+    const result = typeof fileResult === "string" && fileResult.indexOf("http") > -1 ? fileResult : null;
     if (result) {
       const downloadRef = this.downloadTriggerRef.current;
       if (!downloadRef.href) {
@@ -117,9 +116,8 @@ class MainMessagesMessageFile extends Component {
     }
   }
 
-  componentDidUpdate(oldProps) {
+  componentDidUpdate(oldProps, oldState) {
     const {message, dispatch} = this.props;
-    const {chatFileHashCodeMap: oldChatFileHashCodeMap} = oldProps;
 
     if (message) {
       if (message.progress) {
@@ -134,11 +132,11 @@ class MainMessagesMessageFile extends Component {
     const downloadRef = this.downloadTriggerRef.current;
     if (!downloadRef.href) {
       const id = this.state.metaData.fileHash;
-      const result = getFileDownloadingFromHashMap.call(this, id);
-      const oldResult = oldChatFileHashCodeMap.find(e => e.id === id);
+      const result = getFileDownloading(id);
+      const oldResult = oldState.file;
       if (oldResult) {
-        if (oldResult.result === "LOADING") {
-          if (result !== true && result !== false) {
+        if (oldResult === "LOADING") {
+          if (result !== true && result !== false && result) {
             this.buildDownloadAndPlayComponent(false, result);
           }
         }
@@ -168,27 +166,43 @@ class MainMessagesMessageFile extends Component {
 
   onCancelDownload() {
     const {metaData} = this.state;
-    cancelFileDownloadingFromHashMap.call(this, metaData.fileHash);
+    cancelDownload(metaData.fileHash, this.props.dispatch);
+    //just a trigger nothing ;)
+    this.setState({
+      metaData
+    })
   }
 
   onDownload(isPlayable, e) {
     (e || isPlayable).stopPropagation && (e || isPlayable).stopPropagation();
-    const {metaData} = this.state;
+    const {metaData, isVideo} = this.state;
     const downloadRef = this.downloadTriggerRef.current;
-    if (isPlayable) {
-      if (this.playTrigger) {
-        const result = this.playTrigger(downloadRef.href);
-        if (downloadRef.href) {
-          return;
+    const pastAction = () => {
+      if (isPlayable) {
+        if (this.playTrigger) {
+          const result = this.playTrigger(downloadRef.href);
+          if (downloadRef.href) {
+            return;
+          }
         }
       }
+      if (downloadRef.href) {
+        return downloadRef.click();
+      }
+      this.isDownloading = true;
+      this.isPlayable = isPlayable;
+      getFile(metaData.file.hashCode, "file", this, false, false, this.state.isVideo ? {responseType: "link"} : {});
+    };
+    //TODO: fix it when on new token coming
+    if (isVideo && downloadRef && downloadRef.href) {
+      updateLink(metaData.file.hashCode, this.props.dispatch).then(link => {
+        downloadRef.href = link;
+        pastAction();
+      });
+    } else {
+      pastAction();
     }
-    if (downloadRef.href) {
-      return downloadRef.click();
-    }
-    this.isDownloading = true;
-    this.isPlayable = isPlayable;
-    getFileFromHashMap.apply(this, [metaData.file.hashCode]);
+
   }
 
   onRetry() {
@@ -233,11 +247,21 @@ class MainMessagesMessageFile extends Component {
     }
   }
 
+  createContextMenuChildren() {
+    return <ContextItem onClick={this.onDownload.bind(this, false)}>
+      {mobileCheck() ?
+        <MdArrowDownward color={styleVar.colorAccent} size={styleVar.iconSizeMd}/> : strings.download}
+    </ContextItem>
+  }
+
+  componentWillUnmount() {
+    if (this.isDownloading) {
+      this.onCancelDownload();
+    }
+  }
+
   render() {
     const {
-      onDelete,
-      onForward,
-      onReply,
       isMessageByMe,
       isFirstMessage,
       thread,
@@ -249,13 +273,9 @@ class MainMessagesMessageFile extends Component {
       onRepliedMessageClicked,
       onMessageSeenListClick,
       onMessageControlHide,
-      onShare,
-      isParticipantBlocked,
       forceSeen,
       isChannel,
-      isOwner,
       isGroup,
-      onPin,
       chatAudioPlayer,
       smallVersion,
       leftAsideShowing,
@@ -271,7 +291,7 @@ class MainMessagesMessageFile extends Component {
       showProgress
     } = this.state;
     const downloadable = isMessageIsDownloadable(message);
-    const downloading = this.isDownloading && getFileDownloadingFromHashMap.call(this, metaData.fileHash) === true;
+    const downloading = this.isDownloading && getFileDownloading(metaData.fileHash) === true;
     const uploading = isMessageIsUploading(message);
     const audioPlaying = chatAudioPlayer && chatAudioPlayer.message.id === message.id && chatAudioPlayer.playing;
     const showProgressFinalDecision = showProgress || uploading || downloading;
@@ -295,37 +315,20 @@ class MainMessagesMessageFile extends Component {
                                 isFirstMessage={isFirstMessage}
                                 isMessageByMe={isMessageByMe}>
           <MainMessagesMessageBoxHighLighter message={message} highLightMessage={highLightMessage}/>
-          <MainMessagesMessageBoxControl
-            isParticipantBlocked={isParticipantBlocked}
-            isOwner={isOwner}
-            isMessageByMe={isMessageByMe}
-            onPin={onPin}
-            isChannel={isChannel}
-            isGroup={isGroup}
-            onShare={onShare}
-            messageControlShow={messageControlShow}
-            message={message}
-            onMessageSeenListClick={onMessageSeenListClick}
-            onMessageControlHide={onMessageControlHide}
-            onDelete={onDelete} onForward={onForward} onReply={onReply}>
-            <ContextItem onClick={this.onDownload.bind(this, false)}>
-              {mobileCheck() ?
-                <MdArrowDownward color={styleVar.colorAccent} size={styleVar.iconSizeMd}/> : strings.download}
-            </ContextItem>
-          </MainMessagesMessageBoxControl>
           <Container>
             <Container relative
                        className={style.MainMessagesMessageFile__FileContainer}>
               {isImage ?
-                <MainMessagesMessageFileImage onCancel={uploading || isMessageHasError(message) ? this.onCancel : this.onCancelDownload}
-                                              isUploading={uploading}
-                                              message={message}
-                                              setShowProgress={this.setShowProgress}
-                                              smallVersion={smallVersion}
-                                              leftAsideShowing={leftAsideShowing}
-                                              showCancelIcon={downloading || uploading}
-                                              dispatch={dispatch}
-                                              metaData={metaData}/>
+                <MainMessagesMessageFileImage
+                  onCancel={uploading || isMessageHasError(message) ? this.onCancel : this.onCancelDownload}
+                  isUploading={uploading}
+                  message={message}
+                  setShowProgress={this.setShowProgress}
+                  smallVersion={smallVersion}
+                  leftAsideShowing={leftAsideShowing}
+                  showCancelIcon={downloading || uploading}
+                  dispatch={dispatch}
+                  metaData={metaData}/>
                 :
                 <Container className={style.MainMessagesMessageFile__FileName}>
                   {isVideo &&
@@ -339,7 +342,7 @@ class MainMessagesMessageFile extends Component {
                     <MdMic size={styleVar.iconSizeSm} color={styleVar.colorAccent}/>
                     :
                     <Text wordWrap="breakWord" bold>
-                      {metaData.name}
+                      {metaData.name || metaData.file.originalName}
                     </Text>
                   }
 
@@ -376,12 +379,14 @@ class MainMessagesMessageFile extends Component {
 
           </Container>
           <MainMessagesMessageBoxFooter message={message} onMessageControlShow={onMessageControlShow}
-                               isMessageByMe={isMessageByMe}
-                               onMessageControlHide={onMessageControlHide}
-                               messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
-            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread} forceSeen={forceSeen}
-                          onMessageSeenListClick={onMessageSeenListClick} onRetry={this.onRetry}
-                          onCancel={this.onCancel}/>
+                                        mainMessagesMessageRef={this.mainMessagesMessageRef}
+                                        isMessageByMe={isMessageByMe}
+                                        onMessageControlHide={onMessageControlHide}
+                                        messageControlShow={messageControlShow} messageTriggerShow={messageTriggerShow}>
+            <MainMessagesMessageBoxSeen isMessageByMe={isMessageByMe} message={message} thread={thread}
+                                        forceSeen={forceSeen}
+                                        onMessageSeenListClick={onMessageSeenListClick} onRetry={this.onRetry}
+                                        onCancel={this.onCancel}/>
           </MainMessagesMessageBoxFooter>
         </MainMessagesMessageBox>
       </Container>

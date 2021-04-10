@@ -2,7 +2,7 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import date from "../utils/date";
-import {mobileCheck} from "../utils/helpers";
+import {messageDatePetrification, mobileCheck} from "../utils/helpers";
 
 //strings
 import strings from "../constants/localization";
@@ -22,11 +22,6 @@ import {decodeEmoji} from "./_component/EmojiIcons.js";
 
 //styling
 import style from "../../styles/app/LeftAsideMainSearch.scss";
-
-function datePetrification(time) {
-  const correctTime = time / Math.pow(10, 6);
-  return date.isToday(correctTime) ? date.format(correctTime, "HH:mm") : date.isWithinAWeek(correctTime) ? date.format(correctTime, "dddd HH:mm") : date.format(correctTime, "YYYY-MM-DD  HH:mm");
-}
 
 @connect(store => {
   return {
@@ -116,7 +111,7 @@ export default class LeftAsideMainSearch extends Component {
                           <Text wordWrap="breakWord"
                                 color="gray"
                                 dark
-                                size="sm">{datePetrification(el.time)}</Text>
+                                size="sm">{messageDatePetrification(el.time)}</Text>
                         </Container>
                       </Container>
                       <Container inline centerLeft>

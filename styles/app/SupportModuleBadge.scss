@@ -1,0 +1,25 @@
+.SupportModuleBadge {
+  width: 60px;
+  height: 60px;
+  margin: 20px;
+}
+
+.SupportModuleBadge__Image {
+  background-size: cover;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+}
+
+.SupportModuleBadge__LoadingContainer {
+  position: absolute;
+  border-radius: 50px;
+  top: 0;
+  left: 0;
+  background-color: rgba(#8b496d, .7);
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}

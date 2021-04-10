@@ -2,9 +2,11 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import classnames from "classnames";
+import checkForPrivilege from "../utils/privilege";
 
 //strings
 import strings from "../constants/localization";
+import {THREAD_ADMIN} from "../constants/privilege";
 
 //actions
 import {contactBlock} from "../actions/contactActions";
@@ -14,10 +16,11 @@ import {chatModalPrompt} from "../actions/chatActions";
 //components
 import Container from "../../../pod-chat-ui-kit/src/container";
 import Text from "../../../pod-chat-ui-kit/src/typography/Text";
+import Gap from "../../../pod-chat-ui-kit/src/gap";
 
 //styling
 import style from "../../styles/app/MainFooterSpam.scss";
-import Gap from "../../../pod-chat-ui-kit/src/gap";
+import {isChannel, isGroup} from "../utils/helpers";
 
 
 function showMuteForChannel(props) {
@@ -36,8 +39,7 @@ function showMuteForChannel(props) {
   if (thread.type !== 8) {
     return false;
   }
-
-  return thread.inviter.id !== user.id;
+  return !checkForPrivilege(thread, THREAD_ADMIN);
 }
 
 function showSpam(props) {
@@ -98,7 +100,7 @@ export function showBlock(props) {
     return false;
   }
   let participant;
-  if (thread.group) {
+  if (isChannel(thread) || isGroup(thread)) {
     return false;
   }
   if (!participants || !participants.length) {
@@ -108,7 +110,7 @@ export function showBlock(props) {
     return false;
   }
   participant = participants.filter(e => e.id !== user.id)[0];
-  if(!participant) {
+  if (!participant) {
     return false;
   }
   return participant.blocked;
@@ -173,7 +175,7 @@ export default class MainFooterSpam extends Component {
     }, null, strings.accept));
   }
 
-  onThreadMute(){
+  onThreadMute() {
     const {dispatch, thread} = this.props;
     dispatch(threadNotification(thread.id, !thread.mute));
   }
@@ -181,7 +183,7 @@ export default class MainFooterSpam extends Component {
   render() {
     const {thread} = this.props;
     const showSpamming = false;//showSpam(this.props);
-    const showBlockIs = false;//showBlock(this.props);
+    const showBlockIs = showBlock(this.props);
     const showMuteForChannelIs = showMuteForChannel(this.props);
     let classNamesObject = {
       [style.MainFooterSpam]: true,
@@ -205,7 +207,9 @@ export default class MainFooterSpam extends Component {
             </Container>
           </Container>
         </Container>
-        : <ActionBaseFragment classNamesObject={classNamesObject} text={showBlockIs ? strings.unBlock : thread.mute ? strings.unmute : strings.mute} onClick={showBlockIs ? this.onUnblockSelect : this.onThreadMute}/>
+        : <ActionBaseFragment classNamesObject={classNamesObject}
+                              text={showBlockIs ? strings.unBlock : thread.mute ? strings.unmute : strings.mute}
+                              onClick={showBlockIs ? this.onUnblockSelect : this.onThreadMute}/>
     );
   }
 }

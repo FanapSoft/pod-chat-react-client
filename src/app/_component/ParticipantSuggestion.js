@@ -10,8 +10,9 @@ import {
 //components
 import Container from "../../../../pod-chat-ui-kit/src/container";
 import Scroller from "../../../../pod-chat-ui-kit/src/scroller";
+import List from "../../../../pod-chat-ui-kit/src/List";
 import {Text} from "../../../../pod-chat-ui-kit/src/typography";
-import {ContactList} from "./contactList";
+import {ContactListItem} from "./contactList";
 import Loading, {LoadingBlinkDots} from "../../../../pod-chat-ui-kit/src/loading";
 import Gap from "../../../../pod-chat-ui-kit/src/gap";
 
@@ -205,11 +206,17 @@ export default class extends Component {
           <Loading hasSpace><LoadingBlinkDots size="sm"/></Loading>
         </Container>
         }
-        <ContactList contacts={participants} onSelect={this.onContactSelect} AvatarNameFragment={leftActionFragment}
-                     maxAvatarNameWidth={"auto"}
-                     activeRef={this.activeRef}
-                     activeList={[participants[participantsActiveIndex] ? participants[participantsActiveIndex].id : null]}
-                     selection invert/>
+        <List>
+          {participants.map(contact =>
+            <ContactListItem contact={contact}
+                                     onSelect={this.onContactSelect} AvatarNameFragment={leftActionFragment}
+                                     maxAvatarNameWidth={"auto"}
+                                     activeRef={this.activeRef}
+                                     activeList={[participants[participantsActiveIndex] ? participants[participantsActiveIndex].id : null]}
+                                     selection invert/>
+          )}
+        </List>
+
       </Scroller>
     );
   }

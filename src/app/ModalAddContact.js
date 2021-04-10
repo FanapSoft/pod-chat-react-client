@@ -128,7 +128,17 @@ class ModalAddContact extends Component {
       notEnteredMobilePhone: false,
       sameUserMobilePhone: false
     });
-
+    if(contactEdit) {
+      this.setState({
+        sameUserMobilePhone: false,
+        notEnteredFirstOrFamilyName: false,
+        notEnteredMobilePhone: false,
+        addBy: "",
+        firstName: "",
+        lastName: ""
+      });
+      dispatch(contactAdd(null, null, null, false, true));
+    }
   }
 
   onClose(e, noHistory) {
@@ -175,6 +185,7 @@ class ModalAddContact extends Component {
           <form onSubmit={this.onSubmit}>
             {!contactEdit &&
             <InputText max={40} onChange={this.onFieldChange.bind(this, "addBy")}
+                       dir="ltr"
                        value={addBy}
                        placeholder={`${strings.mobilePhoneOrUsername} ( ${strings.required} )`}/>
             }

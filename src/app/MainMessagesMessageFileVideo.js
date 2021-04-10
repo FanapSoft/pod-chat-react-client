@@ -11,7 +11,7 @@ export default function ({message, setPlayTrigger, setPlayAfterDownloadTrigger, 
   setPlayTrigger(result => {
     const videoCurrent = videoRef.current;
     const playVideoCurrent = playVideoRef.current;
-    if (videoCurrent.src) {
+    if (videoCurrent.src && videoCurrent.src === result) {
       playVideoCurrent.click();
     } else if(result) {
       videoCurrent.src = result;
@@ -25,7 +25,7 @@ export default function ({message, setPlayTrigger, setPlayAfterDownloadTrigger, 
     playVideoCurrent.click();
   });
   return <Container display="none">
-    <a ref={playVideoRef} href={`#video-${message.id}`} data-fancybox/>
+    <a ref={playVideoRef} href={`#video-${message.id}`} data-fancybox  data-options={JSON.stringify({arrows: false, infobar: false, caption: message.message})}/>
     <video controls id={`video-${message.id}`} style={{display: "none"}} ref={videoRef}/>
   </Container>
 }

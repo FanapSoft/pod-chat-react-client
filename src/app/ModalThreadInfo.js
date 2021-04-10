@@ -23,7 +23,8 @@ import ModalThreadInfoPerson from "./ModalThreadInfoPerson";
 
 //styling
 import style from "../../styles/app/ModalThreadInfo.scss";
-import {getFileFromHashMap, getImageFromHashMapWindow, getMessageMetaData} from "../utils/helpers";
+import {getMessageMetaData} from "../utils/helpers";
+import {getImage} from "../utils/hashmap";
 
 function GapFragment() {
   return (
@@ -35,7 +36,7 @@ function GapFragment() {
   )
 }
 
-function AvatarModalMediaFragment({participant, thread,}) {
+function AvatarModalMediaFragment({participant, thread}) {
   let image, caption;
   if (participant) {
     image = participant.image;
@@ -44,14 +45,14 @@ function AvatarModalMediaFragment({participant, thread,}) {
     if (thread.metadata) {
       const fileHash = getMessageMetaData(thread).fileHash;
       if (fileHash) {
-        image = getImageFromHashMapWindow(fileHash, 2, null, "avatarImage", this);
+        image = getImage(fileHash, 2, null, "avatarImage", this);
       }
     } else {
       image = thread.image;
     }
     caption = thread.title;
   }
-  return image ? <IndexModalMediaFragment link={image} options={{caption}}
+  return image ? <IndexModalMediaFragment link={image === true ? null : image} options={{caption}}
                                           linkClassName={style.ModalThreadInfo__ModalMediaLink}/> : null;
 }
 

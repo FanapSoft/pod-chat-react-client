@@ -51,10 +51,15 @@ import {
   THREAD_UNREAD_MENTIONED_MESSAGE_REMOVE,
   THREAD_MESSAGE_PIN,
   MESSAGE_NEW,
-  THREAD_DRAFT, THREAD_GET_PARTICIPANT_ROLES
+  THREAD_DRAFT, THREAD_GET_PARTICIPANT_ROLES, THREAD_TRIM_HISTORY, THREAD_TRIM_DOWN_HISTORY
 } from "../constants/actionTypes";
 import {stateGenerator, updateStore, listUpdateStrategyMethods, stateGeneratorState} from "../utils/storeHelper";
-import {getNow} from "../utils/helpers";
+import {getNow, isMessageByMe} from "../utils/helpers";
+import {
+  THREAD_HISTORY_LIMIT_PER_REQUEST,
+  THREAD_HISTORY_MAX_RENDERED,
+  THREAD_HISTORY_UNSEEN_MENTIONED
+} from "../constants/historyFetchLimits";
 
 const {PENDING, SUCCESS, ERROR, CANCELED} = stateGeneratorState;
 
@@ -130,7 +135,7 @@ export const threadCreateReducer = (state = {
       };
     case THREAD_CHANGED:
       return {
-        ...state, ...stateGenerator(SUCCESS, updateStore(state.thread, {roles: state.thread.roles, ...action.payload}, {
+        ...state, ...stateGenerator(SUCCESS, updateStore(state.thread, {...state.thread, ...action.payload}, {
           by: "id",
           method: listUpdateStrategyMethods.UPDATE
         }), "thread")
@@ -140,7 +145,10 @@ export const threadCreateReducer = (state = {
     case THREAD_GET_PARTICIPANT_ROLES(SUCCESS):
       if (action.payload.threadId === state.thread.id) {
         return {
-          ...state, ...stateGenerator(SUCCESS, updateStore(state.thread, {id: action.payload.threadId, roles: action.payload.roles}, {
+          ...state, ...stateGenerator(SUCCESS, updateStore(state.thread, {
+            id: action.payload.threadId,
+            roles: action.payload.roles
+          }, {
             mix: true,
             by: "id",
             method: listUpdateStrategyMethods.UPDATE
@@ -343,6 +351,7 @@ export const threadsReducer = (state = {
     case THREAD_CHANGED: {
       let threads = updateStore(state.threads, action.type === THREAD_CHANGED ? action.payload : action.payload.thread, {
         method: listUpdateStrategyMethods.UPDATE,
+        mix: action.type === THREAD_CHANGED,
         upsert: true,
         by: "id"
       });
@@ -373,15 +382,16 @@ export const threadsReducer = (state = {
       });
       return {...state, ...stateGenerator(SUCCESS, sortThreads(threads), "threads")};
     }
-    case MESSAGE_EDIT():
     case MESSAGE_SEEN(): {
-      const filteredThread = state.threads.filter(thread => thread.lastMessageVO && thread.lastMessageVO.id === action.payload.id);
+      let filteredThread = state.threads.filter(thread => thread.lastMessageVO && thread.lastMessageVO.id === action.payload);
       if (!filteredThread.length) {
         return state;
       }
+      filteredThread = filteredThread[0];
+      const {lastMessageVO, id} = filteredThread;
       const list = updateStore(
         filteredThread,
-        {id: action.payload.threadId, lastMessageVO: action.payload, lastMessage: action.payload.message},
+        {id: id, lastMessageVO: {...lastMessageVO, ...{seen: true}}},
         {
           mix: true,
           by: "id",
@@ -537,9 +547,6 @@ export const threadUnreadMentionedMessageListReducer = (state = {
       if (!action.payload.mentioned) {
         return state;
       }
-      if (action.payload.threadId !== state.threadId) {
-        return state;
-      }
       return {
         ...state, ...stateGenerator(SUCCESS, updateStore(state.messages, action.payload, {
           method: listUpdateStrategyMethods.UPDATE,
@@ -668,6 +675,9 @@ export const threadMessageListReducer = (state = {
     case THREAD_GET_MESSAGE_LIST(ERROR):
       return {...state, ...stateGenerator(ERROR, action.payload)};
     case THREAD_FILE_UPLOADING: {
+      if (state.fetching) {
+        return state;
+      }
       const messages = updateStore(state.messages, action.payload, {
         method: listUpdateStrategyMethods.UPDATE,
         mix: true,
@@ -675,12 +685,34 @@ export const threadMessageListReducer = (state = {
       });
       return removeDuplicateMessages({...state, ...stateGenerator(SUCCESS, messages, "messages")});
     }
+    case THREAD_TRIM_DOWN_HISTORY: {
+      const stateMessages = state.messages;
+      if (stateMessages.length > THREAD_HISTORY_MAX_RENDERED) {
+        return {
+          ...state,
+          messages: state.messages.slice(0, THREAD_HISTORY_MAX_RENDERED),
+          hasNext: true
+        };
+      } else {
+        return state;
+      }
+    }
     case THREAD_GET_MESSAGE_LIST_PARTIAL(SUCCESS): {
+      const {messages} = action.payload;
+      let {messages: stateMessages} = state;
+      let trimUpHistoryCondition = messages.length && (messages[messages.length - 1].time > stateMessages[stateMessages.length - 1].time);
+      if (trimUpHistoryCondition) {
+        if (stateMessages.length + messages.length >= THREAD_HISTORY_MAX_RENDERED) {
+          stateMessages = stateMessages.slice((stateMessages.length + messages.length) - THREAD_HISTORY_MAX_RENDERED, THREAD_HISTORY_MAX_RENDERED);
+        } else {
+          trimUpHistoryCondition = false;
+        }
+      }
       const object = {
-        hasPrevious,
+        hasPrevious: trimUpHistoryCondition || hasPrevious,
         hasNext,
         threadId: action.payload.threadId,
-        messages: [...action.payload.messages, ...state.messages]
+        messages: [...action.payload.messages, ...stateMessages]
       };
       return sortMessages(removeDuplicateMessages({...state, ...stateGenerator(SUCCESS, object)}));
     }
@@ -702,14 +734,33 @@ export const threadMessageListReducer = (state = {
       if (!checkForCurrentThread()) {
         return state;
       }
+      const stateMessages = state.messages;
+      const {followUp, isByMe} = action.payload;
+      if (!followUp && !isByMe) {
+        if (stateMessages.length >= THREAD_HISTORY_MAX_RENDERED) {
+          return {
+            ...state,
+            hasNext: true
+          }
+        }
+      }
+      let messages = updateStore(stateMessages, action.payload, {
+        method: listUpdateStrategyMethods.UPDATE,
+        upsert: true,
+        by: ["id", "uniqueId"],
+        or: true
+      });
+      if (isByMe || followUp) {
+        const limitCount = (isByMe ? THREAD_HISTORY_LIMIT_PER_REQUEST : THREAD_HISTORY_MAX_RENDERED);
+        if (messages.length > limitCount) {
+          messages = messages.slice(messages.length - limitCount);
+        }
+      }
       return sortMessages({
         ...state,
-        messages: updateStore(state.messages, action.payload, {
-          method: listUpdateStrategyMethods.UPDATE,
-          upsert: true,
-          by: ["id", "uniqueId"],
-          or: true
-        })
+        messages,
+        hasNext: false,
+        hasPrevious: stateMessages.length >= 20
       });
     case MESSAGE_EDIT():
       return {
@@ -722,8 +773,8 @@ export const threadMessageListReducer = (state = {
       return {
         ...state, ...stateGenerator(SUCCESS, updateStore(state.messages, {
           seen: true,
-          uniqueId: action.payload.uniqueId
-        }, {method: listUpdateStrategyMethods.UPDATE, by: "uniqueId", mix: true}), "messages")
+          id: action.payload
+        }, {method: listUpdateStrategyMethods.UPDATE, by: "id", mix: true}), "messages")
       };
     case MESSAGE_DELETE:
     case MESSAGE_CANCEL(SUCCESS):

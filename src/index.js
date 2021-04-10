@@ -5,13 +5,16 @@ import store from "./store/index";
 import "../styles/main.scss";
 import Index from "./app";
 import {BrowserRouter} from "react-router-dom";
+import SupportModule from "./app/SupportModule";
 
 
 function PodchatJSX(props) {
   return (
     <Provider store={store}>
       <BrowserRouter>
-        <Index {...props}/>
+        <SupportModule supportMode={props && props.supportMode}>
+          <Index {...props}/>
+        </SupportModule>
       </BrowserRouter>
     </Provider>
   );
@@ -19,10 +22,13 @@ function PodchatJSX(props) {
 
 function Podchat(props, elementId) {
   let instance;
+
   render(
     <Provider store={store}>
       <BrowserRouter>
-        <Index {...props} wrappedComponentRef={e => instance = e}/>
+        <SupportModule supportMode={props && props.supportMode}>
+          <Index {...props} wrappedComponentRef={e => instance = e}/>
+        </SupportModule>
       </BrowserRouter>
     </Provider>,
     document.getElementById(elementId)

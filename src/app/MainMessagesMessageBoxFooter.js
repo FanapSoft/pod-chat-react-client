@@ -13,7 +13,7 @@ import styleVar from "../../styles/variables.scss";
 import style from "../../styles/app/MainMessagesMessageBoxFooter.scss";
 
 
-export default function({message, messageTriggerShow, isMessageByMe, children}) {
+export default function ({message, messageTriggerShow, isMessageByMe, mainMessagesMessageRef, children}) {
   const classNames = classnames({
     [style.MainMessagesMessageBoxFooter__OpenTriggerIconContainer]: true,
     [style["MainMessagesMessageBoxFooter__OpenTriggerIconContainer--show"]]: message.id && messageTriggerShow,
@@ -27,7 +27,8 @@ export default function({message, messageTriggerShow, isMessageByMe, children}) 
       {children}
       {messageDatePetrification(message.time)}
       <Container bottomLeft className={classNames}>
-        <ContextTrigger id={message.id} holdToDisplay={mobileCheck() ? 1000 : -1} mouseButton={0}>
+        <ContextTrigger id={"messages-context-menu"} holdToDisplay={mobileCheck() ? 1000 : -1} mouseButton={0}
+                        collect={() => mainMessagesMessageRef}>
 
           <MdExpandLess size={styleVar.iconSizeMd}
                         style={{marginLeft: "10px"}}
