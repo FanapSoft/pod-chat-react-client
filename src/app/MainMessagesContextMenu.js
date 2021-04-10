@@ -31,11 +31,15 @@ import {messageEditing} from "../actions/messageActions";
 import checkForPrivilege from "../utils/privilege";
 import {THREAD_ADMIN} from "../constants/privilege";
 
-@connect()
+@connect(store => {
+  return {
+    supportMode: store.chatSupportMode
+  };
+})
 export default class AsideThreadsContextMenu extends Component {
   constructor(props) {
     super(props);
-    const {thread} = props;
+    const {thread, supportMode} = props;
     this.state = {message: {}};
     this.isMobile = mobileCheck();
     this.isChannel = isChannel(thread);
@@ -46,6 +50,7 @@ export default class AsideThreadsContextMenu extends Component {
     this.replyCondition = !this.isChannel || this.isOwner;
     this.messageInfoCondition = false;
     this.isMessageByMe = false;
+    this.shareCondition = this.forwardCondition = !supportMode;
     this.onDelete = this.onDelete.bind(this);
     this.onForward = this.onForward.bind(this);
     this.onReply = this.onReply.bind(this);
@@ -55,13 +60,13 @@ export default class AsideThreadsContextMenu extends Component {
   }
 
   onMenuShow(e) {
-    const {thread, user} = this.props;
+    const {thread, user, supportMode} = this.props;
     const instance = this.instance = e.detail.data.instance;
     const {message} = instance.props;
     const isMessageByMeResult = isMessageByMe(message, user, thread);
     this.isMessageByMe = !this.isChannel || isMessageByMeResult;
-    this.messageInfoCondition = (this.isGroup || this.isChannel) && (this.isOwner || isMessageByMeResult);
-    this.deleteCondition = this.isMessageByMe || this.isOwner;
+    this.messageInfoCondition = !supportMode && ((this.isGroup || this.isChannel) && (this.isOwner || isMessageByMeResult));
+    this.deleteCondition = !supportMode && (this.isMessageByMe || this.isOwner);
     this.setState({
       message
     });
@@ -111,6 +116,7 @@ export default class AsideThreadsContextMenu extends Component {
   }
 
   render() {
+    const {supportMode} = this.props;
     const MobileContextMenu = () => {
       return <Fragment>
         <Container className={style.MainMessagesMessageBoxControl__MenuActionContainer}>
@@ -121,9 +127,13 @@ export default class AsideThreadsContextMenu extends Component {
             </ContextItem>
           }
 
-          <ContextItem onClick={this.onForward}>
-            <TiArrowForward size={styleVar.iconSizeMd} color={styleVar.colorAccent}/>
-          </ContextItem>
+          {
+            this.forwardCondition &&
+            <ContextItem onClick={this.onForward}>
+              <TiArrowForward size={styleVar.iconSizeMd} color={styleVar.colorAccent}/>
+            </ContextItem>
+          }
+
 
           {
             this.replyCondition &&
@@ -151,6 +161,7 @@ export default class AsideThreadsContextMenu extends Component {
           }
 
           {
+            this.shareCondition &&
             <ContextItem onClick={this.onShare}>
               <MdShare size={styleVar.iconSizeMd} color={styleVar.colorAccent}/>
             </ContextItem>
@@ -174,9 +185,13 @@ export default class AsideThreadsContextMenu extends Component {
             </ContextItem>
           }
 
-          <ContextItem onClick={this.onForward}>
-            {strings.forward}
-          </ContextItem>
+          {
+            this.forwardCondition &&
+            <ContextItem onClick={this.onForward}>
+              {strings.forward}
+            </ContextItem>
+          }
+
 
           {
             this.replyCondition &&
@@ -204,6 +219,7 @@ export default class AsideThreadsContextMenu extends Component {
           }
 
           {
+            this.shareCondition &&
             <ContextItem onClick={this.onShare}>
               {strings.share}
             </ContextItem>

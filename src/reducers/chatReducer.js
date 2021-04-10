@@ -10,7 +10,7 @@ import {
   CHAT_NOTIFICATION_CLICK_HOOK,
   CHAT_RETRY_HOOK,
   CHAT_SIGN_OUT_HOOK
-  , CHAT_AUDIO_PLAYER, CHAT_AUDIO_RECORDER
+  , CHAT_AUDIO_PLAYER, CHAT_AUDIO_RECORDER, CHAT_SUPPORT_MODE, CHAT_SUPPORT_MODULE_BADGE_SHOWING
 } from "../constants/actionTypes";
 import {listUpdateStrategyMethods, stateGenerator, stateGeneratorState, updateStore} from "../utils/storeHelper";
 
@@ -37,6 +37,24 @@ export const chatInstanceReducer = (state = {
 export const chatSmallVersionReducer = (state = false, action) => {
   switch (action.type) {
     case CHAT_SMALL_VERSION:
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
+export const chatSupportModeReducer = (state = false, action) => {
+  switch (action.type) {
+    case CHAT_SUPPORT_MODE:
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
+export const chatSupportModuleBadgeShowingReducer = (state = true, action) => {
+  switch (action.type) {
+    case CHAT_SUPPORT_MODULE_BADGE_SHOWING:
       return action.payload;
     default:
       return state;

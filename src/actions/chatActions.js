@@ -41,7 +41,11 @@ import {
   CHAT_DESTROY,
   THREAD_THUMBNAIL_UPDATE,
   CHAT_FILE_HASH_CODE_UPDATE,
-  CHAT_AUDIO_PLAYER, CHAT_FILE_HASH_CODE_REMOVE, CHAT_AUDIO_RECORDER
+  CHAT_AUDIO_PLAYER,
+  CHAT_FILE_HASH_CODE_REMOVE,
+  CHAT_AUDIO_RECORDER,
+  CHAT_SUPPORT_MODE,
+  CHAT_SUPPORT_MODULE_BADGE_SHOWING
 } from "../constants/actionTypes";
 import {messageInfo} from "./messageActions";
 import {THREAD_HISTORY_LIMIT_PER_REQUEST} from "../constants/historyFetchLimits";
@@ -339,6 +343,24 @@ export const chatSmallVersion = isSmall => {
     return dispatch({
       type: CHAT_SMALL_VERSION,
       payload: isSmall
+    });
+  }
+};
+
+export const chatSupportMode = isSupportMode => {
+  return dispatch => {
+    return dispatch({
+      type: CHAT_SUPPORT_MODE,
+      payload: isSupportMode
+    });
+  }
+};
+
+export const chatSupportModuleBadgeShowing = showing => {
+  return dispatch => {
+    return dispatch({
+      type: CHAT_SUPPORT_MODULE_BADGE_SHOWING,
+      payload: showing
     });
   }
 };

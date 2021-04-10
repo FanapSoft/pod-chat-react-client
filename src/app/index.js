@@ -1,5 +1,5 @@
 // app/index.js
-import React, {Component} from "react";
+import React, {Component, Fragment} from "react";
 import {connect} from "react-redux";
 import {Route, withRouter} from "react-router-dom";
 import {statics as contactListStatics} from "./ModalContactList";
@@ -27,7 +27,7 @@ import {
   chatRouterLess,
   chatSetInstance,
   chatSignOutHook,
-  chatSmallVersion
+  chatSmallVersion, chatSupportMode
 } from "../actions/chatActions";
 import {
   threadCreateWithExistThread,
@@ -158,13 +158,16 @@ class Index extends Component {
   }
 
   componentDidMount() {
-    const {small, routerLess, dispatch, disableNotification, onNotificationClickHook, onRetryHook, onSignOutHook} = this.props;
+    const {small, supportMode, routerLess, dispatch, disableNotification, onNotificationClickHook, onRetryHook, onSignOutHook} = this.props;
     dispatch(chatSetInstance(this.props));
-    if (small) {
-      dispatch(chatSmallVersion(small))
+    if (small || supportMode) {
+      dispatch(chatSmallVersion(true))
     }
-    if (routerLess) {
-      dispatch(chatRouterLess(routerLess))
+    if (supportMode) {
+      dispatch(chatSupportMode(supportMode));
+    }
+    if (routerLess || supportMode) {
+      dispatch(chatRouterLess(true))
     }
     if (disableNotification) {
       dispatch(chatNotification(false));
@@ -212,43 +215,60 @@ class Index extends Component {
   /*----outside api---*/
 
   render() {
-    const {threadShowing, customClassName, leftAsideShowing, small, chatRouterLess} = this.props;
+    const {threadShowing, customClassName, leftAsideShowing, small, chatRouterLess, supportMode} = this.props;
     const classNames = classnames({
       [customClassName]: customClassName,
       [style.Index]: true,
-      [style["Index--small"]]: small,
+      [style["Index--small"]]: small || supportMode,
       [style["Index--isThreadShow"]]: threadShowing,
       [style["Index--isAsideLeftShow"]]: leftAsideShowing
     });
     const popups = (
       <Container>
-        <Route exact={!chatRouterLess} path={chatRouterLess ? "" : [ROUTE_CREATE_GROUP, ROUTE_CREATE_CHANNEL]}
-               render={() => <ModalCreateGroup smallVersion={small}/>}/>
-        <Route exact={!chatRouterLess} path={chatRouterLess ? "" : ROUTE_CONTACTS}
-               render={() => <ModalContactListMenu smallVersion={small}/>}/>
-        <Route exact={!chatRouterLess} path={chatRouterLess ? "" : ROUTE_ADD_CONTACT}
-               render={() => <ModalAddContact smallVersion={small}/>}/>
-        <Route exact={!chatRouterLess} path={chatRouterLess ? "" : ROUTE_SHARE}
-               render={() => <ModalShare smallVersion={small}/>}/>
-        <Route exact={!chatRouterLess} path={chatRouterLess ? "" : ROUTE_THREAD_INFO}
-               render={() => <ModalThreadInfo smallVersion={small}/>}/>
-        <ModalThreadList smallVersion={small} ref={this.modalThreadListRef}/>
-        <ModalImageCaption smallVersion={small} ref={this.modalImageCaptionRef}/>
-        <ModalMedia selector={`.${style.Index__MediaTrigger} a`}
-                    ref={this.modalMediaRef}
-                    lang="fa"
-                    i18n={{fa: strings.modalMedia}}
-                    backFocus={false}/>
-        <ModalPrompt smallVersion={small} ref={this.modalDeleteMessagePromptRef}/>
+        {supportMode ?
+          <Fragment>
+            <ModalPrompt smallVersion={small} ref={this.modalDeleteMessagePromptRef}/>
+            <ModalMedia selector={`.${style.Index__MediaTrigger} a`}
+                        ref={this.modalMediaRef}
+                        lang="fa"
+                        i18n={{fa: strings.modalMedia}}
+                        backFocus={false}/>
+          </Fragment>
+        :
+
+          <Fragment>
+            <Route exact={!chatRouterLess} path={chatRouterLess ? "" : [ROUTE_CREATE_GROUP, ROUTE_CREATE_CHANNEL]}
+                   render={() => <ModalCreateGroup smallVersion={small}/>}/>
+            <Route exact={!chatRouterLess} path={chatRouterLess ? "" : ROUTE_CONTACTS}
+                   render={() => <ModalContactListMenu smallVersion={small}/>}/>
+            <Route exact={!chatRouterLess} path={chatRouterLess ? "" : ROUTE_ADD_CONTACT}
+                   render={() => <ModalAddContact smallVersion={small}/>}/>
+            <Route exact={!chatRouterLess} path={chatRouterLess ? "" : ROUTE_SHARE}
+                   render={() => <ModalShare smallVersion={small}/>}/>
+            <Route exact={!chatRouterLess} path={chatRouterLess ? "" : ROUTE_THREAD_INFO}
+                   render={() => <ModalThreadInfo smallVersion={small}/>}/>
+            <ModalThreadList smallVersion={small} ref={this.modalThreadListRef}/>
+            <ModalImageCaption smallVersion={small} ref={this.modalImageCaptionRef}/>
+            <ModalMedia selector={`.${style.Index__MediaTrigger} a`}
+                        ref={this.modalMediaRef}
+                        lang="fa"
+                        i18n={{fa: strings.modalMedia}}
+                        backFocus={false}/>
+            <ModalPrompt smallVersion={small} ref={this.modalDeleteMessagePromptRef}/>
+          </Fragment>
+        }
+
       </Container>
     );
 
     return (
       <Container className={classNames}>
         {popups}
+        {!supportMode &&
         <Container className={style.Index__Aside}>
           <Aside/>
         </Container>
+        }
         <Container className={style.Index__Main}>
           <Main/>
         </Container>

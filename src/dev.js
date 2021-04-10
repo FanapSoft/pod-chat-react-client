@@ -8,14 +8,18 @@ import "../styles/main.scss";
 import "../styles/layout/defualt.scss";
 import Index from "./app";
 import {auth, retry} from "podauth/src/auth";
+import SupportModule from "./app/SupportModule";
 
 function renderPodchat(token) {
+  // supportMode={8453}
   render(
     <Provider store={store}>
       <BrowserRouter>
-        <Index token={token}  {...serverConfig} onRetryHook={e => {
-          return retry();
-        }}/>
+        <SupportModule>
+          <Index token={token}  {...serverConfig} onRetryHook={e => {
+            return retry();
+          }}/>
+        </SupportModule>
       </BrowserRouter>
     </Provider>,
     document.getElementById("app")

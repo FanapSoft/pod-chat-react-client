@@ -128,7 +128,17 @@ class ModalAddContact extends Component {
       notEnteredMobilePhone: false,
       sameUserMobilePhone: false
     });
-
+    if(contactEdit) {
+      this.setState({
+        sameUserMobilePhone: false,
+        notEnteredFirstOrFamilyName: false,
+        notEnteredMobilePhone: false,
+        addBy: "",
+        firstName: "",
+        lastName: ""
+      });
+      dispatch(contactAdd(null, null, null, false, true));
+    }
   }
 
   onClose(e, noHistory) {

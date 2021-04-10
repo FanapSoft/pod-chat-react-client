@@ -37,8 +37,8 @@ import style from "../../styles/app/MainMessagesMessage.scss";
   return {
     /*    participants: store.threadParticipantList.participants,
         participantsFetching: store.threadParticipantList.fetching,*/
-    threadLeftAsideShowing: store.threadLeftAsideShowing
-
+    threadLeftAsideShowing: store.threadLeftAsideShowing,
+    supportMode: store.chatSupportMode
   };
 })
 export class MainMessagesMessage extends Component {
@@ -188,7 +188,8 @@ export class MainMessagesMessage extends Component {
       isMessageByMe,
       isGroup,
       isChannel,
-      lastSeenMessageTime
+      lastSeenMessageTime,
+      supportMode
     } = this.props;
     const {messageControlShow, messageTriggerShow} = this.state;
     const args = {
@@ -219,7 +220,7 @@ export class MainMessagesMessage extends Component {
                  relative
                  className={style.MainMessagesMessage__Container}
                  style={{
-                   maxWidth: mobileCheck() ? "70%" : threadLeftAsideShowing && window.innerWidth < 1100 ? "60%" : "50%",
+                   maxWidth: mobileCheck() || supportMode ? "70%" : threadLeftAsideShowing && window.innerWidth < 1100 ? "60%" : "50%",
                    marginRight: isGroup ? null : isMessageByMe ? "5px" : null,
                    marginLeft: isGroup ? null : isMessageByMe ? null : "5px"
                  }}
